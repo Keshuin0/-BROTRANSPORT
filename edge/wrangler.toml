@@ -1,0 +1,11 @@
+name = "brotransport-edge-api"
+main = "src/index.ts"
+compatibility_date = "2024-03-01"
+
+[vars]
+# RESEND_API_KEY = "set_in_dashboard_secrets"
+# TURNSTILE_SECRET_KEY = "set_in_dashboard_secrets"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "brotransport-abstracts-r2"
