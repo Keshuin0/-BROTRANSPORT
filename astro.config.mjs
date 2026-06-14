@@ -45,7 +45,7 @@ export default defineConfig({
   integrations,
   prefetch: true,
   site: 'https://keshuin0.github.io',
-  base: '/-BROTRANSPORT',
+  base: '/-BROTRANSPORT/',
   vite: {
     plugins: [tailwind()],
   }
