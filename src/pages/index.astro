@@ -8,11 +8,11 @@ import LidarTracker from '../components/LidarTracker.astro';
 const fleetItems = await getCollection('fleet');
 const base = import.meta.env.BASE_URL;
 
-// Helper to resolve high-fidelity asset images dynamically by slug
-const getFleetImage = (slug: string) => {
-  if (slug === '13-axle-combo') return `${base}images/13-axle-combo.png?v=4`;
-  if (slug === 'extendable-rgn') return `${base}images/rgn-lowboy.png?v=4`;
-  if (slug === 'mack-titan') return `${base}images/mack-titan.png?v=4`;
+// Helper to resolve high-fidelity asset images dynamically by ID
+const getFleetImage = (id: string) => {
+  if (id === '13-axle-combo') return `${base}images/13-axle-combo.png?v=4`;
+  if (id === 'extendable-rgn') return `${base}images/rgn-lowboy.png?v=4`;
+  if (id === 'mack-titan') return `${base}images/mack-titan.png?v=4`;
   return `${base}images/hero-truck.png?v=4`;
 };
 ---
@@ -184,7 +184,7 @@ const getFleetImage = (slug: string) => {
           <!-- High-Fidelity Render Image -->
           <div class="h-48 overflow-hidden relative border-b border-slate-900">
             <img 
-              src={getFleetImage(item.slug)} 
+              src={getFleetImage(item.id)} 
               alt={item.data.title} 
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
             />
