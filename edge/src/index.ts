@@ -30,6 +30,7 @@ const QuoteSchema = z.object({
   contactName: z.string().min(2),
   contactEmail: z.string().email(),
   contactPhone: z.string().min(10),
+  turnstileToken: z.string().min(1),
 });
 
 const DriverApplicationSchema = z.object({
@@ -40,7 +41,31 @@ const DriverApplicationSchema = z.object({
   citizenOrPR: z.literal(true),
   cgpAuthorized: z.boolean(),
   hasCleanAbstract: z.literal(true),
+  turnstileToken: z.string().min(1),
 });
+
+// Cloudflare Turnstile Verification Helper
+async function verifyTurnstileToken(token: string, secretKey: string, ip?: string): Promise<boolean> {
+  const secret = secretKey || '1x00000000000000000000000000000000AA'; // Fallback to always-pass key for dev
+  const formData = new FormData();
+  formData.append('secret', secret);
+  formData.append('response', token);
+  if (ip) {
+    formData.append('remoteip', ip);
+  }
+
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: formData,
+    });
+    const outcome: any = await res.json();
+    return !!outcome.success;
+  } catch (err) {
+    console.error('Turnstile verification error:', err);
+    return false;
+  }
+}
 
 // Health check endpoint
 app.get('/api/health', (c) => c.json({ status: 'operational', timestamp: Date.now() }));
@@ -56,6 +81,13 @@ app.post('/api/quote', async (c) => {
     }
 
     const data = result.data;
+
+    // Verify Turnstile Anti-Spam Token
+    const ip = c.req.header('CF-Connecting-IP');
+    const isHuman = await verifyTurnstileToken(data.turnstileToken, c.env.TURNSTILE_SECRET_KEY, ip);
+    if (!isHuman) {
+      return c.json({ success: false, error: 'Security verification failed.' }, 403);
+    }
     
     // Evaluate if Oversized
     const isOversized = data.width > 8.5 || data.height > 13.5 || data.length > 53 || data.weight > 45000;
@@ -107,6 +139,13 @@ app.post('/api/drivers', async (c) => {
     }
 
     const data = result.data;
+
+    // Verify Turnstile Anti-Spam Token
+    const ip = c.req.header('CF-Connecting-IP');
+    const isHuman = await verifyTurnstileToken(data.turnstileToken, c.env.TURNSTILE_SECRET_KEY, ip);
+    if (!isHuman) {
+      return c.json({ success: false, error: 'Security verification failed.' }, 403);
+    }
 
     // Simulate database write / logs
     console.log(`Compliance Application received: ${data.driverName}`);

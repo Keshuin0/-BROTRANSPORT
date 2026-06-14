@@ -12,7 +12,8 @@ export const QuoteSchema = z.object({
   destination: z.string().min(3, "Destination address/city must be at least 3 characters."),
   contactName: z.string().min(2, "Contact name is required (min 2 characters)."),
   contactEmail: z.string().email("Provide a valid email address."),
-  contactPhone: z.string().min(10, "Provide a valid 10-digit phone number.")
+  contactPhone: z.string().min(10, "Provide a valid 10-digit phone number."),
+  turnstileToken: z.string().min(1, "Security verification failed. Please complete the Turnstile challenge.")
 });
 
 export const DriverApplicationSchema = z.object({
@@ -30,7 +31,8 @@ export const DriverApplicationSchema = z.object({
   }),
   hasCleanAbstract: z.literal(true, {
     errorMap: () => ({ message: "A clean 3-year commercial driver abstract is mandatory." })
-  })
+  }),
+  turnstileToken: z.string().min(1, "Security verification failed. Please complete the Turnstile challenge.")
 });
 
 export type QuoteInput = z.infer<typeof QuoteSchema>;

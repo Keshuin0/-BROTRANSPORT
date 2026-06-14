@@ -151,6 +151,11 @@ import Layout from '../layouts/Layout.astro';
               </div>
               <input type="file" id="file-uploader" class="hidden" />
             </div>
+
+            <!-- Cloudflare Turnstile Challenge -->
+            <div class="flex justify-center pt-6" id="turnstile-drivers-wrapper">
+              <div id="turnstile-drivers-widget"></div>
+            </div>
           </div>
 
           <!-- Error/Validation Message -->
@@ -186,6 +191,10 @@ import Layout from '../layouts/Layout.astro';
   const totalSteps = 3;
   const STORAGE_KEY = 'bro_driver_compliance_flow';
 
+  // Turnstile State
+  let turnstileWidgetId: any = null;
+  let turnstileToken = '';
+
   // DOM Elements
   const form = document.getElementById('driver-compliance-form') as HTMLFormElement;
   const panels = document.querySelectorAll('.step-panel');
@@ -211,6 +220,35 @@ import Layout from '../layouts/Layout.astro';
     const el = document.getElementById(id) as HTMLInputElement | null;
     return el ? el.checked : false;
   };
+
+  function renderTurnstileWidget() {
+    const container = document.getElementById('turnstile-drivers-widget');
+    if (!container) return;
+
+    if (!(window as any).turnstile) {
+      setTimeout(renderTurnstileWidget, 500);
+      return;
+    }
+
+    const turnstile = (window as any).turnstile;
+    if (turnstileWidgetId !== null) {
+      turnstile.reset(turnstileWidgetId);
+      return;
+    }
+
+    try {
+      turnstileWidgetId = turnstile.render('#turnstile-drivers-widget', {
+        sitekey: '1x00000000000000000000AA', // Testing sitekey (always passes)
+        theme: 'dark',
+        callback: function(token: string) {
+          turnstileToken = token;
+          if (errorBox) errorBox.classList.add('hidden');
+        }
+      });
+    } catch (e) {
+      console.error('Failed to render Turnstile widget', e);
+    }
+  }
 
   // Step Switching
   function showStep(step: number) {
@@ -246,6 +284,10 @@ import Layout from '../layouts/Layout.astro';
     } else {
       nextBtn.innerText = 'Next Step';
       nextBtn.className = 'bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10';
+    }
+
+    if (step === 3) {
+      renderTurnstileWidget();
     }
   }
 
@@ -351,7 +393,8 @@ import Layout from '../layouts/Layout.astro';
         preferredLanes: getStringVal('preferredLanes'),
         citizenOrPR: getCheckVal('citizenOrPR'),
         cgpAuthorized: getCheckVal('cgpAuthorized'),
-        hasCleanAbstract: getCheckVal('hasCleanAbstract')
+        hasCleanAbstract: getCheckVal('hasCleanAbstract'),
+        turnstileToken: turnstileToken
       };
 
       // Zod Validation
@@ -371,15 +414,48 @@ import Layout from '../layouts/Layout.astro';
         errorBox.classList.remove('hidden');
       }
 
-      setTimeout(() => {
-        alert("Compliance Profile submitted successfully! Edge servers generated DND intake logs.");
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://127.0.0.1:8787/api/drivers'
+        : 'https://brotransport-edge-api.keshuin0.workers.dev/api/drivers';
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Server rejected the application.');
+        }
+        return data;
+      })
+      .then((data) => {
+        alert(`Compliance Profile submitted successfully! Decoupled edge worker response: ${data.message}`);
         localStorage.removeItem(STORAGE_KEY);
         form.reset();
-        if (uploadStatus) uploadStatus.innerText = 'Drag & Drop Driver Abstract, CV or CGP Form';
+        if (uploadStatus) {
+          uploadStatus.innerText = 'Drag & Drop Driver Abstract, CV or CGP Form';
+          uploadStatus.className = 'text-sm font-bold text-white';
+        }
         currentStep = 1;
         showStep(1);
         if (errorBox) errorBox.classList.add('hidden');
-      }, 1500);
+        // Reset Turnstile
+        if (turnstileWidgetId !== null && (window as any).turnstile) {
+          (window as any).turnstile.reset(turnstileWidgetId);
+          turnstileToken = '';
+        }
+      })
+      .catch((err) => {
+        if (errorBox) {
+          errorBox.innerText = `Submission failed: ${err.message}`;
+          errorBox.className = 'text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
+          errorBox.classList.remove('hidden');
+        }
+      });
 
       return;
     }

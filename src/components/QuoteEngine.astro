@@ -140,6 +140,11 @@
           <input type="tel" id="contactPhone" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="902-555-0144" />
         </div>
       </div>
+      
+      <!-- Cloudflare Turnstile Challenge -->
+      <div class="flex justify-center pt-6" id="turnstile-quote-wrapper">
+        <div id="turnstile-quote-widget"></div>
+      </div>
     </div>
 
     <!-- Error/Status Box -->
@@ -167,6 +172,10 @@
   const totalSteps = 4;
   const STORAGE_KEY = 'bro_quote_flow_v5';
 
+  // Turnstile State
+  let turnstileWidgetId: any = null;
+  let turnstileToken = '';
+
   // DOM Elements
   const form = document.getElementById('quote-form') as HTMLFormElement;
   const panels = document.querySelectorAll('.step-panel');
@@ -189,6 +198,35 @@
     const el = document.getElementById(id) as HTMLInputElement | null;
     return el ? el.value.trim() : '';
   };
+
+  function renderTurnstileWidget() {
+    const container = document.getElementById('turnstile-quote-widget');
+    if (!container) return;
+
+    if (!(window as any).turnstile) {
+      setTimeout(renderTurnstileWidget, 500);
+      return;
+    }
+
+    const turnstile = (window as any).turnstile;
+    if (turnstileWidgetId !== null) {
+      turnstile.reset(turnstileWidgetId);
+      return;
+    }
+
+    try {
+      turnstileWidgetId = turnstile.render('#turnstile-quote-widget', {
+        sitekey: '1x00000000000000000000AA', // Testing sitekey (always passes)
+        theme: 'dark',
+        callback: function(token: string) {
+          turnstileToken = token;
+          if (errorBox) errorBox.classList.add('hidden');
+        }
+      });
+    } catch (e) {
+      console.error('Failed to render Turnstile widget', e);
+    }
+  }
 
   // Setup Step Changes
   function showStep(step: number) {
@@ -228,6 +266,10 @@
 
     if (step === 3) {
       runEvaluation();
+    }
+
+    if (step === 4) {
+      renderTurnstileWidget();
     }
   }
 
@@ -372,7 +414,8 @@
         destination: getStringVal('destination'),
         contactName: getStringVal('contactName'),
         contactEmail: getStringVal('contactEmail'),
-        contactPhone: getStringVal('contactPhone')
+        contactPhone: getStringVal('contactPhone'),
+        turnstileToken: turnstileToken
       };
 
       // Zod Validation
@@ -392,14 +435,44 @@
         errorBox.classList.remove('hidden');
       }
 
-      setTimeout(() => {
-        alert("Quote submitted successfully! Decoupled edge worker dispatched notification email.");
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://127.0.0.1:8787/api/quote'
+        : 'https://brotransport-edge-api.keshuin0.workers.dev/api/quote';
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Server rejected the request.');
+        }
+        return data;
+      })
+      .then((data) => {
+        alert(`Quote submitted successfully! Decoupled edge worker response: ${data.message}`);
         localStorage.removeItem(STORAGE_KEY);
         form.reset();
         currentStep = 1;
         showStep(1);
         if (errorBox) errorBox.classList.add('hidden');
-      }, 1500);
+        // Reset turnstile widget
+        if (turnstileWidgetId !== null && (window as any).turnstile) {
+          (window as any).turnstile.reset(turnstileWidgetId);
+          turnstileToken = '';
+        }
+      })
+      .catch((err) => {
+        if (errorBox) {
+          errorBox.innerText = `Submission failed: ${err.message}`;
+          errorBox.className = 'text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
+          errorBox.classList.remove('hidden');
+        }
+      });
 
       return;
     }

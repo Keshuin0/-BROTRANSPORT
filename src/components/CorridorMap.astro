@@ -1,0 +1,134 @@
+---
+---
+<div class="space-y-4">
+  <div class="text-[10px] font-mono tracking-widest text-slate-500 uppercase flex items-center gap-2 select-none">
+    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+    SYS_CORRIDOR_GRID // LIVE RADAR TRANSIT corridors
+  </div>
+  <div id="corridor-map" class="h-96 w-full rounded-lg bg-slate-900 border border-slate-800/80 shadow-2xl relative z-0">
+    <div id="map-loader" class="absolute inset-0 flex items-center justify-center text-xs font-mono text-slate-500 bg-slate-950/80 rounded-lg">
+      [WAITING FOR SCAN TARGET TO SCROLL INTO VIEW]
+    </div>
+  </div>
+</div>
+
+<script>
+  let mapInitialized = false;
+
+  const initMap = () => {
+    if (mapInitialized) return;
+    const mapEl = document.getElementById('corridor-map');
+    const loader = document.getElementById('map-loader');
+    if (!mapEl) return;
+
+    mapInitialized = true;
+    if (loader) loader.innerText = '[INITIALIZING SATELLITE TRANSIT LINK...]';
+
+    // 1. Inject Leaflet stylesheet dynamically
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    link.crossOrigin = '';
+    document.head.appendChild(link);
+
+    // 2. Load Leaflet script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    script.crossOrigin = '';
+    
+    script.onload = () => {
+      // Leaflet global L is now available in browser scope
+      const L = (window as any).L;
+      if (!L) return;
+
+      if (loader) loader.remove();
+
+      // Initialize Map focused on central Canada
+      const map = L.map('corridor-map', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([50.0, -90.0], 4);
+
+      // Dark Mode Tile Layer
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 18,
+      }).addTo(map);
+
+      // Custom Glowing Markers
+      const createGlowingMarker = (title: string, subtitle: string) => {
+        return L.divIcon({
+          className: 'custom-radar-icon',
+          html: `<div class="relative flex items-center justify-center">
+            <span class="absolute inline-flex h-6 w-6 rounded-full bg-blue-500/20 animate-ping"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500 border border-white/40"></span>
+            <div class="absolute left-4 bg-slate-950/90 border border-slate-800 text-[10px] text-slate-300 font-mono px-2 py-0.5 rounded whitespace-nowrap">
+              <strong>${title}</strong><br/>${subtitle}
+            </div>
+          </div>`,
+          iconSize: [8, 8],
+          iconAnchor: [4, 4]
+        });
+      };
+
+      // Define Hubs
+      const hubs = [
+        { name: 'PEI HQ', coords: [46.2507, -63.1375], info: 'Dispatch Headquarters' },
+        { name: 'CFB Borden', coords: [44.2706, -79.9048], info: 'Military Operations Hub' },
+        { name: 'Alberta Hub', coords: [56.7264, -111.3803], info: 'Corridor Logistics Hub' }
+      ];
+
+      const latlngs = hubs.map(hub => {
+        L.marker(hub.coords, { icon: createGlowingMarker(hub.name, hub.info) }).addTo(map);
+        return hub.coords;
+      });
+
+      // Connect corridors with glowing dashed polyline
+      L.polyline(latlngs, {
+        color: '#3b82f6',
+        weight: 1.5,
+        opacity: 0.8,
+        dashArray: '5, 10'
+      }).addTo(map);
+
+      // Fit bounds nicely
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+    };
+
+    document.body.appendChild(script);
+  };
+
+  // Setup Lazy Loading IntersectionObserver
+  const setupObserver = () => {
+    const mapEl = document.getElementById('corridor-map');
+    if (!mapEl) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          initMap();
+          observer.disconnect(); // Only run once
+        }
+      });
+    }, {
+      rootMargin: '100px' // Load 100px before scrolling into view
+    });
+
+    observer.observe(mapEl);
+  };
+
+  // Astro ClientRouter compatible
+  document.addEventListener('astro:page-load', setupObserver);
+</script>
+
+<style is:global>
+  /* Custom styles for Leaflet elements inside our dark theme */
+  .custom-radar-icon {
+    background: transparent !important;
+    border: none !important;
+  }
+  .leaflet-container {
+    background: #0B0F19 !important;
+  }
+</style>
