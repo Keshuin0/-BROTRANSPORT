@@ -1,76 +1,100 @@
 ---
 ---
-<div class="relative min-h-[92vh] flex flex-col justify-between overflow-hidden bg-[#0B0F19] text-white border-b border-slate-900 select-none">
-  <!-- Interactive Lidar 3D Canvas -->
+<div class="relative min-h-[90vh] flex flex-col justify-between overflow-hidden text-white border-b border-slate-900 select-none">
+  <!-- Background Image with High Priority -->
   <div class="absolute inset-0 z-0">
-    <canvas id="hero-3d-canvas" class="w-full h-full opacity-65 block"></canvas>
+    <img 
+      src="/images/hero-truck.png" 
+      alt="Heavy haul semi truck crossing a highway bridge at sunset" 
+      class="w-full h-full object-cover object-center scale-105 animate-[pulse-slow_8s_infinite] pointer-events-none"
+      fetchpriority="high"
+    />
+    <!-- Premium Gradient Masks -->
+    <div class="absolute inset-0 bg-gradient-to-t from-[#05070D] via-[#05070D]/70 to-transparent z-10"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-[#05070D]/85 via-[#05070D]/30 to-transparent z-10"></div>
+    <div class="absolute inset-0 bg-radial-at-c from-transparent via-[#05070D]/40 to-[#05070D]/90 z-10"></div>
+    <!-- Subtle Grid Overlay -->
+    <div class="absolute inset-0 futuristic-grid opacity-20 z-10 pointer-events-none"></div>
   </div>
 
-  <!-- Tactical HUD Scan Grid -->
-  <div class="absolute inset-0 z-10 bg-[linear-gradient(to_right,#1e293b0e_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0e_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none"></div>
-
-  <!-- Tactical Corner Accents -->
-  <div class="absolute top-8 left-8 z-20 pointer-events-none hidden md:block">
-    <div class="text-[10px] font-mono tracking-widest text-blue-500/80">SYS_STATUS: ACTIVE</div>
-    <div class="text-[9px] font-mono text-slate-500 mt-1">LAT: 44.2706° N | LON: 79.9048° W (CFB BORDEN)</div>
+  <!-- Tactical Corner Accents (Industrial look) -->
+  <div class="absolute top-8 left-8 z-20 pointer-events-none hidden lg:block">
+    <div class="text-[10px] font-mono tracking-widest text-blue-500/80 font-bold flex items-center gap-2">
+      <span class="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping"></span>
+      SYS_GRID: DND_SECURE_ONLINE
+    </div>
+    <div class="text-[9px] font-mono text-slate-500 mt-1">LAT: 44.2706° N | LON: -79.9048° W (CFB BORDEN HUB)</div>
   </div>
 
-  <div class="absolute top-8 right-8 z-20 pointer-events-none hidden md:block text-right">
-    <div class="text-[10px] font-mono tracking-widest text-amber-500/80">SECTOR: ONTARIO CORRIDOR</div>
-    <div class="text-[9px] font-mono text-slate-500 mt-1">DND SECURE CONNECT // PERMIT STATUS: VERIFIED</div>
+  <div class="absolute top-8 right-8 z-20 pointer-events-none hidden lg:block text-right">
+    <div class="text-[10px] font-mono tracking-widest text-amber-500/80 font-bold">// OPERATIONS CENTRAL</div>
+    <div class="text-[9px] font-mono text-slate-500 mt-1">CROSS-BORDER PERMIT SYSTEM: ACTIVE</div>
   </div>
 
   <!-- Hero Content Centered Layout -->
-  <div class="relative z-20 flex-1 flex flex-col justify-center items-center px-6 text-center max-w-7xl mx-auto w-full pt-16">
-    <div class="space-y-6 max-w-4xl">
-      <div class="inline-flex items-center gap-2 border border-blue-500/30 bg-blue-950/20 px-3 py-1.5 rounded-full text-xs font-bold text-blue-400 uppercase tracking-widest animate-pulse">
+  <div class="relative z-20 flex-1 flex flex-col justify-center px-6 max-w-7xl mx-auto w-full pt-28 pb-12">
+    <div class="space-y-8 max-w-3xl">
+      <div class="inline-flex items-center gap-2 border border-blue-500/30 bg-blue-950/20 px-3 py-1.5 rounded-full text-xs font-bold text-blue-400 uppercase tracking-widest animate-pulse select-none">
         <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-        Tactical Heavy Logistics Division
+        Elite Heavy-Haul & DND Clearance Logistics
       </div>
 
-      <h1 class="text-4xl sm:text-6xl md:text-8xl font-black font-outfit uppercase tracking-tight leading-none text-white drop-shadow-[0_2px_15px_rgba(0,0,0,0.8)]">
-        Operational <br />
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Dominance</span>
-      </h1>
+      <div class="space-y-4">
+        <h1 class="text-4xl sm:text-6xl md:text-7xl font-black font-outfit uppercase tracking-tight leading-none text-white drop-shadow-md">
+          TACTICAL HEAVY-HAUL <br />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 glow-text-blue">
+            COMMAND CENTER
+          </span>
+        </h1>
+        <p class="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl font-normal leading-relaxed">
+          Executing high-stakes military relocation and cross-border commercial heavy-haul networks out of Prince Edward Island. Controlled Goods Program (CGP) registered and CFB Borden cleared.
+        </p>
+      </div>
 
-      <p class="text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">
-        Executing high-value logistics and oversized military convoy movements near CFB Borden. 100% compliance with Controlled Goods and DND clearances.
-      </p>
-
-      <div class="flex flex-col sm:flex-row justify-center items-center gap-4 pt-6">
-        <a href="#drivers" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 border border-blue-500/20 text-white px-8 py-4 rounded-md font-semibold text-sm transition-all duration-300 shadow-lg shadow-blue-500/10 transform hover:-translate-y-0.5">
-          Access Driver Gateway
+      <!-- Quick Action Panels (Morphing Glassmorphism cards) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl pt-2">
+        <a href="/quote" data-astro-prefetch class="flex items-center gap-4 p-5 rounded-lg border border-blue-500/20 bg-blue-950/20 hover:bg-blue-950/40 hover:border-blue-500/40 transition-all duration-300 group shadow-lg shadow-blue-950/10 hover:-translate-y-0.5">
+          <div class="h-10 w-10 bg-blue-500/10 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 text-blue-400 rounded flex items-center justify-center font-black font-mono">01</div>
+          <div class="text-left">
+            <h4 class="text-sm font-bold text-white font-outfit tracking-wide uppercase group-hover:text-blue-400 transition-colors">Procurement Engine</h4>
+            <p class="text-slate-400 text-xs mt-0.5">Evaluate RGN or 13-axle requirements.</p>
+          </div>
         </a>
-        <a href="#fleet" class="w-full sm:w-auto bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white px-8 py-4 rounded-md font-semibold text-sm transition-all duration-300 backdrop-blur-sm">
-          Inspect Fleet Spec
+
+        <a href="/drivers" data-astro-prefetch class="flex items-center gap-4 p-5 rounded-lg border border-amber-500/20 bg-amber-950/15 hover:bg-amber-950/30 hover:border-amber-500/40 transition-all duration-300 group shadow-lg shadow-amber-950/10 hover:-translate-y-0.5">
+          <div class="h-10 w-10 bg-amber-500/10 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300 text-amber-400 rounded flex items-center justify-center font-black font-mono">02</div>
+          <div class="text-left">
+            <h4 class="text-sm font-bold text-white font-outfit tracking-wide uppercase group-hover:text-amber-400 transition-colors">Driver Gateway</h4>
+            <p class="text-slate-400 text-xs mt-0.5">Register Controlled Goods clearances.</p>
+          </div>
         </a>
       </div>
     </div>
   </div>
 
-  <!-- Scroll-Velocity Kinetic Typography (CSS compositor-only animation) -->
-  <div class="w-full overflow-hidden border-t border-slate-900/80 bg-[#0B0F19]/90 backdrop-blur-sm py-4 relative z-20 pointer-events-none select-none">
+  <!-- Scroll-Velocity Kinetic Typography -->
+  <div class="w-full overflow-hidden border-t border-slate-900/60 bg-[#05070D]/90 backdrop-blur-sm py-4 relative z-20 pointer-events-none select-none">
     <div class="flex flex-col gap-2">
       <!-- Row 1: Left to Right -->
-      <div class="flex whitespace-nowrap text-[3vw] font-black uppercase tracking-widest text-slate-800/20 font-outfit skew-x-12 animate-row-left">
+      <div class="flex whitespace-nowrap text-[3vw] font-black uppercase tracking-widest text-slate-800/15 font-outfit skew-x-12 animate-row-left">
         <span class="inline-block px-4">CFB Borden Operations Division</span>
-        <span class="inline-block px-4 text-blue-900/20">—</span>
-        <span class="inline-block px-4">13-Axle Superloads</span>
-        <span class="inline-block px-4 text-blue-900/20">—</span>
+        <span class="inline-block px-4 text-blue-900/15">—</span>
+        <span class="inline-block px-4">13-Axle Combo Transport</span>
+        <span class="inline-block px-4 text-blue-900/15">—</span>
         <span class="inline-block px-4">Controlled Goods Clearance</span>
-        <span class="inline-block px-4 text-blue-900/20">—</span>
+        <span class="inline-block px-4 text-blue-900/15">—</span>
         <span class="inline-block px-4">CFB Borden Operations Division</span>
       </div>
       
       <!-- Row 2: Right to Left -->
-      <div class="flex whitespace-nowrap text-[3vw] font-black uppercase tracking-widest text-slate-800/20 font-outfit -skew-x-12 animate-row-right">
-        <span class="inline-block px-4 text-amber-900/20">Tactical Heavy Haul Convoys</span>
+      <div class="flex whitespace-nowrap text-[3vw] font-black uppercase tracking-widest text-slate-800/15 font-outfit -skew-x-12 animate-row-right">
+        <span class="inline-block px-4 text-amber-900/15">Tactical Heavy Haul Convoys</span>
         <span class="inline-block px-4">—</span>
         <span class="inline-block px-4">85 Ton Max Capacity</span>
         <span class="inline-block px-4">—</span>
         <span class="inline-block px-4">Ontario Corridor Logistics</span>
         <span class="inline-block px-4">—</span>
-        <span class="inline-block px-4 text-amber-900/20">Tactical Heavy Haul Convoys</span>
+        <span class="inline-block px-4 text-amber-900/15">Tactical Heavy Haul Convoys</span>
       </div>
     </div>
   </div>
@@ -105,64 +129,14 @@
     animation: marqueeRight linear;
     animation-timeline: scroll();
   }
-</style>
 
-<script>
-  async function initHero3D() {
-    const canvas = document.getElementById('hero-3d-canvas') as HTMLCanvasElement | null;
-    if (!canvas) return;
-
-    // Verify browser compatibility for OffscreenCanvas
-    if (!('transferControlToOffscreen' in canvas)) {
-      console.warn('OffscreenCanvas not supported in this browser. Loading simplified WebGL on main thread.');
-      // Defer to regular WebGL if no OffscreenCanvas support (for older browsers)
-      return;
+  /* Pulse animation for background image */
+  @keyframes pulse-slow {
+    0%, 100% {
+      transform: scale(1.03);
     }
-
-    const offscreen = canvas.transferControlToOffscreen();
-
-    try {
-      // Import worker using Vite's worker constructor
-      const HeroWorker = await import('../lib/hero-worker?worker');
-      const worker = new HeroWorker.default();
-
-      // Initialize worker with offscreen canvas and dimensions
-      worker.postMessage({
-        type: 'init',
-        canvas: offscreen,
-        w: canvas.clientWidth,
-        h: canvas.clientHeight
-      }, [offscreen]);
-
-      // Responsive resize handling
-      const resizeObserver = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          const { width, height } = entry.contentRect;
-          worker.postMessage({
-            type: 'resize',
-            w: Math.floor(width),
-            h: Math.floor(height)
-          });
-        }
-      });
-      resizeObserver.observe(canvas.parentElement || document.body);
-
-      // Interactive camera angle shift on mouse movement
-      window.addEventListener('mousemove', (e) => {
-        const mx = (e.clientX / window.innerWidth) * 2 - 1;
-        const my = -(e.clientY / window.innerHeight) * 2 + 1;
-        worker.postMessage({
-          type: 'mousemove',
-          mx,
-          my
-        });
-      });
-
-    } catch (err) {
-      console.error('Failed to initialize Three.js Web Worker:', err);
+    50% {
+      transform: scale(1.05);
     }
   }
-
-  // Handle Astro page transitions (ClientRouter compatible)
-  document.addEventListener('astro:page-load', initHero3D);
-</script>
+</style>
