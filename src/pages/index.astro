@@ -1,0 +1,140 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+
+const fleetItems = await getCollection('fleet');
+---
+
+<Layout>
+  <!-- Navigation -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#0B0F19]/80 border-b border-slate-800/80" style="view-transition-name: main-header;">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="h-3 w-3 bg-blue-500 rounded-full animate-pulse"></div>
+        <span class="text-xl font-black tracking-wider text-white font-outfit">#BRO <span class="text-blue-500">TRANSPORT</span></span>
+      </div>
+      
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#services" class="hover:text-blue-400 transition-colors">Operations</a>
+        <a href="#fleet" class="hover:text-blue-400 transition-colors">Fleet Capabilities</a>
+        <a href="#quote" class="hover:text-blue-400 transition-colors">Quote Engine</a>
+        <a href="/drivers" class="hover:text-blue-400 transition-colors">Driver Portal</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <a href="tel:902-916-6936" class="hidden sm:inline-flex bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all duration-300 text-blue-400 text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
+          <span>Call Desk: 902-916-6936</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <Hero />
+
+  <!-- Core Operations Suite -->
+  <section id="services" class="py-24 px-6 max-w-7xl mx-auto space-y-16">
+    <div class="text-center space-y-4">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white font-outfit uppercase">Our Core Operations Suite</h2>
+      <p class="text-slate-400 max-w-xl mx-auto">Lowering your daily cognitive load with comprehensive, edge-validated dispatch solutions.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Card 1 -->
+      <div class="bg-[#111827]/60 p-8 rounded-lg border border-slate-800/65 hover:border-blue-500/50 hover:bg-[#111827] transition-all duration-300 group">
+        <div class="h-12 w-12 bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center rounded-md mb-6 font-bold group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">01</div>
+        <h3 class="text-xl font-bold mb-3 text-white font-outfit">Smart Route Corridor Planning</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">
+          We coordinate complex transit routes across North American corridors, pre-screening highway heights and bridge limits to secure oversized transport clearances.
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-[#111827]/60 p-8 rounded-lg border border-slate-800/65 hover:border-blue-500/50 hover:bg-[#111827] transition-all duration-300 group">
+        <div class="h-12 w-12 bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center rounded-md mb-6 font-bold group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">02</div>
+        <h3 class="text-xl font-bold mb-3 text-white font-outfit">CGP & DND Compliance</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">
+          Registered and security-cleared for the Controlled Goods Program (CGP) and Department of National Defence logistics, facilitating smooth military base transits.
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-[#111827]/60 p-8 rounded-lg border border-slate-800/65 hover:border-blue-500/50 hover:bg-[#111827] transition-all duration-300 group">
+        <div class="h-12 w-12 bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center rounded-md mb-6 font-bold group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">03</div>
+        <h3 class="text-xl font-bold mb-3 text-white font-outfit">eManifest Customs Clearance</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">
+          Streamlined US/Canada border transits. We manage the digital validation and transmission of complex ACE and ACI eManifest paperwork beforehand.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fleet Showcase -->
+  <section id="fleet" class="py-24 bg-[#111827]/30 border-y border-slate-900/60 px-6">
+    <div class="max-w-7xl mx-auto space-y-16">
+      <div class="text-center space-y-4">
+        <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white font-outfit uppercase">Engineered Fleet Capabilities</h2>
+        <p class="text-slate-400 max-w-xl mx-auto">Providing structural and dimensional specifications for specialized military and commercial assets.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {fleetItems.map((item) => (
+          <div class="bg-[#0B0F19] rounded-lg border border-slate-800/60 overflow-hidden flex flex-col group hover:border-blue-500/30 transition-all duration-300">
+            <div class="p-8 flex-1 space-y-4 flex flex-col justify-between">
+              <div class="space-y-2">
+                <span class="text-xs font-semibold text-blue-400 uppercase tracking-widest">
+                  {item.data.militaryCleared ? "Military Relocation Spec" : "Dimensionally Adaptable"}
+                </span>
+                <h3 class="text-2xl font-bold text-white font-outfit">{item.data.title}</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                  {item.body}
+                </p>
+              </div>
+              <ul class="text-xs text-slate-500 space-y-1.5 border-t border-slate-800/40 pt-4">
+                <li>Max Payload Capacity: <span class="text-slate-300 font-medium">{item.data.capacityTonnage} Tons</span></li>
+                <li>Axle Layout: <span class="text-slate-300 font-medium">{item.data.axleConfiguration}</span></li>
+                {item.data.equipmentSpecs && (
+                  <li>Key Equipment Features:
+                    <ul class="list-disc pl-4 mt-1 space-y-1 text-slate-400">
+                      {item.data.equipmentSpecs.map((spec) => (
+                        <li>{spec}</li>
+                      ))}
+                    </ul>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Freight Quote Engine Promotion Section -->
+  <section id="quote" class="py-24 px-6 bg-[#111827]/10 border-t border-slate-900">
+    <div class="max-w-4xl mx-auto space-y-8 text-center">
+      <div class="space-y-4">
+        <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-blue-400 font-bold px-3 py-1 bg-blue-500/10 rounded-full border border-blue-500/20">
+          Integrated Dispatch Systems
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-black tracking-tight text-white font-outfit uppercase">Operational Procurement Engine</h2>
+        <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          Need a heavy-haul quote? Evaluate corridor constraints, height limits, and weight tolerances to allocate standard, RGN, or 13-axle combinations dynamically.
+        </p>
+      </div>
+
+      <div class="pt-4">
+        <a href="/quote" data-astro-prefetch class="inline-flex bg-blue-600 hover:bg-blue-500 border border-blue-500/30 text-white px-8 py-4 rounded-md font-semibold text-sm transition-all duration-300 shadow-lg shadow-blue-600/20 transform hover:-translate-y-0.5">
+          Launch Procurement Engine
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-16 border-t border-slate-900 bg-[#0B0F19] text-center space-y-4">
+    <span class="text-sm font-bold text-white font-outfit tracking-wide">#BRO TRANSPORT CORP.</span>
+    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-stakes military relocation and cross-border commercial heavy-haul networks.</p>
+    <p class="text-[10px] text-slate-600 pt-4">Built using zero-bloat static architecture and next-gen compiled components.</p>
+  </footer>
+</Layout>

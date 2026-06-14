@@ -1,0 +1,406 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Driver Compliance Gateway | #BRO Transport Corp." description="Progressive recruitment portal for high-stakes heavy-haul operations near CFB Borden. Security clearances, Controlled Goods verification, and driver intake.">
+  <!-- Navigation -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#0B0F19]/80 border-b border-slate-800/80" style="view-transition-name: main-header;">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/" class="flex items-center gap-2 group">
+        <div class="h-3 w-3 bg-blue-500 rounded-full animate-pulse group-hover:bg-blue-400 transition-colors"></div>
+        <span class="text-xl font-black tracking-wider text-white font-outfit">#BRO <span class="text-blue-500">TRANSPORT</span></span>
+      </a>
+      
+      <nav class="flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="/" class="hover:text-blue-400 transition-colors">Return Home</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <a href="tel:902-916-6936" class="bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all duration-300 text-blue-400 text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
+          <span>Call Desk: 902-916-6936</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Driver Registration Portal Hero -->
+  <section class="py-16 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(59,130,246,0.08),rgba(255,255,255,0))] border-b border-slate-900">
+    <div class="max-w-4xl mx-auto text-center space-y-6">
+      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-amber-500 font-bold px-3 py-1 bg-amber-500/10 rounded-full border border-amber-500/20">
+        Transport Canada Secure Portal
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-outfit uppercase">
+        Driver Compliance Gateway
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+         hauling military and high-value oversized freight out of CFB Borden requires security screening. Provide credentials to initiate the Controlled Goods Program (CGP) checks.
+      </p>
+    </div>
+  </section>
+
+  <!-- Multi-Step Driver Intake Form -->
+  <section class="py-16 px-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="bg-[#111827]/40 border border-slate-800/70 p-8 rounded-lg shadow-xl relative overflow-hidden" id="driver-portal-container">
+        <!-- Progress Steps -->
+        <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-4">
+          <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_REGISTRATION: STEP <span id="current-step-num">1</span> OF 3</span>
+          <div class="flex gap-2">
+            <div class="h-1.5 w-6 rounded-full bg-blue-600 step-dot"></div>
+            <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
+            <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
+          </div>
+        </div>
+
+        <form id="driver-compliance-form" class="space-y-6">
+          <!-- STEP 1: Personal & Lane Profile -->
+          <div class="step-panel space-y-6" data-step="1">
+            <div class="space-y-1">
+              <h3 class="text-lg font-bold text-white font-outfit uppercase">Driver Credentials</h3>
+              <p class="text-slate-400 text-xs">Verify contact coordinates and fleet equipment compatibility parameters.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label for="driverName" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Driver / Carrier Name</label>
+                <input type="text" id="driverName" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="John Doe" />
+              </div>
+              <div>
+                <label for="driverPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Cell Phone Number</label>
+                <input type="tel" id="driverPhone" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="902-555-0199" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label for="equipType" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Equipment Combination</label>
+                <select id="equipType" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm">
+                  <option value="multi-axle">Multi-Axle Heavy Combo (10+ axles)</option>
+                  <option value="rgn">Removable Gooseneck (RGN) / Lowboy</option>
+                  <option value="stepdeck">Step Deck / Flatbed</option>
+                  <option value="military-spec">Military Grade Container Transport</option>
+                </select>
+              </div>
+              <div>
+                <label for="preferredLanes" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Primary Lanes Focus</label>
+                <input type="text" id="preferredLanes" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., CFB Borden to Alberta Corridors" />
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: Compliance Clearances -->
+          <div class="step-panel space-y-6 hidden" data-step="2">
+            <div class="space-y-1">
+              <h3 class="text-lg font-bold text-white font-outfit uppercase">DND & Controlled Goods Screening</h3>
+              <p class="text-slate-400 text-xs">Verify Controlled Goods clearance compliance criteria.</p>
+            </div>
+
+            <div class="space-y-4 pt-2">
+              <!-- Checkbox 1 -->
+              <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
+                <input type="checkbox" id="citizenOrPR" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                <div class="space-y-0.5">
+                  <span class="text-sm font-bold text-white font-outfit">Canadian Citizenship / Permanent Resident Status</span>
+                  <p class="text-slate-500 text-xs leading-relaxed">
+                    Under CGP regulations, applicants must verify citizenship or resident status to transport DND assets.
+                  </p>
+                </div>
+              </label>
+
+              <!-- Checkbox 2 -->
+              <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
+                <input type="checkbox" id="cgpAuthorized" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                <div class="space-y-0.5">
+                  <span class="text-sm font-bold text-white font-outfit">Already CGP Registered (Optional)</span>
+                  <p class="text-slate-500 text-xs leading-relaxed">
+                    Check if you currently hold active security credentials registered under the Controlled Goods Program.
+                  </p>
+                </div>
+              </label>
+
+              <!-- Checkbox 3 -->
+              <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
+                <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                <div class="space-y-0.5">
+                  <span class="text-sm font-bold text-white font-outfit">Clean 3-Year Commercial Driver Abstract</span>
+                  <p class="text-slate-500 text-xs leading-relaxed">
+                    Verify that your commercial abstract contains zero heavy safety infractions or regulatory safety penalties.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- STEP 3: Secure Document Drag & Drop -->
+          <div class="step-panel space-y-6 hidden" data-step="3">
+            <div class="space-y-1">
+              <h3 class="text-lg font-bold text-white font-outfit uppercase">Secure Document Intake</h3>
+              <p class="text-slate-400 text-xs">Upload required credentials. Files are scanned locally before edge worker dispatch.</p>
+            </div>
+
+            <!-- Upload Box Mock -->
+            <div class="border-2 border-dashed border-slate-800 hover:border-blue-500/40 rounded-lg p-8 text-center cursor-pointer bg-[#0B0F19]/40 hover:bg-[#0b0f19]/60 transition-all space-y-4 group" id="upload-zone">
+              <div class="h-12 w-12 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm font-bold text-white" id="upload-status">Drag & Drop Driver Abstract, CV or CGP Form</p>
+                <p class="text-slate-500 text-xs">PDF, PNG, JPG, or DOCX formats accepted (Max 15MB size limit)</p>
+              </div>
+              <input type="file" id="file-uploader" class="hidden" />
+            </div>
+          </div>
+
+          <!-- Error/Validation Message -->
+          <div id="validation-errors" class="hidden text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
+
+          <!-- Navigation Buttons -->
+          <div class="flex justify-between items-center pt-4 border-t border-slate-800/50">
+            <button type="button" id="prev-btn" class="hidden bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white px-6 py-3 rounded-md font-semibold text-sm transition-all duration-300">
+              Previous Step
+            </button>
+            <div class="flex-1"></div>
+            <button type="button" id="next-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10">
+              Next Step
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-16 border-t border-slate-900 bg-[#0B0F19] text-center space-y-4">
+    <span class="text-sm font-bold text-white font-outfit tracking-wide">#BRO TRANSPORT CORP.</span>
+    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-stakes military relocation and cross-border commercial heavy-haul networks.</p>
+  </footer>
+</Layout>
+
+<script>
+  import { DriverApplicationSchema } from '../lib/schemas';
+
+  // State Management
+  let currentStep = 1;
+  const totalSteps = 3;
+  const STORAGE_KEY = 'bro_driver_compliance_flow';
+
+  // DOM Elements
+  const form = document.getElementById('driver-compliance-form') as HTMLFormElement;
+  const panels = document.querySelectorAll('.step-panel');
+  const dots = document.querySelectorAll('.step-dot');
+  const currentStepNum = document.getElementById('current-step-num');
+  const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
+  const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+  const errorBox = document.getElementById('validation-errors');
+  const uploadZone = document.getElementById('upload-zone');
+  const fileUploader = document.getElementById('file-uploader') as HTMLInputElement | null;
+  const uploadStatus = document.getElementById('upload-status');
+
+  // Input Getters
+  const getStringVal = (id: string) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    return el ? el.value.trim() : '';
+  };
+  const getSelectVal = (id: string) => {
+    const el = document.getElementById(id) as HTMLSelectElement | null;
+    return el ? el.value : '';
+  };
+  const getCheckVal = (id: string) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    return el ? el.checked : false;
+  };
+
+  // Step Switching
+  function showStep(step: number) {
+    panels.forEach((p) => {
+      const panelStep = parseInt(p.getAttribute('data-step') || '1');
+      if (panelStep === step) {
+        p.classList.remove('hidden');
+      } else {
+        p.classList.add('hidden');
+      }
+    });
+
+    dots.forEach((d, idx) => {
+      if (idx + 1 <= step) {
+        d.className = 'h-1.5 w-6 rounded-full bg-blue-600 step-dot';
+      } else {
+        d.className = 'h-1.5 w-6 rounded-full bg-slate-800 step-dot';
+      }
+    });
+
+    if (currentStepNum) currentStepNum.innerText = step.toString();
+
+    // Toggle nav buttons
+    if (step === 1) {
+      prevBtn.classList.add('hidden');
+    } else {
+      prevBtn.classList.remove('hidden');
+    }
+
+    if (step === totalSteps) {
+      nextBtn.innerText = 'Submit Security Clearance Profile';
+      nextBtn.className = 'bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
+    } else {
+      nextBtn.innerText = 'Next Step';
+      nextBtn.className = 'bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10';
+    }
+  }
+
+  // Local Storage Caching
+  function saveDriverProgress() {
+    const data = {
+      driverName: getStringVal('driverName'),
+      driverPhone: getStringVal('driverPhone'),
+      equipType: getSelectVal('equipType'),
+      preferredLanes: getStringVal('preferredLanes'),
+      citizenOrPR: getCheckVal('citizenOrPR'),
+      cgpAuthorized: getCheckVal('cgpAuthorized'),
+      hasCleanAbstract: getCheckVal('hasCleanAbstract'),
+      currentStep
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function loadDriverProgress() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+      const data = JSON.parse(saved);
+      const setStr = (id: string, val: string) => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el && val) el.value = val;
+      };
+      setStr('driverName', data.driverName);
+      setStr('driverPhone', data.driverPhone);
+      setStr('preferredLanes', data.preferredLanes);
+      
+      const select = document.getElementById('equipType') as HTMLSelectElement | null;
+      if (select && data.equipType) select.value = data.equipType;
+
+      const setCheck = (id: string, val: boolean) => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el) el.checked = val;
+      };
+      setCheck('citizenOrPR', data.citizenOrPR);
+      setCheck('cgpAuthorized', data.cgpAuthorized);
+      setCheck('hasCleanAbstract', data.hasCleanAbstract);
+
+      if (data.currentStep) {
+        currentStep = data.currentStep;
+        showStep(currentStep);
+      }
+    } catch (e) {
+      console.error('Failed to restore cached driver compliance progress', e);
+    }
+  }
+
+  // Initialize Data
+  loadDriverProgress();
+
+  // Drag & Drop Mock Trigger
+  uploadZone?.addEventListener('click', () => {
+    fileUploader?.click();
+  });
+
+  fileUploader?.addEventListener('change', () => {
+    if (fileUploader?.files && fileUploader.files.length > 0 && uploadStatus) {
+      uploadStatus.innerText = `📎 Selected: ${fileUploader.files[0].name} (${Math.round(fileUploader.files[0].size / 1024)} KB)`;
+      uploadStatus.className = 'text-sm font-bold text-emerald-400';
+    }
+  });
+
+  // Next / Submit Button
+  nextBtn?.addEventListener('click', () => {
+    if (errorBox) errorBox.classList.add('hidden');
+
+    // Step-by-Step input validations
+    if (currentStep === 1) {
+      const name = getStringVal('driverName');
+      const phone = getStringVal('driverPhone');
+      const lanes = getStringVal('preferredLanes');
+      if (!name || !phone || !lanes) {
+        if (errorBox) {
+          errorBox.innerText = 'Please complete all driver contact coordinates before moving forward.';
+          errorBox.classList.remove('hidden');
+        }
+        return;
+      }
+    }
+
+    if (currentStep === 2) {
+      const citizen = getCheckVal('citizenOrPR');
+      const clean = getCheckVal('hasCleanAbstract');
+      if (!citizen || !clean) {
+        if (errorBox) {
+          errorBox.innerText = 'Under Controlled Goods directives, Citizenship/PR status and a clean abstract are mandatory.';
+          errorBox.classList.remove('hidden');
+        }
+        return;
+      }
+    }
+
+    if (currentStep === totalSteps) {
+      const payload = {
+        driverName: getStringVal('driverName'),
+        driverPhone: getStringVal('driverPhone'),
+        equipType: getSelectVal('equipType'),
+        preferredLanes: getStringVal('preferredLanes'),
+        citizenOrPR: getCheckVal('citizenOrPR'),
+        cgpAuthorized: getCheckVal('cgpAuthorized'),
+        hasCleanAbstract: getCheckVal('hasCleanAbstract')
+      };
+
+      // Zod Validation
+      const result = DriverApplicationSchema.safeParse(payload);
+      if (!result.success) {
+        if (errorBox) {
+          errorBox.innerHTML = result.error.errors.map((e) => `• ${e.message}`).join('<br />');
+          errorBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Successful Application submission
+      if (errorBox) {
+        errorBox.className = 'text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-md';
+        errorBox.innerText = 'Controlled Goods criteria verified. Transmitting encrypted profile to CFB Borden database...';
+        errorBox.classList.remove('hidden');
+      }
+
+      setTimeout(() => {
+        alert("Compliance Profile submitted successfully! Edge servers generated DND intake logs.");
+        localStorage.removeItem(STORAGE_KEY);
+        form.reset();
+        if (uploadStatus) uploadStatus.innerText = 'Drag & Drop Driver Abstract, CV or CGP Form';
+        currentStep = 1;
+        showStep(1);
+        if (errorBox) errorBox.classList.add('hidden');
+      }, 1500);
+
+      return;
+    }
+
+    currentStep++;
+    showStep(currentStep);
+    saveDriverProgress();
+  });
+
+  // Prev Button
+  prevBtn?.addEventListener('click', () => {
+    if (errorBox) errorBox.classList.add('hidden');
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+      saveDriverProgress();
+    }
+  });
+
+  // Save progress on inputs
+  form?.addEventListener('input', () => {
+    saveDriverProgress();
+  });
+</script>

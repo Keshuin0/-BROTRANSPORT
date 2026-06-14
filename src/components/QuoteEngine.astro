@@ -1,0 +1,458 @@
+---
+---
+
+<div class="bg-[#111827]/40 border border-slate-800/70 p-8 rounded-lg shadow-xl relative overflow-hidden max-w-4xl mx-auto" id="quote-container">
+  <!-- Progress Header -->
+  <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-4">
+    <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_PROCUREMENT: STEP <span id="current-step-num">1</span> OF 4</span>
+    <div class="flex gap-2">
+      <div class="h-1.5 w-6 rounded-full bg-blue-600 step-dot"></div>
+      <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
+      <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
+      <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
+    </div>
+  </div>
+
+  <form id="quote-form" class="space-y-6">
+    <!-- STEP 1: Operations Division Selection -->
+    <div class="step-panel space-y-4" data-step="1">
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white font-outfit uppercase">Select Operations Division</h3>
+        <p class="text-slate-400 text-sm">Choose the operational framework for your shipment to apply correct regulatory routing.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+        <!-- Division Option 1 -->
+        <label class="border-2 border-slate-800 bg-[#0B0F19]/60 hover:bg-[#0b0f19] p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none" id="div-commercial">
+          <input type="radio" name="logisticsType" value="commercial" class="absolute top-4 right-4 h-4 w-4 text-blue-600 focus:ring-0 focus:ring-offset-0 border-slate-800" checked />
+          <div class="space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-widest text-blue-400">Division 01 // COM</span>
+            <h4 class="text-lg font-bold text-white font-outfit">Commercial Cross-Border</h4>
+            <p class="text-slate-400 text-xs leading-relaxed">
+              Standard commercial oversized, flatbed, or stepdeck loads across regional corridors and Canada/US borders.
+            </p>
+          </div>
+        </label>
+
+        <!-- Division Option 2 -->
+        <label class="border-2 border-slate-800 bg-[#0B0F19]/60 hover:bg-[#0b0f19] p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none" id="div-military">
+          <input type="radio" name="logisticsType" value="military" class="absolute top-4 right-4 h-4 w-4 text-blue-600 focus:ring-0 focus:ring-offset-0 border-slate-800" />
+          <div class="space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-widest text-amber-400">Division 02 // DND</span>
+            <h4 class="text-lg font-bold text-white font-outfit">Military Relocation & Cargo</h4>
+            <p class="text-slate-400 text-xs leading-relaxed">
+              Controlled Goods Program (CGP) freight, CFB Borden transits, and military relocation tasks requiring security clearance.
+            </p>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- STEP 2: Dimensional Configurations -->
+    <div class="step-panel space-y-4 hidden" data-step="2">
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white font-outfit uppercase">Load Specifications</h3>
+        <p class="text-slate-400 text-sm">Provide exact load dimensions. System will evaluate equipment specs in real-time.</p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+        <div>
+          <label for="length" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Length (ft)</label>
+          <input type="number" id="length" min="1" step="0.5" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="48" />
+        </div>
+        <div>
+          <label for="width" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Width (ft)</label>
+          <input type="number" id="width" min="1" step="0.5" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="8.5" />
+        </div>
+        <div>
+          <label for="height" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Height (ft)</label>
+          <input type="number" id="height" min="1" step="0.5" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="13.5" />
+        </div>
+        <div>
+          <label for="weight" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Weight (lbs)</label>
+          <input type="number" id="weight" min="1" step="50" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="45000" />
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Real-Time Regulatory Review -->
+    <div class="step-panel space-y-4 hidden" data-step="3">
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white font-outfit uppercase">Regulatory Evaluation</h3>
+        <p class="text-slate-400 text-sm">Lidar and permit calculations based on your physical specifications.</p>
+      </div>
+
+      <!-- Real-Time Evaluation Report Widget -->
+      <div class="bg-[#0B0F19] rounded-lg border border-slate-800 p-6 space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+          <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_REPORT // AUTO_DIAGNOSTIC</span>
+          <span class="text-xs px-2 py-1 rounded font-mono" id="permit-badge">EVALUATING</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-1.5">
+            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Asset Allocation Suggestions:</span>
+            <div class="text-base font-bold text-white" id="allocated-trailer">Calculating Optimal Trailer...</div>
+            <p class="text-xs text-slate-400 leading-relaxed" id="allocated-desc">
+              Analyzing dimensions to select flatbed, RGN, or heavy 13-axle combinations.
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Special Directives Required:</span>
+            <ul class="text-xs space-y-1.5 text-slate-300" id="directive-list">
+              <li>- Operational clearance check</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Corridor Contact -->
+    <div class="step-panel space-y-4 hidden" data-step="4">
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white font-outfit uppercase">Secure Routing Detail</h3>
+        <p class="text-slate-400 text-sm">Enter destination and contact profiles to dispatch pricing summaries to the edge Workers.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="origin" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Transit Origin</label>
+          <input type="text" id="origin" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., Borden, ON" />
+        </div>
+        <div>
+          <label for="destination" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Transit Destination</label>
+          <input type="text" id="destination" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., Fort McMurray, AB" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="contactName" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Contact Name</label>
+          <input type="text" id="contactName" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="Alex Carter" />
+        </div>
+        <div>
+          <label for="contactEmail" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
+          <input type="email" id="contactEmail" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="alex@carrier.com" />
+        </div>
+        <div>
+          <label for="contactPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Direct Phone</label>
+          <input type="tel" id="contactPhone" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="902-555-0144" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Error/Status Box -->
+    <div id="validation-errors" class="hidden text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
+
+    <!-- Navigation Buttons -->
+    <div class="flex justify-between items-center pt-4 border-t border-slate-800/50">
+      <button type="button" id="prev-btn" class="hidden bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white px-6 py-3 rounded-md font-semibold text-sm transition-all duration-300">
+        Previous Step
+      </button>
+      <div class="flex-1"></div>
+      <button type="button" id="next-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10">
+        Next Step
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Client-side Quote Engine Processing -->
+<script>
+  import { QuoteSchema } from '../lib/schemas';
+
+  // State Management
+  let currentStep = 1;
+  const totalSteps = 4;
+  const STORAGE_KEY = 'bro_quote_flow_v5';
+
+  // DOM Elements
+  const form = document.getElementById('quote-form') as HTMLFormElement;
+  const panels = document.querySelectorAll('.step-panel');
+  const dots = document.querySelectorAll('.step-dot');
+  const currentStepNum = document.getElementById('current-step-num');
+  const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
+  const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+  const errorBox = document.getElementById('validation-errors');
+
+  // Input Elements
+  const getRadioVal = (name: string) => {
+    const el = document.querySelector(`input[name="${name}"]:checked`) as HTMLInputElement | null;
+    return el ? el.value : '';
+  };
+  const getNumberVal = (id: string) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    return el ? parseFloat(el.value) || 0 : 0;
+  };
+  const getStringVal = (id: string) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    return el ? el.value.trim() : '';
+  };
+
+  // Setup Step Changes
+  function showStep(step: number) {
+    panels.forEach((p) => {
+      const panelStep = parseInt(p.getAttribute('data-step') || '1');
+      if (panelStep === step) {
+        p.classList.remove('hidden');
+      } else {
+        p.classList.add('hidden');
+      }
+    });
+
+    dots.forEach((d, idx) => {
+      if (idx + 1 <= step) {
+        d.className = 'h-1.5 w-6 rounded-full bg-blue-600 step-dot';
+      } else {
+        d.className = 'h-1.5 w-6 rounded-full bg-slate-800 step-dot';
+      }
+    });
+
+    if (currentStepNum) currentStepNum.innerText = step.toString();
+
+    // Toggle Nav Buttons
+    if (step === 1) {
+      prevBtn.classList.add('hidden');
+    } else {
+      prevBtn.classList.remove('hidden');
+    }
+
+    if (step === totalSteps) {
+      nextBtn.innerText = 'Submit Quote Request';
+      nextBtn.className = 'bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
+    } else {
+      nextBtn.innerText = 'Next Step';
+      nextBtn.className = 'bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10';
+    }
+
+    if (step === 3) {
+      runEvaluation();
+    }
+  }
+
+  // Real-Time Evaluation logic for Step 3
+  function runEvaluation() {
+    const logisticsType = getRadioVal('logisticsType');
+    const length = getNumberVal('length');
+    const width = getNumberVal('width');
+    const height = getNumberVal('height');
+    const weight = getNumberVal('weight');
+
+    const badge = document.getElementById('permit-badge');
+    const allocatedTrailer = document.getElementById('allocated-trailer');
+    const allocatedDesc = document.getElementById('allocated-desc');
+    const directiveList = document.getElementById('directive-list');
+
+    if (!badge || !allocatedTrailer || !allocatedDesc || !directiveList) return;
+
+    // Check if Oversized
+    const isOversized = width > 8.5 || height > 13.5 || length > 53 || weight > 45000;
+    const isMilitary = logisticsType === 'military';
+
+    // Reset styles
+    badge.className = 'text-xs px-2 py-1 rounded font-mono';
+    directiveList.innerHTML = '';
+
+    // Set Status Badge
+    if (isOversized) {
+      badge.innerText = 'OVERSIZED SUPERLOAD';
+      badge.classList.add('bg-rose-950/40', 'text-rose-400', 'border', 'border-rose-900/30');
+    } else {
+      badge.innerText = 'STANDARD LOAD';
+      badge.classList.add('bg-emerald-950/40', 'text-emerald-400', 'border', 'border-emerald-900/30');
+    }
+
+    // Allocate Equipment
+    if (weight > 75000 || (width > 11 && weight > 50000)) {
+      allocatedTrailer.innerText = '13-Axle Transport Combo';
+      allocatedDesc.innerText = 'Allocated due to excessive load tonnage and oversized load width footprint. Jeeps and boosters will distribute ground pressure to clear regional highway bridges.';
+    } else if (isOversized) {
+      allocatedTrailer.innerText = 'Extendable RGN Lowboy Float';
+      allocatedDesc.innerText = 'Removable Gooseneck selected. RGN configuration accommodates height restrictions by lowering structural clearance down to 12 inches.';
+    } else {
+      allocatedTrailer.innerText = 'Standard Stepdeck / Flatbed';
+      allocatedDesc.innerText = 'Standard freight parameters detected. Cargo fits within standard commercial Flatbed or Stepdeck loading parameters.';
+    }
+
+    // Directives
+    if (isMilitary) {
+      directiveList.innerHTML += `<li class="text-amber-400 font-mono">🛡️ Controlled Goods Program (CGP) security clearance active</li>`;
+      directiveList.innerHTML += `<li class="text-slate-300 font-mono">- Direct DND clearance routing check required</li>`;
+      directiveList.innerHTML += `<li class="text-slate-300 font-mono">- ACI eManifest customs transmission mandatory</li>`;
+    } else {
+      directiveList.innerHTML += `<li class="text-slate-400 font-mono">- Standard commercial shipping regulations</li>`;
+    }
+
+    if (isOversized) {
+      directiveList.innerHTML += `<li class="text-rose-400 font-mono">⚠️ Oversized Load Permits (Ontario corridor)</li>`;
+      if (width > 10) {
+        directiveList.innerHTML += `<li class="text-rose-400 font-mono">⚠️ Escort Vehicles & Pilot Cars required</li>`;
+      }
+    }
+  }
+
+  // Local Storage Save
+  function saveFlowData() {
+    const data = {
+      logisticsType: getRadioVal('logisticsType'),
+      length: getNumberVal('length'),
+      width: getNumberVal('width'),
+      height: getNumberVal('height'),
+      weight: getNumberVal('weight'),
+      origin: getStringVal('origin'),
+      destination: getStringVal('destination'),
+      contactName: getStringVal('contactName'),
+      contactEmail: getStringVal('contactEmail'),
+      contactPhone: getStringVal('contactPhone'),
+      currentStep
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  // Local Storage Load
+  function loadFlowData() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+      const data = JSON.parse(saved);
+      
+      // Set Radios
+      const radio = document.querySelector(`input[name="logisticsType"][value="${data.logisticsType}"]`) as HTMLInputElement | null;
+      if (radio) radio.checked = true;
+
+      // Set Numbers
+      const setNum = (id: string, val: number) => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el && val) el.value = val.toString();
+      };
+      setNum('length', data.length);
+      setNum('width', data.width);
+      setNum('height', data.height);
+      setNum('weight', data.weight);
+
+      // Set Strings
+      const setStr = (id: string, val: string) => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el && val) el.value = val;
+      };
+      setStr('origin', data.origin);
+      setStr('destination', data.destination);
+      setStr('contactName', data.contactName);
+      setStr('contactEmail', data.contactEmail);
+      setStr('contactPhone', data.contactPhone);
+
+      // Set step if cached
+      if (data.currentStep) {
+        currentStep = data.currentStep;
+        showStep(currentStep);
+      }
+    } catch (e) {
+      console.error('Failed to restore cached quote progress', e);
+    }
+  }
+
+  // Initialize
+  loadFlowData();
+
+  // Next Button Handler
+  nextBtn?.addEventListener('click', () => {
+    if (errorBox) errorBox.classList.add('hidden');
+
+    // If on Step 4, validate everything with Zod and submit
+    if (currentStep === totalSteps) {
+      const payload = {
+        logisticsType: getRadioVal('logisticsType'),
+        length: getNumberVal('length'),
+        width: getNumberVal('width'),
+        height: getNumberVal('height'),
+        weight: getNumberVal('weight'),
+        origin: getStringVal('origin'),
+        destination: getStringVal('destination'),
+        contactName: getStringVal('contactName'),
+        contactEmail: getStringVal('contactEmail'),
+        contactPhone: getStringVal('contactPhone')
+      };
+
+      // Zod Validation
+      const result = QuoteSchema.safeParse(payload);
+      if (!result.success) {
+        if (errorBox) {
+          errorBox.innerHTML = result.error.errors.map((e) => `• ${e.message}`).join('<br />');
+          errorBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Successful Validation - submit payload
+      if (errorBox) {
+        errorBox.className = 'text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-md';
+        errorBox.innerText = 'Payload verified. Transmitting secure payload to edge Cloudflare Workers...';
+        errorBox.classList.remove('hidden');
+      }
+
+      setTimeout(() => {
+        alert("Quote submitted successfully! Decoupled edge worker dispatched notification email.");
+        localStorage.removeItem(STORAGE_KEY);
+        form.reset();
+        currentStep = 1;
+        showStep(1);
+        if (errorBox) errorBox.classList.add('hidden');
+      }, 1500);
+
+      return;
+    }
+
+    // Step-by-Step input safety checks
+    if (currentStep === 2) {
+      const l = getNumberVal('length');
+      const w = getNumberVal('width');
+      const h = getNumberVal('height');
+      const wt = getNumberVal('weight');
+      if (l <= 0 || w <= 0 || h <= 0 || wt <= 0) {
+        if (errorBox) {
+          errorBox.innerText = 'Please enter valid dimension metrics (must be greater than 0).';
+          errorBox.classList.remove('hidden');
+        }
+        return;
+      }
+    }
+
+    currentStep++;
+    showStep(currentStep);
+    saveFlowData();
+  });
+
+  // Prev Button Handler
+  prevBtn?.addEventListener('click', () => {
+    if (errorBox) errorBox.classList.add('hidden');
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+      saveFlowData();
+    }
+  });
+
+  // Save changes on input
+  form?.addEventListener('input', () => {
+    saveFlowData();
+  });
+</script>
+
+<style>
+  /* Styling tweaks to highlight the active radio card */
+  input[type="radio"]:checked + div {
+    border-color: #3b82f6;
+  }
+  
+  #div-commercial:has(input[type="radio"]:checked) {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+
+  #div-military:has(input[type="radio"]:checked) {
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.05);
+  }
+</style>

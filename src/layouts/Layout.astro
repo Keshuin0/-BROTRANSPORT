@@ -1,0 +1,41 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = "#BRO Transport Corp. | Elite Heavy-Haul Logistics & Dispatch", 
+  description = "High-performance heavy-haul dispatching and logistics coordinator near CFB Borden. Managed cross-border operations, permit loads, and DND compliance."
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- SEO Meta Tags -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    
+    <!-- Preload Local WOFF2 Fonts -->
+    <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    
+    <!-- Client Router for seamless Transitions -->
+    <ClientRouter />
+  </head>
+  <body class="bg-[#0B0F19] text-slate-100 min-h-screen selection:bg-blue-500/30 selection:text-blue-200">
+    <slot />
+  </body>
+</html>
