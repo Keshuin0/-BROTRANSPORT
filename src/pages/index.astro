@@ -21,10 +21,10 @@ const getFleetImage = (slug: string) => {
   <!-- Navigation -->
   <header class="sticky top-0 z-50 backdrop-blur-md bg-[#05070D]/85 border-b border-slate-900" style="view-transition-name: main-header;">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <div class="h-3 w-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_#3b82f6]"></div>
-        <span class="text-xl font-black tracking-wider text-white font-outfit">#BRO <span class="text-blue-500">TRANSPORT</span></span>
-      </div>
+      <a href={base} class="flex items-center gap-2 group">
+        <div class="h-3 w-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_#3b82f6] group-hover:bg-blue-400 transition-colors shrink-0"></div>
+        <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90" />
+      </a>
       
       <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-300">
         <a href="#divisions" class="hover:text-blue-400 transition-colors">Operations</a>
