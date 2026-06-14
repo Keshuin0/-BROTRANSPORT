@@ -18,6 +18,7 @@
     "@keystatic/core": "^0.5.50",
     "@vite-pwa/astro": "^1.2.0",
     "astro": "^5.0.0",
+    "jimp": "^1.6.1",
     "motion": "^12.40.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
