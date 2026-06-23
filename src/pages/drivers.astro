@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<Layout title="Driver Compliance Gateway | #BRO Transport Corp." description="Progressive recruitment portal for high-stakes heavy-haul operations near CFB Borden. Security clearances, Controlled Goods verification, and driver intake.">
+<Layout title="Driver Intake Portal | #BRO Transport Corp." description="Progressive recruitment portal for high-stakes specialized commercial heavy-haul operations. Driver qualifications, safety certifications, and intake.">
   <!-- Navigation -->
   <header class="sticky top-0 z-50 backdrop-blur-md bg-[#0B0F19]/80 border-b border-slate-800/80" style="view-transition-name: main-header;">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -31,10 +31,10 @@ const base = import.meta.env.BASE_URL;
         Transport Canada Secure Portal
       </span>
       <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-outfit uppercase">
-        Driver Compliance Gateway
+        Driver Intake Portal
       </h1>
       <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-         hauling military and high-value oversized freight out of CFB Borden requires security screening. Provide credentials to initiate the Controlled Goods Program (CGP) checks.
+         Specialized heavy-haul operations require strict safety compliance. Provide your driver credentials and safety certifications to register for our commercial transport network.
       </p>
     </div>
   </section>
@@ -79,12 +79,12 @@ const base = import.meta.env.BASE_URL;
                   <option value="multi-axle">Multi-Axle Heavy Combo (10+ axles)</option>
                   <option value="rgn">Removable Gooseneck (RGN) / Lowboy</option>
                   <option value="stepdeck">Step Deck / Flatbed</option>
-                  <option value="military-spec">Military Grade Container Transport</option>
+                  <option value="heavy-spec">Heavy Duty Spec Transport</option>
                 </select>
               </div>
               <div>
                 <label for="preferredLanes" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Primary Lanes Focus</label>
-                <input type="text" id="preferredLanes" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., CFB Borden to Alberta Corridors" />
+                <input type="text" id="preferredLanes" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., PEI to Ontario Corridors" />
               </div>
             </div>
           </div>
@@ -92,29 +92,29 @@ const base = import.meta.env.BASE_URL;
           <!-- STEP 2: Compliance Clearances -->
           <div class="step-panel space-y-6 hidden" data-step="2">
             <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-outfit uppercase">DND & Controlled Goods Screening</h3>
-              <p class="text-slate-400 text-xs">Verify Controlled Goods clearance compliance criteria.</p>
+              <h3 class="text-lg font-bold text-white font-outfit uppercase">Safety Certifications & Qualifications</h3>
+              <p class="text-slate-400 text-xs">Verify safety qualification and licensing compliance criteria.</p>
             </div>
 
             <div class="space-y-4 pt-2">
               <!-- Checkbox 1 -->
               <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
-                <input type="checkbox" id="citizenOrPR" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
                 <div class="space-y-0.5">
-                  <span class="text-sm font-bold text-white font-outfit">Canadian Citizenship / Permanent Resident Status</span>
+                  <span class="text-sm font-bold text-white font-outfit">Class 1 / AZ Commercial Driver's License</span>
                   <p class="text-slate-500 text-xs leading-relaxed">
-                    Under CGP regulations, applicants must verify citizenship or resident status to transport DND assets.
+                    Applicants must verify they hold a valid Class 1 or AZ Commercial Driver's License in good standing.
                   </p>
                 </div>
               </label>
 
               <!-- Checkbox 2 -->
               <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
-                <input type="checkbox" id="cgpAuthorized" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
                 <div class="space-y-0.5">
-                  <span class="text-sm font-bold text-white font-outfit">Already CGP Registered (Optional)</span>
+                  <span class="text-sm font-bold text-white font-outfit">COR / Safety Certified</span>
                   <p class="text-slate-500 text-xs leading-relaxed">
-                    Check if you currently hold active security credentials registered under the Controlled Goods Program.
+                    Check if you hold current Certificate of Recognition (COR) or equivalent industrial safety certifications.
                   </p>
                 </div>
               </label>
@@ -147,7 +147,7 @@ const base = import.meta.env.BASE_URL;
                 </svg>
               </div>
               <div class="space-y-1">
-                <p class="text-sm font-bold text-white" id="upload-status">Drag & Drop Driver Abstract, CV or CGP Form</p>
+                <p class="text-sm font-bold text-white" id="upload-status">Drag & Drop Driver Abstract, CV or Safety Certificates</p>
                 <p class="text-slate-500 text-xs">PDF, PNG, JPG, or DOCX formats accepted (Max 15MB size limit)</p>
               </div>
               <input type="file" id="file-uploader" class="hidden" />
@@ -180,7 +180,7 @@ const base = import.meta.env.BASE_URL;
   <!-- Footer -->
   <footer class="py-16 border-t border-slate-900 bg-[#0B0F19] text-center space-y-4">
     <span class="text-sm font-bold text-white font-outfit tracking-wide">#BRO TRANSPORT CORP.</span>
-    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-stakes military relocation and cross-border commercial heavy-haul networks.</p>
+    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-stakes industrial logistics and cross-border commercial heavy-haul networks.</p>
   </footer>
 </Layout>
 
@@ -280,7 +280,7 @@ const base = import.meta.env.BASE_URL;
     }
 
     if (step === totalSteps) {
-      nextBtn.innerText = 'Submit Security Clearance Profile';
+      nextBtn.innerText = 'Submit Driver Qualifications Profile';
       nextBtn.className = 'bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
     } else {
       nextBtn.innerText = 'Next Step';
@@ -299,8 +299,8 @@ const base = import.meta.env.BASE_URL;
       driverPhone: getStringVal('driverPhone'),
       equipType: getSelectVal('equipType'),
       preferredLanes: getStringVal('preferredLanes'),
-      citizenOrPR: getCheckVal('citizenOrPR'),
-      cgpAuthorized: getCheckVal('cgpAuthorized'),
+      class1OrAz: getCheckVal('class1OrAz'),
+      safetyCertified: getCheckVal('safetyCertified'),
       hasCleanAbstract: getCheckVal('hasCleanAbstract'),
       currentStep
     };
@@ -328,8 +328,8 @@ const base = import.meta.env.BASE_URL;
         const el = document.getElementById(id) as HTMLInputElement | null;
         if (el) el.checked = val;
       };
-      setCheck('citizenOrPR', data.citizenOrPR);
-      setCheck('cgpAuthorized', data.cgpAuthorized);
+      setCheck('class1OrAz', data.class1OrAz);
+      setCheck('safetyCertified', data.safetyCertified);
       setCheck('hasCleanAbstract', data.hasCleanAbstract);
 
       if (data.currentStep) {
@@ -375,11 +375,11 @@ const base = import.meta.env.BASE_URL;
     }
 
     if (currentStep === 2) {
-      const citizen = getCheckVal('citizenOrPR');
+      const class1 = getCheckVal('class1OrAz');
       const clean = getCheckVal('hasCleanAbstract');
-      if (!citizen || !clean) {
+      if (!class1 || !clean) {
         if (errorBox) {
-          errorBox.innerText = 'Under Controlled Goods directives, Citizenship/PR status and a clean abstract are mandatory.';
+          errorBox.innerText = 'Class 1 / AZ Commercial Driver\'s License and a clean abstract are mandatory.';
           errorBox.classList.remove('hidden');
         }
         return;
@@ -392,8 +392,8 @@ const base = import.meta.env.BASE_URL;
         driverPhone: getStringVal('driverPhone'),
         equipType: getSelectVal('equipType'),
         preferredLanes: getStringVal('preferredLanes'),
-        citizenOrPR: getCheckVal('citizenOrPR'),
-        cgpAuthorized: getCheckVal('cgpAuthorized'),
+        class1OrAz: getCheckVal('class1OrAz'),
+        safetyCertified: getCheckVal('safetyCertified'),
         hasCleanAbstract: getCheckVal('hasCleanAbstract'),
         turnstileToken: turnstileToken
       };
@@ -411,7 +411,7 @@ const base = import.meta.env.BASE_URL;
       // Successful Application submission
       if (errorBox) {
         errorBox.className = 'text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-md';
-        errorBox.innerText = 'Controlled Goods criteria verified. Transmitting encrypted profile to CFB Borden database...';
+        errorBox.innerText = 'Safety criteria verified. Transmitting encrypted profile to logistics network database...';
         errorBox.classList.remove('hidden');
       }
 
@@ -434,11 +434,11 @@ const base = import.meta.env.BASE_URL;
         return data;
       })
       .then((data) => {
-        alert(`Compliance Profile submitted successfully! Decoupled edge worker response: ${data.message}`);
+        alert(`Driver profile submitted successfully! Decoupled edge worker response: ${data.message}`);
         localStorage.removeItem(STORAGE_KEY);
         form.reset();
         if (uploadStatus) {
-          uploadStatus.innerText = 'Drag & Drop Driver Abstract, CV or CGP Form';
+          uploadStatus.innerText = 'Drag & Drop Driver Abstract, CV or Safety Certificates';
           uploadStatus.className = 'text-sm font-bold text-white';
         }
         currentStep = 1;

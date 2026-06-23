@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const QuoteSchema = z.object({
-  logisticsType: z.enum(['commercial', 'military'], {
+  logisticsType: z.enum(['commercial', 'industrial'], {
     errorMap: () => ({ message: "Select a valid operations division." })
   }),
   length: z.number().min(1, "Length must be at least 1 foot."),
@@ -19,15 +19,15 @@ export const QuoteSchema = z.object({
 export const DriverApplicationSchema = z.object({
   driverName: z.string().min(2, "Driver name is required."),
   driverPhone: z.string().min(10, "Valid contact number is required."),
-  equipType: z.enum(['multi-axle', 'rgn', 'stepdeck', 'military-spec'], {
+  equipType: z.enum(['multi-axle', 'rgn', 'stepdeck', 'heavy-spec'], {
     errorMap: () => ({ message: "Select a valid trailer combo." })
   }),
   preferredLanes: z.string().min(3, "Primary lanes must be detailed."),
-  citizenOrPR: z.literal(true, {
-    errorMap: () => ({ message: "Canadian Citizenship or Permanent Residency is required for Controlled Goods clearances." })
+  class1OrAz: z.literal(true, {
+    errorMap: () => ({ message: "A valid Class 1 or AZ Commercial Driver's License is required." })
   }),
-  cgpAuthorized: z.boolean({
-    required_error: "Declare your CGP authorization status."
+  safetyCertified: z.boolean({
+    required_error: "Declare your safety certification status."
   }),
   hasCleanAbstract: z.literal(true, {
     errorMap: () => ({ message: "A clean 3-year commercial driver abstract is mandatory." })
