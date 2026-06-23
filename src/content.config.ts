@@ -7,7 +7,7 @@ const fleet = defineCollection({
     title: z.string(),
     capacityTonnage: z.number(),
     axleConfiguration: z.string(),
-    militaryCleared: z.boolean().default(false),
+    superloadSpec: z.boolean().default(false),
     equipmentSpecs: z.array(z.string()).optional(),
   })
 });

@@ -35,13 +35,13 @@
         </label>
 
         <!-- Division Option 2 -->
-        <label class="border-2 border-slate-800 bg-[#0B0F19]/60 hover:bg-[#0b0f19] p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none" id="div-military">
-          <input type="radio" name="logisticsType" value="military" class="absolute top-4 right-4 h-4 w-4 text-blue-600 focus:ring-0 focus:ring-offset-0 border-slate-800" />
+        <label class="border-2 border-slate-800 bg-[#0B0F19]/60 hover:bg-[#0b0f19] p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none" id="div-industrial">
+          <input type="radio" name="logisticsType" value="industrial" class="absolute top-4 right-4 h-4 w-4 text-blue-600 focus:ring-0 focus:ring-offset-0 border-slate-800" />
           <div class="space-y-2">
-            <span class="text-xs font-semibold uppercase tracking-widest text-amber-400">Division 02 // DND</span>
-            <h4 class="text-lg font-bold text-white font-outfit">Military Relocation & Cargo</h4>
+            <span class="text-xs font-semibold uppercase tracking-widest text-amber-400">Division 02 // IND</span>
+            <h4 class="text-lg font-bold text-white font-outfit">Specialized Industrial</h4>
             <p class="text-slate-400 text-xs leading-relaxed">
-              Controlled Goods Program (CGP) freight, CFB Borden transits, and military relocation tasks requiring security clearance.
+              Superload specs, heavy industrial machinery, and infrastructure components requiring route surveys and specialized permits.
             </p>
           </div>
         </label>
@@ -118,7 +118,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="origin" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Transit Origin</label>
-          <input type="text" id="origin" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., Borden, ON" />
+          <input type="text" id="origin" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., Charlottetown, PE" />
         </div>
         <div>
           <label for="destination" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Transit Destination</label>
@@ -290,7 +290,7 @@
 
     // Check if Oversized
     const isOversized = width > 8.5 || height > 13.5 || length > 53 || weight > 45000;
-    const isMilitary = logisticsType === 'military';
+    const isIndustrial = logisticsType === 'industrial';
 
     // Reset styles
     badge.className = 'text-xs px-2 py-1 rounded font-mono';
@@ -318,9 +318,9 @@
     }
 
     // Directives
-    if (isMilitary) {
-      directiveList.innerHTML += `<li class="text-amber-400 font-mono">🛡️ Controlled Goods Program (CGP) security clearance active</li>`;
-      directiveList.innerHTML += `<li class="text-slate-300 font-mono">- Direct DND clearance routing check required</li>`;
+    if (isIndustrial) {
+      directiveList.innerHTML += `<li class="text-amber-400 font-mono">📋 Route survey & infrastructure assessment active</li>`;
+      directiveList.innerHTML += `<li class="text-slate-300 font-mono">- Multi-jurisdictional permit filings required</li>`;
       directiveList.innerHTML += `<li class="text-slate-300 font-mono">- ACI eManifest customs transmission mandatory</li>`;
     } else {
       directiveList.innerHTML += `<li class="text-slate-400 font-mono">- Standard commercial shipping regulations</li>`;
@@ -524,7 +524,7 @@
     background-color: rgba(59, 130, 246, 0.05);
   }
 
-  #div-military:has(input[type="radio"]:checked) {
+  #div-industrial:has(input[type="radio"]:checked) {
     border-color: #f59e0b;
     background-color: rgba(245, 158, 11, 0.05);
   }
