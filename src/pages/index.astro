@@ -79,14 +79,17 @@ const getFleetImage = (id: string) => {
     <div class="max-w-4xl mx-auto space-y-8" id="operations-tabs-container">
       <!-- Tabs Navigation -->
       <div class="flex flex-col sm:flex-row gap-2 border-b border-slate-900 pb-2">
-        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-xs uppercase tracking-wider font-bold border border-blue-500/40 bg-blue-950/20 text-white transition-all duration-300 tab-btn active" data-target="tab-heavy">
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-blue-500/40 bg-blue-950/20 text-white transition-all duration-300 tab-btn active" data-target="tab-heavy">
           DIV_01 // SPECIALIZED HEAVY-HAUL
         </button>
-        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-xs uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-permits">
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-permits">
           DIV_02 // PERMITS & ESCORTS
         </button>
-        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-xs uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-customs">
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-customs">
           DIV_03 // CUSTOMS eMANIFEST
+        </button>
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-tracker">
+          DIV_04 // LIVE SHIPMENT TRACKER
         </button>
       </div>
 
@@ -171,6 +174,45 @@ const getFleetImage = (id: string) => {
             </div>
             <div class="rounded-lg overflow-hidden border border-slate-900/60 relative h-60 md:h-auto">
               <img src={`${base}images/rgn-lowboy.png`} alt="Cross-border cargo" class="w-full h-full object-cover" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Live Telemetry Tracker -->
+        <div class="tab-panel space-y-6 hidden" id="tab-tracker">
+          <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg space-y-6">
+            <div class="space-y-2">
+              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 04 // Live Shipment Telemetry Console</h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                Connect to active fleet transit beacons. Enter a valid secure load key below to query live coordinate logs, convoy velocities, and transshipment metrics.
+              </p>
+            </div>
+
+            <!-- Tracker Terminal Console Wrapper -->
+            <div class="bg-black/80 border border-slate-800 rounded-lg p-6 font-mono text-xs space-y-4 relative scanlines cyber-corners shadow-xl">
+              <div class="flex items-center justify-between border-b border-slate-950 pb-3">
+                <span class="text-blue-500 font-bold flex items-center gap-1.5">
+                  <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                  SYS_TRACKER_GATEWAY // SECURE PORTAL
+                </span>
+                <span class="text-slate-500 text-[10px]">UPLINK STATUS: ESTABLISHED</span>
+              </div>
+
+              <!-- Console Input Area -->
+              <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1 flex items-center bg-[#05070D] border border-slate-850 rounded px-3 py-2.5 text-slate-300 focus-within:border-blue-500 transition-colors">
+                  <span class="text-blue-500 font-bold mr-2">&gt; INPUT SECURE LOAD KEY:</span>
+                  <input type="text" id="telemetry-input" class="w-full bg-transparent focus:outline-none text-white text-xs placeholder:text-slate-700 uppercase" placeholder="e.g. BRO-7740" maxlength="15" autocomplete="off" />
+                </div>
+                <button type="button" id="telemetry-query-btn" class="bg-blue-600 hover:bg-blue-500 border border-blue-500/20 text-white font-bold px-6 py-2.5 rounded text-xs transition-all uppercase cursor-pointer">
+                  Query Uplink
+                </button>
+              </div>
+
+              <!-- Console output panel -->
+              <div id="telemetry-output-panel" class="hidden border border-slate-900 bg-slate-950/70 p-4 rounded text-slate-400 min-h-[160px] max-h-[300px] overflow-y-auto space-y-1.5 select-text leading-relaxed">
+                <!-- Javascript will inject typing outputs here -->
+              </div>
             </div>
           </div>
         </div>
@@ -280,12 +322,12 @@ const getFleetImage = (id: string) => {
       <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg relative overflow-hidden font-mono text-xs text-slate-400 space-y-4">
         <div class="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full blur-2xl"></div>
         <p class="italic leading-relaxed text-slate-300">
-          "#BRO Transport coordinated the relocation of our heavy power generator equipment to the Alberta hub. Outstanding permit management and zero corridor delay clearance. They are our go-to superload carrier."
+          "#BRO Transport coordinated the relocation of our 450-ton heavy generator hubs across the Alberta corridor. Flawless multi-jurisdictional permit routing, active pilot escorts, and zero transit delays. They are the absolute pinnacle of heavy-haul logistics."
         </p>
         <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
           <div>
-            <span class="text-white font-bold block">Logistics Manager</span>
-            <span class="text-slate-500 text-[10px]">Industrial Power Equipment OEM</span>
+            <span class="text-white font-bold block">Marcus Vance</span>
+            <span class="text-slate-500 text-[10px]">Lead Logistics Director, Atlantic Renewable Energy Group</span>
           </div>
           <span class="text-blue-500 font-bold">// VERIFIED</span>
         </div>
@@ -294,12 +336,12 @@ const getFleetImage = (id: string) => {
       <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg relative overflow-hidden font-mono text-xs text-slate-400 space-y-4">
         <div class="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full blur-2xl"></div>
         <p class="italic leading-relaxed text-slate-300">
-          "Oversized permit compliance is non-negotiable for our operations. #BRO's drivers arrived fully certified, route logs synced, and executed complex industrial site transits with absolute precision."
+          "Transporting oversized substation transformers requires precision clearance mapping. #BRO's interactive console diagnostics and real-time transit telemetry made this our most secure transport ever. Fully COR-compliant execution."
         </p>
         <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
           <div>
-            <span class="text-white font-bold block">Senior Project Manager</span>
-            <span class="text-slate-500 text-[10px]">Global Infrastructure Partners</span>
+            <span class="text-white font-bold block">Sarah Jenkins</span>
+            <span class="text-slate-500 text-[10px]">Operations Supervisor, Apex Grid Infrastructure</span>
           </div>
           <span class="text-amber-500 font-bold">// SECURE</span>
         </div>
@@ -346,70 +388,189 @@ const getFleetImage = (id: string) => {
 </Layout>
 
 <!-- Client Side Tabs Handler -->
-<script>  function setupTabs() {
-    const btns = document.querySelectorAll('.tab-btn');
-    const panels = document.querySelectorAll('.tab-panel');
-    const loader = document.getElementById('tab-terminal-loader');
-    const loaderCmd = document.getElementById('terminal-loader-cmd');
-    const loaderBar = document.getElementById('terminal-loader-bar');
-    const loaderPct = document.getElementById('terminal-loader-pct');
+  <script>
+    import { broAudio } from '../lib/audio';
 
-    btns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetId = btn.getAttribute('data-target');
-        const targetBtnName = btn.textContent?.trim() || '';
+    function setupTabs() {
+      const btns = document.querySelectorAll('.tab-btn');
+      const panels = document.querySelectorAll('.tab-panel');
+      const loader = document.getElementById('tab-terminal-loader');
+      const loaderCmd = document.getElementById('terminal-loader-cmd');
+      const loaderBar = document.getElementById('terminal-loader-bar');
+      const loaderPct = document.getElementById('terminal-loader-pct');
 
-        // Hide all active panels
-        panels.forEach(p => p.classList.add('hidden'));
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-target');
+          const targetBtnName = btn.textContent?.trim() || '';
 
-        // Reset and show loader
-        if (loader && loaderCmd && loaderBar && loaderPct) {
-          loader.classList.remove('hidden');
-          loaderCmd.innerText = `> UPLINKING ${targetBtnName.split(' // ')[1]} DATA...`;
-          
-          let progress = 0;
-          loaderBar.style.width = '0%';
-          loaderPct.innerText = '0%';
+          // Hide all active panels
+          panels.forEach(p => p.classList.add('hidden'));
 
-          const interval = setInterval(() => {
-            progress += Math.floor(Math.random() * 25) + 15;
-            if (progress >= 100) {
-              progress = 100;
-              clearInterval(interval);
-            }
-            loaderBar.style.width = `${progress}%`;
-            loaderPct.innerText = `${progress}%`;
-          }, 60);
-
-          setTimeout(() => {
-            clearInterval(interval);
-            loader.classList.add('hidden');
+          // Reset and show loader
+          if (loader && loaderCmd && loaderBar && loaderPct) {
+            loader.classList.remove('hidden');
+            loaderCmd.innerText = `> UPLINKING ${targetBtnName.split(' // ')[1]} DATA...`;
             
-            // Show target panel
+            let progress = 0;
+            loaderBar.style.width = '0%';
+            loaderPct.innerText = '0%';
+
+            const interval = setInterval(() => {
+              progress += Math.floor(Math.random() * 25) + 15;
+              if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+              }
+              loaderBar.style.width = `${progress}%`;
+              loaderPct.innerText = `${progress}%`;
+            }, 60);
+
+            setTimeout(() => {
+              clearInterval(interval);
+              loader.classList.add('hidden');
+              
+              // Show target panel
+              const targetPanel = document.getElementById(targetId);
+              if (targetPanel) {
+                targetPanel.classList.remove('hidden');
+              }
+            }, 450);
+          } else {
+            // Fallback
             const targetPanel = document.getElementById(targetId);
             if (targetPanel) {
               targetPanel.classList.remove('hidden');
             }
-          }, 450);
-        } else {
-          // Fallback
-          const targetPanel = document.getElementById(targetId);
-          if (targetPanel) {
-            targetPanel.classList.remove('hidden');
           }
+
+          // Toggle active button classes
+          btns.forEach(b => {
+            b.classList.remove('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
+            b.classList.add('border-slate-900', 'text-slate-500');
+          });
+          btn.classList.add('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
+          btn.classList.remove('border-slate-900', 'text-slate-500');
+        });
+      });
+    }
+
+    function setupTelemetryTracker() {
+      const queryBtn = document.getElementById('telemetry-query-btn');
+      const inputEl = document.getElementById('telemetry-input') as HTMLInputElement | null;
+      const panel = document.getElementById('telemetry-output-panel');
+
+      if (!queryBtn || !inputEl || !panel) return;
+
+      let isTyping = false;
+
+      const triggerQuery = () => {
+        if (isTyping) return;
+        const key = inputEl.value.trim().toUpperCase();
+        if (!key) return;
+
+        broAudio.playTabClick();
+        panel.classList.remove('hidden');
+        panel.innerHTML = '';
+        isTyping = true;
+
+        let lines: string[] = [];
+
+        if (key === 'BRO-7740') {
+          lines = [
+            'CONNECTING SECURE UPLINK GATEWAY... DONE',
+            'ESTABLISHING SAT-COM LINK [BAND: KA]... DONE',
+            'DECRYPTING FLEET PARAMS & COORDINATES... DONE',
+            '==========================================',
+            'ACTIVE LOAD: 450-TON WIND TURBINE HUB',
+            'TRANSIT ROUTE: ALBERTA INDUSTRIAL CORRIDOR',
+            'COORDINATES: 53.5461° N, 113.4938° W (EDMONTON)',
+            'VELOCITY: 82 km/h | DIRECTION: NORTH-NORTHWEST',
+            'ESCORT COMPLIANCE: 2 PILOT CARS (ACTIVE ESCORT)',
+            'LOGISTICS HAZARDS: VELOCITY RESTRICTED (BRIDGE OVERWEIGHT)',
+            'ESTIMATED ARRIVAL IN CORRIDOR: 3.4 HOURS (ON-SCHEDULE)'
+          ];
+        } else if (key === 'BRO-9011') {
+          lines = [
+            'CONNECTING SECURE UPLINK GATEWAY... DONE',
+            'ESTABLISHING SAT-COM LINK [BAND: KA]... DONE',
+            'DECRYPTING FLEET PARAMS & COORDINATES... DONE',
+            '==========================================',
+            'ACTIVE LOAD: REINFORCED STRUCTURAL STEEL BEAMS',
+            'TRANSIT ROUTE: PRINCE EDWARD ISLAND TO MAINE CORRIDOR',
+            'COORDINATES: 46.2512° N, 63.1250° W (CHARLOTTETOWN)',
+            'VELOCITY: 95 km/h | DIRECTION: SOUTHWEST',
+            'ESCORT COMPLIANCE: CLASS A VEHICLE SPEC (NO ESCORT REQUIRED)',
+            'LOGISTICS HAZARDS: APPROACHING BORDER / ACE MANIFEST FILED',
+            'ESTIMATED ARRIVAL IN CORRIDOR: 1.8 HOURS (ON-SCHEDULE)'
+          ];
+        } else if (key === 'BRO-3302') {
+          lines = [
+            'CONNECTING SECURE UPLINK GATEWAY... DONE',
+            'ESTABLISHING SAT-COM LINK [BAND: KA]... DONE',
+            'DECRYPTING FLEET PARAMS & COORDINATES... DONE',
+            '==========================================',
+            'ACTIVE LOAD: OVERSIZED SUBSTATION TRANSFORMER',
+            'TRANSIT ROUTE: ONTARIO POWER GRID TRANSMISSION CORRIDOR',
+            'COORDINATES: 48.4284° N, 89.2612° W (THUNDER BAY)',
+            'VELOCITY: 0 km/h | DIRECTION: STATIONARY',
+            'ESCORT COMPLIANCE: 2 POLICE MOTORCYCLE ESCORTS (STANDBY)',
+            'LOGISTICS HAZARDS: SUSPENDED RUN / NIGHT LAYOVER PROTOCOL',
+            'ESTIMATED ARRIVAL IN CORRIDOR: 12.5 HOURS (RESUMING AT 06:00)'
+          ];
+        } else {
+          lines = [
+            'CONNECTING SECURE UPLINK GATEWAY... DONE',
+            'ESTABLISHING SAT-COM LINK [BAND: KA]... FAILED',
+            'RETRYING SECURE LINK... REFUSED',
+            '==========================================',
+            'ERROR: UNABLE TO ESTABLISH TELEMETRY UPLINK.',
+            'REASON: INVALID OR UNREGISTERED SECURITY KEY.',
+            'SYS_WARNING: SECURITY LOG RECORDED. BACKTRACE INITIATED.'
+          ];
         }
 
-        // Toggle active button classes
-        btns.forEach(b => {
-          b.classList.remove('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
-          b.classList.add('border-slate-900', 'text-slate-500');
-        });
-        btn.classList.add('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
-        btn.classList.remove('border-slate-900', 'text-slate-500');
-      });
-    });
-  }
+        let lineIndex = 0;
+        const printLine = () => {
+          if (lineIndex < lines.length) {
+            const p = document.createElement('div');
+            p.innerText = lines[lineIndex];
 
-  // Compatible with ClientRouter transitions
-  document.addEventListener('astro:page-load', setupTabs);
-</script>
+            if (lines[lineIndex].startsWith('ERROR') || lines[lineIndex].startsWith('SYS_WARNING')) {
+              p.className = 'text-rose-400 font-bold';
+            } else if (lines[lineIndex].startsWith('ACTIVE') || lines[lineIndex].startsWith('TRANSIT') || lines[lineIndex].startsWith('COORDINATES')) {
+              p.className = 'text-emerald-400';
+            } else if (lines[lineIndex].startsWith('===') || lines[lineIndex].startsWith('BRO-')) {
+              p.className = 'text-slate-500';
+            } else {
+              p.className = 'text-blue-400';
+            }
+
+            panel.appendChild(p);
+            panel.scrollTop = panel.scrollHeight;
+
+            broAudio.playTerminalType();
+            lineIndex++;
+            setTimeout(printLine, 120);
+          } else {
+            isTyping = false;
+          }
+        };
+
+        printLine();
+      };
+
+      queryBtn.addEventListener('click', triggerQuery);
+      inputEl?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          triggerQuery();
+        }
+      });
+    }
+
+    // Compatible with ClientRouter transitions
+    document.addEventListener('astro:page-load', () => {
+      setupTabs();
+      setupTelemetryTracker();
+    });
+  </script>
