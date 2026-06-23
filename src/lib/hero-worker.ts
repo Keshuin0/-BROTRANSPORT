@@ -16,8 +16,12 @@ let targetRotationY = 0;
 let currentRotationX = 0;
 let currentRotationY = 0;
 
+let scanFreqMultiplier = 1.0;
+let noiseMultiplier = 1.0;
+let rotationMultiplier = 1.0;
+
 self.onmessage = (event) => {
-  const { type, canvas, w, h, mx, my } = event.data;
+  const { type, canvas, w, h, mx, my, value } = event.data;
 
   if (type === 'init' && canvas) {
     init(canvas, w, h);
@@ -28,6 +32,12 @@ self.onmessage = (event) => {
     mouseY = my;
     targetRotationY = mouseX * 0.5;
     targetRotationX = mouseY * 0.3;
+  } else if (type === 'update_freq') {
+    scanFreqMultiplier = value;
+  } else if (type === 'update_noise') {
+    noiseMultiplier = value;
+  } else if (type === 'update_rotation') {
+    rotationMultiplier = value;
   }
 };
 
@@ -176,7 +186,7 @@ function animate() {
 
   // Animate sweep line back and forth
   if (radarLine) {
-    radarLine.position.z = Math.sin(time * 0.6) * 90;
+    radarLine.position.z = Math.sin(time * 0.6 * scanFreqMultiplier) * 90;
   }
 
   // Smooth mouse rotation dampening
@@ -185,7 +195,7 @@ function animate() {
 
   if (scene) {
     // Base rotating movement
-    scene.rotation.y = time * 0.04 + currentRotationY;
+    scene.rotation.y = time * 0.04 * rotationMultiplier + currentRotationY;
     scene.rotation.x = currentRotationX;
   }
 
@@ -195,7 +205,7 @@ function animate() {
     const count = positions.length / 3;
     // Only animate the background noise particles (index >= 2400)
     for (let i = 2400; i < count; i++) {
-      positions[i * 3 + 1] += Math.sin(time * 2 + i) * 0.005;
+      positions[i * 3 + 1] += Math.sin(time * 2 + i) * 0.005 * noiseMultiplier;
     }
     particles.geometry.attributes.position.needsUpdate = true;
   }
