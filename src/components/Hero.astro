@@ -54,7 +54,7 @@ const base = import.meta.env.BASE_URL;
       </div>
 
       <!-- Quick Action Panels (Morphing Glassmorphism cards) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl pt-2">
+      <div class="grid grid-cols-1 sm:sm:grid-cols-2 gap-4 max-w-2xl pt-2">
         <a href={`${base}quote`} data-astro-prefetch class="flex items-center gap-4 p-5 rounded-lg border border-blue-500/20 bg-blue-950/20 hover:bg-blue-950/40 hover:border-blue-500/40 transition-all duration-300 group shadow-lg shadow-blue-950/10 hover:-translate-y-0.5">
           <div class="h-10 w-10 bg-blue-500/10 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 text-blue-400 rounded flex items-center justify-center font-black font-mono">01</div>
           <div class="text-left">
@@ -70,6 +70,23 @@ const base = import.meta.env.BASE_URL;
             <p class="text-slate-400 text-xs mt-0.5">Submit safety qualifications.</p>
           </div>
         </a>
+      </div>
+
+      <!-- Live Operations Console Index (HUD Telemetry Stats) -->
+      <div class="p-4 rounded-lg bg-[#080B13]/70 border border-slate-900 glass-panel font-mono text-[10px] text-slate-400 flex flex-wrap gap-x-8 gap-y-2 max-w-2xl z-20">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>DISPATCH_LINK: <span class="text-emerald-400 font-bold">ONLINE</span></span>
+        </div>
+        <div>
+          <span>ACTIVE_HAULS: <span class="text-blue-400 font-bold" id="active-hauls-num">124</span></span>
+        </div>
+        <div>
+          <span>PERMIT_COMPLIANCE: <span class="text-amber-500 font-bold">100.0%</span></span>
+        </div>
+        <div>
+          <span>SYSTEM_LATENCY: <span class="text-purple-400 font-bold" id="telemetry-latency">14ms</span></span>
+        </div>
       </div>
     </div>
   </div>
@@ -142,3 +159,25 @@ const base = import.meta.env.BASE_URL;
     }
   }
 </style>
+
+<script>
+  function runTelemetryTicker() {
+    const hauls = document.getElementById('active-hauls-num');
+    const latency = document.getElementById('telemetry-latency');
+    if (!hauls || !latency) return;
+
+    setInterval(() => {
+      // Simulate active hauls fluctuating slightly
+      const currentHauls = parseInt(hauls.innerText) || 124;
+      const change = Math.random() > 0.5 ? 1 : -1;
+      const nextHauls = Math.max(115, Math.min(145, currentHauls + (Math.random() > 0.7 ? change : 0)));
+      hauls.innerText = nextHauls.toString();
+
+      // Simulate ping latency jitter
+      const nextLatency = Math.floor(10 + Math.random() * 8);
+      latency.innerText = `${nextLatency}ms`;
+    }, 3000);
+  }
+
+  document.addEventListener('astro:page-load', runTelemetryTicker);
+</script>

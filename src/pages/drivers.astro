@@ -98,36 +98,45 @@ const base = import.meta.env.BASE_URL;
 
             <div class="space-y-4 pt-2">
               <!-- Checkbox 1 -->
-              <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
-                <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
-                <div class="space-y-0.5">
-                  <span class="text-sm font-bold text-white font-outfit">Class 1 / AZ Commercial Driver's License</span>
-                  <p class="text-slate-500 text-xs leading-relaxed">
-                    Applicants must verify they hold a valid Class 1 or AZ Commercial Driver's License in good standing.
-                  </p>
+              <label class="flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+                <div class="flex items-start gap-4">
+                  <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                  <div class="space-y-0.5">
+                    <span class="text-sm font-bold text-white font-outfit">Class 1 / AZ Commercial Driver's License</span>
+                    <p class="text-slate-500 text-xs leading-relaxed">
+                      Applicants must verify they hold a valid Class 1 or AZ Commercial Driver's License in good standing.
+                    </p>
+                  </div>
                 </div>
+                <span id="class1OrAz-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none">PENDING</span>
               </label>
 
               <!-- Checkbox 2 -->
-              <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
-                <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
-                <div class="space-y-0.5">
-                  <span class="text-sm font-bold text-white font-outfit">COR / Safety Certified</span>
-                  <p class="text-slate-500 text-xs leading-relaxed">
-                    Check if you hold current Certificate of Recognition (COR) or equivalent industrial safety certifications.
-                  </p>
+              <label class="flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+                <div class="flex items-start gap-4">
+                  <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                  <div class="space-y-0.5">
+                    <span class="text-sm font-bold text-white font-outfit">COR / Safety Certified</span>
+                    <p class="text-slate-500 text-xs leading-relaxed">
+                      Check if you hold current Certificate of Recognition (COR) or equivalent industrial safety certifications.
+                    </p>
+                  </div>
                 </div>
+                <span id="safetyCertified-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-500 rounded shrink-0 select-none">OPTIONAL</span>
               </label>
 
               <!-- Checkbox 3 -->
-              <label class="flex items-start gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none">
-                <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
-                <div class="space-y-0.5">
-                  <span class="text-sm font-bold text-white font-outfit">Clean 3-Year Commercial Driver Abstract</span>
-                  <p class="text-slate-500 text-xs leading-relaxed">
-                    Verify that your commercial abstract contains zero heavy safety infractions or regulatory safety penalties.
-                  </p>
+              <label class="flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+                <div class="flex items-start gap-4">
+                  <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
+                  <div class="space-y-0.5">
+                    <span class="text-sm font-bold text-white font-outfit">Clean 3-Year Commercial Driver Abstract</span>
+                    <p class="text-slate-500 text-xs leading-relaxed">
+                      Verify that your commercial abstract contains zero heavy safety infractions or regulatory safety penalties.
+                    </p>
+                  </div>
                 </div>
+                <span id="hasCleanAbstract-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none">PENDING</span>
               </label>
             </div>
           </div>
@@ -341,8 +350,49 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
+  function updateChecklistStatus() {
+    const class1 = getCheckVal('class1OrAz');
+    const safety = getCheckVal('safetyCertified');
+    const abstract = getCheckVal('hasCleanAbstract');
+
+    const class1Status = document.getElementById('class1OrAz-status');
+    const safetyStatus = document.getElementById('safetyCertified-status');
+    const abstractStatus = document.getElementById('hasCleanAbstract-status');
+
+    if (class1Status) {
+      if (class1) {
+        class1Status.innerText = 'COMPLIANT';
+        class1Status.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 rounded shrink-0 select-none';
+      } else {
+        class1Status.innerText = 'PENDING';
+        class1Status.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none';
+      }
+    }
+
+    if (safetyStatus) {
+      if (safety) {
+        safetyStatus.innerText = 'CERTIFIED';
+        safetyStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 rounded shrink-0 select-none';
+      } else {
+        safetyStatus.innerText = 'OPTIONAL';
+        safetyStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-500 rounded shrink-0 select-none';
+      }
+    }
+
+    if (abstractStatus) {
+      if (abstract) {
+        abstractStatus.innerText = 'COMPLIANT';
+        abstractStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 rounded shrink-0 select-none';
+      } else {
+        abstractStatus.innerText = 'PENDING';
+        abstractStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none';
+      }
+    }
+  }
+
   // Initialize Data
   loadDriverProgress();
+  updateChecklistStatus();
 
   // Drag & Drop Mock Trigger
   uploadZone?.addEventListener('click', () => {
@@ -479,5 +529,6 @@ const base = import.meta.env.BASE_URL;
   // Save progress on inputs
   form?.addEventListener('input', () => {
     saveDriverProgress();
+    updateChecklistStatus();
   });
 </script>

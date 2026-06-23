@@ -90,6 +90,29 @@ const getFleetImage = (id: string) => {
         </button>
       </div>
 
+      <!-- Terminal Loader HUD (Animated Console Screen) -->
+      <div id="tab-terminal-loader" class="hidden h-[340px] bg-[#05070D] border border-blue-500/20 rounded-lg p-8 flex flex-col justify-center space-y-4 font-mono text-xs text-blue-400 relative scanlines cyber-corners shadow-2xl">
+        <div class="space-y-1.5">
+          <div class="text-blue-500/70 text-[10px]">SYS_CONSOLE // CONNECTING LINK...</div>
+          <div id="terminal-loader-cmd" class="text-slate-200 font-bold">&gt; UPLINKING SPECIALIZED HEAVY-HAUL DIRECTIVES...</div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <div class="w-full h-3 bg-slate-950 border border-slate-900 rounded overflow-hidden relative">
+            <div id="terminal-loader-bar" class="h-full w-0 bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 transition-all duration-300"></div>
+          </div>
+          <span id="terminal-loader-pct" class="font-bold shrink-0 text-slate-300">0%</span>
+        </div>
+
+        <div class="text-[10px] text-slate-500 space-y-1">
+          <div>&gt; CACHING LOCAL PERMIT CACHES... OK</div>
+          <div class="flex items-center gap-1">
+            <span>&gt; INITIATING DECISION MATRIX...</span>
+            <span class="h-3 w-1.5 bg-blue-500 animate-ping"></span>
+          </div>
+        </div>
+      </div>
+
       <!-- Tabs Contents -->
       <div class="space-y-6">
         <!-- Tab 1: Heavy Haul -->
@@ -147,7 +170,7 @@ const getFleetImage = (id: string) => {
               </ul>
             </div>
             <div class="rounded-lg overflow-hidden border border-slate-900/60 relative h-60 md:h-auto">
-              <img src={`${base}images/hero-truck.png`} alt="Cross-border cargo" class="w-full h-full object-cover" />
+              <img src={`${base}images/rgn-lowboy.png`} alt="Cross-border cargo" class="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -323,29 +346,66 @@ const getFleetImage = (id: string) => {
 </Layout>
 
 <!-- Client Side Tabs Handler -->
-<script>
-  function setupTabs() {
+<script>  function setupTabs() {
     const btns = document.querySelectorAll('.tab-btn');
     const panels = document.querySelectorAll('.tab-panel');
+    const loader = document.getElementById('tab-terminal-loader');
+    const loaderCmd = document.getElementById('terminal-loader-cmd');
+    const loaderBar = document.getElementById('terminal-loader-bar');
+    const loaderPct = document.getElementById('terminal-loader-pct');
 
     btns.forEach(btn => {
       btn.addEventListener('click', () => {
-        // Remove active state
+        const targetId = btn.getAttribute('data-target');
+        const targetBtnName = btn.textContent?.trim() || '';
+
+        // Hide all active panels
+        panels.forEach(p => p.classList.add('hidden'));
+
+        // Reset and show loader
+        if (loader && loaderCmd && loaderBar && loaderPct) {
+          loader.classList.remove('hidden');
+          loaderCmd.innerText = `> UPLINKING ${targetBtnName.split(' // ')[1]} DATA...`;
+          
+          let progress = 0;
+          loaderBar.style.width = '0%';
+          loaderPct.innerText = '0%';
+
+          const interval = setInterval(() => {
+            progress += Math.floor(Math.random() * 25) + 15;
+            if (progress >= 100) {
+              progress = 100;
+              clearInterval(interval);
+            }
+            loaderBar.style.width = `${progress}%`;
+            loaderPct.innerText = `${progress}%`;
+          }, 60);
+
+          setTimeout(() => {
+            clearInterval(interval);
+            loader.classList.add('hidden');
+            
+            // Show target panel
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) {
+              targetPanel.classList.remove('hidden');
+            }
+          }, 450);
+        } else {
+          // Fallback
+          const targetPanel = document.getElementById(targetId);
+          if (targetPanel) {
+            targetPanel.classList.remove('hidden');
+          }
+        }
+
+        // Toggle active button classes
         btns.forEach(b => {
           b.classList.remove('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
           b.classList.add('border-slate-900', 'text-slate-500');
         });
-        panels.forEach(p => p.classList.add('hidden'));
-
-        // Add active state to clicked
         btn.classList.add('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
         btn.classList.remove('border-slate-900', 'text-slate-500');
-        
-        const targetId = btn.getAttribute('data-target');
-        const targetPanel = document.getElementById(targetId);
-        if (targetPanel) {
-          targetPanel.classList.remove('hidden');
-        }
       });
     });
   }
