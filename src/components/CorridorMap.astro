@@ -3,31 +3,31 @@ const base = import.meta.env.BASE_URL;
 ---
 <div class="space-y-4">
   <div class="text-[10px] font-mono tracking-widest text-slate-500 uppercase flex items-center gap-2 select-none">
-    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-    SYS_CORRIDOR_GRID // LIVE RADAR TRANSIT CORRIDORS
+    <span class="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_#00f0ff]"></span>
+    SYS_CORRIDOR_GRID // LIVE COMMERCIAL TRANSIT ROUTES
   </div>
-  <div id="corridor-map" class="h-96 w-full rounded-lg bg-slate-900 border border-slate-800/80 shadow-2xl relative z-0">
-    <div id="map-loader" class="absolute inset-0 flex items-center justify-center text-xs font-mono text-slate-500 bg-slate-950/80 rounded-lg">
-      [WAITING FOR SCAN TARGET TO SCROLL INTO VIEW]
+  <div id="corridor-map" class="h-96 w-full rounded-lg bg-[#020408] border border-slate-900 shadow-2xl relative z-0">
+    <div id="map-loader" class="absolute inset-0 flex items-center justify-center text-xs font-mono text-slate-500 bg-[#020408]/90 rounded-lg">
+      [WAITING FOR TRANSIT SCANNER IN VIEW]
     </div>
   </div>
 
   <!-- Live GPS Telemetry Dashboard Panel -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-black/60 border border-slate-900 rounded-lg text-[10px] font-mono text-slate-500 shadow-xl relative overflow-hidden scanlines">
     <div class="space-y-1">
-      <span class="text-slate-500 block uppercase">Convoy Unit:</span>
+      <span class="text-slate-500 block uppercase">Active Unit:</span>
       <span class="text-white font-bold block flex items-center gap-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping"></span>
-        CONVOY_BRO_ALPHA
+        <span class="h-1.5 w-1.5 rounded-full bg-blaze animate-ping"></span>
+        UNIT_BRO_ACTIVE
       </span>
     </div>
     <div class="space-y-1">
       <span class="text-slate-500 block uppercase">Telemetry GPS:</span>
-      <span id="telemetry-gps" class="text-emerald-400 font-bold block">46.2507° N, 63.1375° W</span>
+      <span id="telemetry-gps" class="text-cyan-400 font-bold block">46.2507° N, 63.1375° W</span>
     </div>
     <div class="space-y-1">
-      <span class="text-slate-500 block uppercase">Convoy Velocity:</span>
-      <span id="telemetry-velocity" class="text-blue-400 font-bold block">82 km/h</span>
+      <span class="text-slate-500 block uppercase">Transit Velocity:</span>
+      <span id="telemetry-velocity" class="text-blaze font-bold block">82 km/h</span>
     </div>
     <div class="space-y-1">
       <span class="text-slate-500 block uppercase">Active Route:</span>
@@ -46,7 +46,7 @@ const base = import.meta.env.BASE_URL;
     if (!mapEl) return;
 
     mapInitialized = true;
-    if (loader) loader.innerText = '[INITIALIZING SATELLITE TRANSIT LINK...]';
+    if (loader) loader.innerText = '[ESTABLISHING SATELLITE ROAD LINK...]';
 
     // 1. Inject Leaflet stylesheet dynamically
     const link = document.createElement('link');
@@ -74,19 +74,19 @@ const base = import.meta.env.BASE_URL;
         attributionControl: false
       }).setView([50.0, -90.0], 4);
 
-      // Dark Mode Tile Layer
+      // Dark Mode Tile Layer (CartoDB Dark Matter)
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 18,
       }).addTo(map);
 
-      // Custom Glowing Markers
+      // Custom Glowing Markers using Cyber Cyan
       const createGlowingMarker = (title: string, subtitle: string) => {
         return L.divIcon({
           className: 'custom-radar-icon',
           html: `<div class="relative flex items-center justify-center">
-            <span class="absolute inline-flex h-6 w-6 rounded-full bg-blue-500/20 animate-ping"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500 border border-white/40"></span>
-            <div class="absolute left-4 bg-slate-950/90 border border-slate-800 text-[10px] text-slate-300 font-mono px-2 py-0.5 rounded whitespace-nowrap">
+            <span class="absolute inline-flex h-6 w-6 rounded-full bg-[#00f0ff]/20 animate-ping"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#00f0ff] border border-white/40 shadow-[0_0_6px_#00f0ff]"></span>
+            <div class="absolute left-4 bg-[#020408]/90 border border-slate-900 text-[9px] text-slate-350 font-mono px-2 py-0.5 rounded whitespace-nowrap">
               <strong>${title}</strong><br/>${subtitle}
             </div>
           </div>`,
@@ -98,8 +98,8 @@ const base = import.meta.env.BASE_URL;
       // Define Hubs
       const hubs = [
         { name: 'PEI HQ', coords: [46.2507, -63.1375], info: 'Dispatch Headquarters' },
-        { name: 'Ontario Hub', coords: [44.2706, -79.9048], info: 'Regional Transshipment Hub' },
-        { name: 'Alberta Hub', coords: [56.7264, -111.3803], info: 'Corridor Logistics Hub' }
+        { name: 'Ontario Hub', coords: [44.2706, -79.9048], info: 'Central Commercial Hub' },
+        { name: 'Alberta Hub', coords: [56.7264, -111.3803], info: 'Western Distribution Link' }
       ];
 
       const latlngs = hubs.map(hub => {
@@ -107,20 +107,20 @@ const base = import.meta.env.BASE_URL;
         return hub.coords;
       });
 
-      // Connect corridors with glowing dashed polyline
+      // Connect corridors with glowing Cyber Cyan dashed polyline
       L.polyline(latlngs, {
-        color: '#3b82f6',
+        color: '#00f0ff',
         weight: 1.5,
         opacity: 0.8,
         dashArray: '5, 10'
       }).addTo(map);
 
-      // Moving convoy marker
+      // Moving convoy marker using Blaze Orange
       const convoyIcon = L.divIcon({
         className: 'custom-radar-icon',
         html: `<div class="relative flex items-center justify-center">
-          <span class="absolute inline-flex h-4 w-4 rounded-full bg-amber-500/40 animate-ping"></span>
-          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500 shadow-[0_0_8px_#f59e0b] border border-white/60"></span>
+          <span class="absolute inline-flex h-4 w-4 rounded-full bg-[#ff6000]/40 animate-ping"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ff6000] shadow-[0_0_8px_#ff6000] border border-white/60"></span>
         </div>`,
         iconSize: [10, 10],
         iconAnchor: [5, 5]
@@ -170,8 +170,8 @@ const base = import.meta.env.BASE_URL;
 
         // Drifting Velocity readout
         if (velLabel) {
-          const baseVel = 80;
-          const drift = Math.floor(Math.sin(Date.now() / 1500) * 6);
+          const baseVel = 85;
+          const drift = Math.floor(Math.sin(Date.now() / 1500) * 5);
           velLabel.innerText = `${baseVel + drift} km/h`;
         }
 
@@ -213,6 +213,6 @@ const base = import.meta.env.BASE_URL;
     border: none !important;
   }
   .leaflet-container {
-    background: #0B0F19 !important;
+    background: #020408 !important;
   }
 </style>

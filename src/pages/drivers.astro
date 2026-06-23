@@ -3,21 +3,21 @@ import Layout from '../layouts/Layout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<Layout title="Driver Intake Portal | #BRO Transport Corp." description="Progressive recruitment portal for high-stakes specialized commercial heavy-haul operations. Driver qualifications, safety certifications, and intake.">
+<Layout title="Driver Intake Portal | #BRO Transport Corp." description="Progressive recruitment portal for commercial dry van, reefer, and flatbed transport operations. Driver qualifications, safety certifications, and intake.">
   <!-- Navigation -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#0B0F19]/80 border-b border-slate-800/80" style="view-transition-name: main-header;">
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#020408]/80 border-b border-slate-900" style="view-transition-name: main-header;">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
       <a href={base} class="flex items-center gap-2 group">
-        <div class="h-3 w-3 bg-blue-500 rounded-full animate-pulse group-hover:bg-blue-400 transition-colors shrink-0"></div>
+        <div class="h-3 w-3 bg-[#00f0ff] rounded-full animate-pulse shadow-[0_0_8px_#00f0ff] group-hover:bg-[#00f0ff] transition-colors shrink-0"></div>
         <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90" />
       </a>
       
-      <nav class="flex items-center gap-8 text-sm font-medium text-slate-300">
-        <a href={base} class="hover:text-blue-400 transition-colors">Return Home</a>
+      <nav class="flex items-center gap-8 text-sm font-medium text-slate-350">
+        <a href={base} class="hover:text-[#00f0ff] transition-colors">Return Home</a>
       </nav>
 
       <div class="flex items-center gap-4">
-        <a href="tel:902-916-6936" class="bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all duration-300 text-blue-400 text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
+        <a href="tel:902-916-6936" class="bg-cyan-500/10 border border-cyan-500/30 hover:bg-[#00f0ff] hover:text-black transition-all duration-300 text-[#00f0ff] text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
           <span>Call Desk: 902-916-6936</span>
         </a>
       </div>
@@ -25,16 +25,16 @@ const base = import.meta.env.BASE_URL;
   </header>
 
   <!-- Driver Registration Portal Hero -->
-  <section class="py-16 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(59,130,246,0.08),rgba(255,255,255,0))] border-b border-slate-900">
+  <section class="py-16 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] border-b border-slate-900">
     <div class="max-w-4xl mx-auto text-center space-y-6">
-      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-amber-500 font-bold px-3 py-1 bg-amber-500/10 rounded-full border border-amber-500/20">
+      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#ff6000] font-bold px-3 py-1 bg-orange-950/10 rounded-full border border-orange-500/20">
         Transport Canada Secure Portal
       </span>
       <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-outfit uppercase">
         Driver Intake Portal
       </h1>
       <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-         Specialized heavy-haul operations require strict safety compliance. Provide your driver credentials and safety certifications to register for our commercial transport network.
+         Commercial freight operations require strict compliance and safety. Provide your driver credentials and qualifications to register for our dry van, reefer, and flatbed divisions.
       </p>
     </div>
   </section>
@@ -43,40 +43,40 @@ const base = import.meta.env.BASE_URL;
   <section class="py-16 px-6">
     <div class="max-w-3xl mx-auto">
       <!-- Driver Compensation & Assigned Fleet Specs Matrix -->
-      <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg mb-12 space-y-6 shadow-xl relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl"></div>
+      <div class="bg-[#05070d]/50 border border-slate-900 p-8 rounded-lg mb-12 space-y-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-3xl"></div>
         <div class="flex items-center gap-2">
-          <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <h2 class="text-xs font-mono uppercase tracking-widest text-slate-400">SYS_COMPENSATION // ASSIGNED FLEET SPEC & PAYOUT MATRIX</h2>
+          <span class="h-2 w-2 rounded-full bg-[#ff6000] animate-pulse"></span>
+          <h2 class="text-xs font-mono uppercase tracking-widest text-slate-450">SYS_COMPENSATION // ASSIGNED FLEET SPEC & PAYOUT MATRIX</h2>
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 font-mono text-[10px] text-slate-400">
-          <div class="border border-slate-900/60 p-4 rounded bg-[#05070D]/40 space-y-2 hover:border-amber-500/35 transition-all">
-            <span class="text-amber-500 font-bold block">// BASE MILEAGE RATE</span>
-            <div class="text-base font-bold text-white tracking-tight">$0.78 - $0.92 / mile</div>
-            <p class="text-slate-500 leading-normal text-[9px]">Heavy specimen cargo, specialized trailers, and RGN combination loads.</p>
+          <div class="border border-slate-900 p-4 rounded bg-[#020408]/40 space-y-2 hover:border-[#00f0ff]/35 transition-all">
+            <span class="text-cyan-400 font-bold block">// BASE MILEAGE RATE</span>
+            <div class="text-base font-bold text-white tracking-tight">$0.62 - $0.70 / mile</div>
+            <p class="text-slate-550 leading-normal text-[9px]">Standard 53ft Enclosed Dry Van regional and long-haul runs.</p>
           </div>
-          <div class="border border-slate-900/60 p-4 rounded bg-[#05070D]/40 space-y-2 hover:border-amber-500/35 transition-all">
-            <span class="text-amber-500 font-bold block">// ESCORT & LAYOVER BONUS</span>
-            <div class="text-base font-bold text-white tracking-tight">+$0.15/mi | $180/day</div>
-            <p class="text-slate-500 leading-normal text-[9px]">Oversized routes requiring pilot escorts + guaranteed layover allowance.</p>
+          <div class="border border-slate-900 p-4 rounded bg-[#020408]/40 space-y-2 hover:border-[#00f0ff]/35 transition-all">
+            <span class="text-cyan-400 font-bold block">// TEMPERATURE PREMIUM</span>
+            <div class="text-base font-bold text-white tracking-tight">+$0.03 / mile</div>
+            <p class="text-slate-550 leading-normal text-[9px]">Additional allowance paid for temperature-sensitive cooling log runs.</p>
           </div>
-          <div class="border border-slate-900/60 p-4 rounded bg-[#05070D]/40 space-y-2 hover:border-amber-500/35 transition-all">
-            <span class="text-amber-500 font-bold block">// eMANIFEST / BORDER CROSS</span>
-            <div class="text-base font-bold text-white tracking-tight">$75.00 / crossing</div>
-            <p class="text-slate-500 leading-normal text-[9px]">Cleared through automated eManifest ACI (Canada) & ACE (US) channels.</p>
+          <div class="border border-slate-900 p-4 rounded bg-[#020408]/40 space-y-2 hover:border-blaze/35 transition-all">
+            <span class="text-[#ff6000] font-bold block">// TARP & SECUREMENT PREMIUM</span>
+            <div class="text-base font-bold text-white tracking-tight">+$0.05 / mile</div>
+            <p class="text-slate-550 leading-normal text-[9px]">Flatbed securement, chain binder strapping, and tarp drops.</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-[#111827]/40 border border-slate-800/70 p-8 rounded-lg shadow-xl relative overflow-hidden" id="driver-portal-container">
+      <div class="bg-[#020408]/90 border border-slate-900 p-8 rounded-lg shadow-2xl relative overflow-hidden scanlines cyber-corners" id="driver-portal-container">
         <!-- Progress Steps -->
-        <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-4">
+        <div class="flex items-center justify-between mb-8 border-b border-slate-900 pb-4">
           <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_REGISTRATION: STEP <span id="current-step-num">1</span> OF 3</span>
           <div class="flex gap-2">
-            <div class="h-1.5 w-6 rounded-full bg-blue-600 step-dot"></div>
-            <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
-            <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
+            <div class="h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot"></div>
+            <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
+            <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
           </div>
         </div>
 
@@ -90,28 +90,27 @@ const base = import.meta.env.BASE_URL;
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label for="driverName" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Driver / Carrier Name</label>
-                <input type="text" id="driverName" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="John Doe" />
+                <label for="driverName" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Driver / Carrier Name</label>
+                <input type="text" id="driverName" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="John Doe" />
               </div>
               <div>
-                <label for="driverPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Cell Phone Number</label>
-                <input type="tel" id="driverPhone" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="902-555-0199" />
+                <label for="driverPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Cell Phone Number</label>
+                <input type="tel" id="driverPhone" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="902-555-0199" />
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label for="equipType" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Equipment Combination</label>
-                <select id="equipType" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm">
-                  <option value="multi-axle">Multi-Axle Heavy Combo (10+ axles)</option>
-                  <option value="rgn">Removable Gooseneck (RGN) / Lowboy</option>
-                  <option value="stepdeck">Step Deck / Flatbed</option>
-                  <option value="heavy-spec">Heavy Duty Spec Transport</option>
+                <label for="equipType" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Equipment Division</label>
+                <select id="equipType" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono">
+                  <option value="dry-van">53ft Enclosed Dry Van Division</option>
+                  <option value="reefer">53ft Climate-Controlled Reefer Division</option>
+                  <option value="flatbed">53ft Open Deck Flatbed Division</option>
                 </select>
               </div>
               <div>
-                <label for="preferredLanes" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Primary Lanes Focus</label>
-                <input type="text" id="preferredLanes" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., PEI to Ontario Corridors" />
+                <label for="preferredLanes" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Primary Lanes Focus</label>
+                <input type="text" id="preferredLanes" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="e.g. PEI to Ontario Corridors" />
               </div>
             </div>
           </div>
@@ -119,17 +118,17 @@ const base = import.meta.env.BASE_URL;
           <!-- STEP 2: Compliance Clearances -->
           <div class="step-panel space-y-6 hidden" data-step="2">
             <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-outfit uppercase">Safety Certifications & Qualifications</h3>
-              <p class="text-slate-400 text-xs">Verify safety qualification and licensing compliance criteria.</p>
+              <h3 class="text-lg font-bold text-white font-outfit uppercase">Safety Certifications & CDL Status</h3>
+              <p class="text-slate-400 text-xs">Verify safety qualification and licensing compliance criteria. Click options to scan.</p>
             </div>
 
             <div class="space-y-4 pt-2">
               <!-- Checkbox 1 -->
-              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
-                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-emerald-500/70 shadow-[0_0_8px_#10b981] pointer-events-none opacity-0"></div>
+              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-slate-950/45 border border-slate-900 hover:border-slate-850 cursor-pointer transition-all select-none justify-between">
+                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-[#00f0ff] shadow-[0_0_8px_#00f0ff] pointer-events-none opacity-0"></div>
                 <div class="flex items-start gap-4">
-                  <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
-                  <div class="space-y-0.5">
+                  <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
+                  <div class="space-y-0.5 text-left">
                     <span class="text-sm font-bold text-white font-outfit">Class 1 / AZ Commercial Driver's License</span>
                     <p class="text-slate-500 text-xs leading-relaxed">
                       Applicants must verify they hold a valid Class 1 or AZ Commercial Driver's License in good standing.
@@ -140,26 +139,26 @@ const base = import.meta.env.BASE_URL;
               </label>
 
               <!-- Checkbox 2 -->
-              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
-                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-emerald-500/70 shadow-[0_0_8px_#10b981] pointer-events-none opacity-0"></div>
+              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-slate-950/45 border border-slate-900 hover:border-slate-850 cursor-pointer transition-all select-none justify-between">
+                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-[#00f0ff] shadow-[0_0_8px_#00f0ff] pointer-events-none opacity-0"></div>
                 <div class="flex items-start gap-4">
-                  <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
-                  <div class="space-y-0.5">
+                  <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
+                  <div class="space-y-0.5 text-left">
                     <span class="text-sm font-bold text-white font-outfit">COR / Safety Certified</span>
                     <p class="text-slate-500 text-xs leading-relaxed">
                       Check if you hold current Certificate of Recognition (COR) or equivalent industrial safety certifications.
                     </p>
                   </div>
                 </div>
-                <span id="safetyCertified-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-500 rounded shrink-0 select-none">OPTIONAL</span>
+                <span id="safetyCertified-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-550 rounded shrink-0 select-none">OPTIONAL</span>
               </label>
 
               <!-- Checkbox 3 -->
-              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
-                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-emerald-500/70 shadow-[0_0_8px_#10b981] pointer-events-none opacity-0"></div>
+              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-slate-950/45 border border-slate-900 hover:border-slate-850 cursor-pointer transition-all select-none justify-between">
+                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-[#00f0ff] shadow-[0_0_8px_#00f0ff] pointer-events-none opacity-0"></div>
                 <div class="flex items-start gap-4">
-                  <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
-                  <div class="space-y-0.5">
+                  <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
+                  <div class="space-y-0.5 text-left">
                     <span class="text-sm font-bold text-white font-outfit">Clean 3-Year Commercial Driver Abstract</span>
                     <p class="text-slate-500 text-xs leading-relaxed">
                       Verify that your commercial abstract contains zero heavy safety infractions or regulatory safety penalties.
@@ -179,8 +178,8 @@ const base = import.meta.env.BASE_URL;
             </div>
 
             <!-- Upload Box Mock -->
-            <div class="border-2 border-dashed border-slate-800 hover:border-blue-500/40 rounded-lg p-8 text-center cursor-pointer bg-[#0B0F19]/40 hover:bg-[#0b0f19]/60 transition-all space-y-4 group" id="upload-zone">
-              <div class="h-12 w-12 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
+            <div class="border-2 border-dashed border-slate-900 hover:border-cyan-500/40 rounded-lg p-8 text-center cursor-pointer bg-slate-950/40 hover:bg-slate-950/60 transition-all space-y-4 group" id="upload-zone">
+              <div class="h-12 w-12 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto group-hover:bg-[#00f0ff] group-hover:text-black transition-colors duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
@@ -199,15 +198,15 @@ const base = import.meta.env.BASE_URL;
           </div>
 
           <!-- Error/Validation Message -->
-          <div id="validation-errors" class="hidden text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
+          <div id="validation-errors" class="hidden text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
 
           <!-- Navigation Buttons -->
-          <div class="flex justify-between items-center pt-4 border-t border-slate-800/50">
-            <button type="button" id="prev-btn" class="hidden bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white px-6 py-3 rounded-md font-semibold text-sm transition-all duration-300">
+          <div class="flex justify-between items-center pt-4 border-t border-slate-900">
+            <button type="button" id="prev-btn" class="hidden bg-slate-950 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-white px-6 py-3 rounded font-semibold text-sm transition-all duration-300">
               Previous Step
             </button>
             <div class="flex-1"></div>
-            <button type="button" id="next-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10">
+            <button type="button" id="next-btn" class="bg-cyan-500 hover:bg-[#00f0ff] text-black px-8 py-3.5 rounded font-bold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10">
               Next Step
             </button>
           </div>
@@ -217,9 +216,9 @@ const base = import.meta.env.BASE_URL;
   </section>
 
   <!-- Footer -->
-  <footer class="py-16 border-t border-slate-900 bg-[#0B0F19] text-center space-y-4">
+  <footer class="py-16 border-t border-slate-900 bg-[#020408] text-center space-y-4">
     <span class="text-sm font-bold text-white font-outfit tracking-wide">#BRO TRANSPORT CORP.</span>
-    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-stakes industrial logistics and cross-border commercial heavy-haul networks.</p>
+    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-performance commercial freight networks and cross-border logistics.</p>
   </footer>
 </Layout>
 
@@ -279,7 +278,7 @@ const base = import.meta.env.BASE_URL;
 
     try {
       turnstileWidgetId = turnstile.render('#turnstile-drivers-widget', {
-        sitekey: '1x00000000000000000000AA', // Testing sitekey (always passes)
+        sitekey: '1x00000000000000000000AA', // Testing sitekey
         theme: 'dark',
         callback: function(token: string) {
           turnstileToken = token;
@@ -304,15 +303,14 @@ const base = import.meta.env.BASE_URL;
 
     dots.forEach((d, idx) => {
       if (idx + 1 <= step) {
-        d.className = 'h-1.5 w-6 rounded-full bg-blue-600 step-dot';
+        d.className = 'h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot';
       } else {
-        d.className = 'h-1.5 w-6 rounded-full bg-slate-800 step-dot';
+        d.className = 'h-1.5 w-6 rounded-full bg-slate-900 step-dot';
       }
     });
 
     if (currentStepNum) currentStepNum.innerText = step.toString();
 
-    // Toggle nav buttons
     if (step === 1) {
       prevBtn.classList.add('hidden');
     } else {
@@ -320,11 +318,11 @@ const base = import.meta.env.BASE_URL;
     }
 
     if (step === totalSteps) {
-      nextBtn.innerText = 'Submit Driver Qualifications Profile';
-      nextBtn.className = 'bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
+      nextBtn.innerText = 'Submit Driver Profile';
+      nextBtn.className = 'bg-emerald-500 hover:bg-emerald-450 text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
     } else {
       nextBtn.innerText = 'Next Step';
-      nextBtn.className = 'bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10';
+      nextBtn.className = 'bg-cyan-500 hover:bg-[#00f0ff] text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10';
     }
 
     if (step === 3) {
@@ -377,7 +375,7 @@ const base = import.meta.env.BASE_URL;
         showStep(currentStep);
       }
     } catch (e) {
-      console.error('Failed to restore cached driver compliance progress', e);
+      console.error('Failed to restore cached driver progress', e);
     }
   }
 
@@ -406,7 +404,7 @@ const base = import.meta.env.BASE_URL;
         safetyStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 rounded shrink-0 select-none';
       } else {
         safetyStatus.innerText = 'OPTIONAL';
-        safetyStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-500 rounded shrink-0 select-none';
+        safetyStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-550 rounded shrink-0 select-none';
       }
     }
 
@@ -427,7 +425,7 @@ const base = import.meta.env.BASE_URL;
       const el = document.getElementById(id) as HTMLInputElement | null;
       el?.addEventListener('change', () => {
         if (el.checked) {
-          broAudio.playScanlineGlitch();
+          broAudio.playBiometricScan();
           const label = el.closest('label');
           const bar = label?.querySelector('.scanner-bar');
           if (bar) {
@@ -436,8 +434,8 @@ const base = import.meta.env.BASE_URL;
             bar.classList.add('active-scan');
           }
           setTimeout(() => {
-            broAudio.playSonarPing(1300);
-          }, 600);
+            broAudio.playBiometricSuccess();
+          }, 500);
         } else {
           broAudio.playTabClick();
         }
@@ -450,7 +448,6 @@ const base = import.meta.env.BASE_URL;
   updateChecklistStatus();
   initChecklistEffects();
 
-  // Drag & Drop Mock Trigger
   uploadZone?.addEventListener('click', () => {
     fileUploader?.click();
   });
@@ -466,7 +463,6 @@ const base = import.meta.env.BASE_URL;
   nextBtn?.addEventListener('click', () => {
     if (errorBox) errorBox.classList.add('hidden');
 
-    // Step-by-Step input validations
     if (currentStep === 1) {
       const name = getStringVal('driverName');
       const phone = getStringVal('driverPhone');
@@ -485,7 +481,7 @@ const base = import.meta.env.BASE_URL;
       const clean = getCheckVal('hasCleanAbstract');
       if (!class1 || !clean) {
         if (errorBox) {
-          errorBox.innerText = 'Class 1 / AZ Commercial Driver\'s License and a clean abstract are mandatory.';
+          errorBox.innerText = "Valid Class 1 CDL license and a clean abstract are mandatory safety criteria.";
           errorBox.classList.remove('hidden');
         }
         return;
@@ -504,7 +500,6 @@ const base = import.meta.env.BASE_URL;
         turnstileToken: turnstileToken
       };
 
-      // Zod Validation
       const result = DriverApplicationSchema.safeParse(payload);
       if (!result.success) {
         if (errorBox) {
@@ -514,10 +509,9 @@ const base = import.meta.env.BASE_URL;
         return;
       }
 
-      // Successful Application submission
       if (errorBox) {
-        errorBox.className = 'text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-md';
-        errorBox.innerText = 'Safety criteria verified. Transmitting encrypted profile to logistics network database...';
+        errorBox.className = 'text-xs text-emerald-450 bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-md';
+        errorBox.innerText = 'Qualifications verified. Transmitting encrypted profile to network...';
         errorBox.classList.remove('hidden');
       }
 
@@ -535,12 +529,13 @@ const base = import.meta.env.BASE_URL;
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || 'Server rejected the application.');
+          throw new Error(data.error || 'Server rejected application.');
         }
         return data;
       })
       .then((data) => {
-        alert(`Driver profile submitted successfully! Decoupled edge worker response: ${data.message}`);
+        broAudio.playBiometricSuccess();
+        alert(`Driver application successfully logged! Edge worker response: ${data.message}`);
         localStorage.removeItem(STORAGE_KEY);
         form.reset();
         if (uploadStatus) {
@@ -550,7 +545,6 @@ const base = import.meta.env.BASE_URL;
         currentStep = 1;
         showStep(1);
         if (errorBox) errorBox.classList.add('hidden');
-        // Reset Turnstile
         if (turnstileWidgetId !== null && (window as any).turnstile) {
           (window as any).turnstile.reset(turnstileWidgetId);
           turnstileToken = '';
@@ -559,7 +553,7 @@ const base = import.meta.env.BASE_URL;
       .catch((err) => {
         if (errorBox) {
           errorBox.innerText = `Submission failed: ${err.message}`;
-          errorBox.className = 'text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
+          errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
           errorBox.classList.remove('hidden');
         }
       });
@@ -582,7 +576,6 @@ const base = import.meta.env.BASE_URL;
     }
   });
 
-  // Save progress on inputs
   form?.addEventListener('input', () => {
     saveDriverProgress();
     updateChecklistStatus();
@@ -597,6 +590,6 @@ const base = import.meta.env.BASE_URL;
   }
   .scanner-bar.active-scan {
     opacity: 1 !important;
-    animation: scanSweep 0.6s ease-in-out forwards;
+    animation: scanSweep 0.5s ease-in-out forwards;
   }
 </style>
