@@ -3,40 +3,38 @@ import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.astro';
 import CorridorMap from '../components/CorridorMap.astro';
-import LidarTracker from '../components/LidarTracker.astro';
 
 const fleetItems = await getCollection('fleet');
 const base = import.meta.env.BASE_URL;
 
-// Helper to resolve high-fidelity asset images dynamically by ID
+// Helper to resolve images dynamically
 const getFleetImage = (id: string) => {
-  if (id === '13-axle-combo') return `${base}images/13-axle-combo.png?v=4`;
-  if (id === 'extendable-rgn') return `${base}images/rgn-lowboy.png?v=4`;
-  if (id === 'mack-titan') return `${base}images/mack-titan.png?v=4`;
+  if (id === 'dry-van') return `${base}images/hero-truck.png?v=4`;
+  if (id === 'reefer') return `${base}images/rgn-lowboy.png?v=4`;
+  if (id === 'flatbed') return `${base}images/mack-titan.png?v=4`;
   return `${base}images/hero-truck.png?v=4`;
 };
 ---
 
 <Layout>
   <!-- Navigation -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#05070D]/85 border-b border-slate-900" style="view-transition-name: main-header;">
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#020408]/85 border-b border-slate-900" style="view-transition-name: main-header;">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
       <a href={base} class="flex items-center gap-2 group">
-        <div class="h-3 w-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_#3b82f6] group-hover:bg-blue-400 transition-colors shrink-0"></div>
+        <div class="h-3 w-3 bg-[#00f0ff] rounded-full animate-pulse shadow-[0_0_8px_#00f0ff] group-hover:bg-cyan-400 transition-colors shrink-0"></div>
         <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90" />
       </a>
       
-      <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-300">
-        <a href="#divisions" class="hover:text-blue-400 transition-colors">Operations</a>
-        <a href="#fleet" class="hover:text-blue-400 transition-colors">Fleet Specs</a>
-        <a href="#corridors" class="hover:text-blue-400 transition-colors">Transit Corridors</a>
-        <a href="#radar" class="hover:text-blue-400 transition-colors">LiDAR Tech Hub</a>
-        <a href={`${base}quote`} data-astro-prefetch class="hover:text-blue-400 transition-colors">Quote Engine</a>
-        <a href={`${base}drivers`} data-astro-prefetch class="hover:text-blue-400 transition-colors">Driver Portal</a>
+      <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-350">
+        <a href="#divisions" class="hover:text-[#00f0ff] transition-colors">Operations</a>
+        <a href="#fleet" class="hover:text-[#00f0ff] transition-colors">Fleet Specs</a>
+        <a href="#corridors" class="hover:text-[#00f0ff] transition-colors">Transit Routes</a>
+        <a href={`${base}quote`} data-astro-prefetch class="hover:text-[#00f0ff] transition-colors">Quote Engine</a>
+        <a href={`${base}drivers`} data-astro-prefetch class="hover:text-[#00f0ff] transition-colors">Driver Portal</a>
       </nav>
 
       <div class="flex items-center gap-4">
-        <a href="tel:902-916-6936" class="hidden sm:inline-flex bg-blue-500/10 border border-blue-500/30 hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-all duration-300 text-blue-400 text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
+        <a href="tel:902-916-6936" class="hidden sm:inline-flex bg-cyan-500/10 border border-cyan-500/30 hover:border-[#00f0ff] hover:bg-[#00f0ff] hover:text-black transition-all duration-300 text-[#00f0ff] text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
           <span>Call Desk: 902-916-6936</span>
         </a>
       </div>
@@ -46,23 +44,23 @@ const getFleetImage = (id: string) => {
   <Hero />
 
   <!-- Live Operational Metrics Dashboard Banner -->
-  <section class="border-y border-slate-900 bg-[#080B13] relative z-20">
+  <section class="border-y border-slate-900 bg-[#05070d] relative z-20">
     <div class="max-w-7xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
       <div class="text-center md:text-left space-y-1">
-        <div class="text-3xl font-black font-outfit text-white tracking-tight glow-text-blue">35+ YEARS</div>
-        <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500">Specialized Logistics Trust</div>
+        <div class="text-3xl font-black font-outfit text-white tracking-tight glow-text-cyan">35+ YEARS</div>
+        <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500">Commercial Shipping Trust</div>
       </div>
       <div class="text-center md:text-left space-y-1 border-l border-slate-900 pl-0 md:pl-8">
-        <div class="text-3xl font-black font-outfit text-white tracking-tight glow-text-blue">99.8%</div>
-        <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500">On-Time Transit Rating</div>
+        <div class="text-3xl font-black font-outfit text-white tracking-tight glow-text-cyan">99.8%</div>
+        <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500">On-Time Delivery Rating</div>
       </div>
       <div class="text-center md:text-left space-y-1 border-l border-slate-900 pl-0 md:pl-8">
-        <div class="text-3xl font-black font-outfit text-amber-500 tracking-tight glow-text-amber">100% COR</div>
+        <div class="text-3xl font-black font-outfit text-[#ff6000] tracking-tight glow-text-blaze">100% COR</div>
         <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500">Safety Certified / DOT Compliant</div>
       </div>
       <div class="text-center md:text-left space-y-1 border-l border-slate-900 pl-0 md:pl-8">
-        <div class="text-3xl font-black font-outfit text-emerald-500 tracking-tight glow-text-emerald">24/7 CMD</div>
-        <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500">Live Dispatch Desk</div>
+        <div class="text-3xl font-black font-outfit text-[#00f0ff] tracking-tight glow-text-cyan">24/7 CMD</div>
+        <div class="text-[10px] font-mono uppercase tracking-widest text-slate-500">Active Fleet Dispatch</div>
       </div>
     </div>
   </section>
@@ -70,167 +68,275 @@ const getFleetImage = (id: string) => {
   <!-- Interactive Operations Divisions Section -->
   <section id="divisions" class="py-24 px-6 max-w-7xl mx-auto space-y-16">
     <div class="text-center space-y-4">
-      <span class="text-xs font-mono uppercase tracking-widest text-blue-500 font-bold">[SYS_DIVISIONS_MANAGEMENT]</span>
+      <span class="text-xs font-mono uppercase tracking-widest text-[#ff6000] font-bold">[SYS_DIVISIONS_MANAGEMENT]</span>
       <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white font-outfit uppercase">Our Core Operations Suite</h2>
-      <p class="text-slate-400 max-w-xl mx-auto text-sm">Industrial-grade dispatch structures separating commercial, specialized, and customs clearances.</p>
+      <p class="text-slate-400 max-w-xl mx-auto text-sm">Interactive control terminals for Dry Van packing, Reefer cold chain telemetry, and Flatbed stress diagnostics.</p>
     </div>
 
     <!-- Interactive Tabs Component -->
-    <div class="max-w-4xl mx-auto space-y-8" id="operations-tabs-container">
+    <div class="max-w-5xl mx-auto space-y-8" id="operations-tabs-container">
       <!-- Tabs Navigation -->
       <div class="flex flex-col sm:flex-row gap-2 border-b border-slate-900 pb-2">
-        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-blue-500/40 bg-blue-950/20 text-white transition-all duration-300 tab-btn active" data-target="tab-heavy">
-          DIV_01 // SPECIALIZED HEAVY-HAUL
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-cyan-500/40 bg-cyan-950/20 text-white transition-all duration-300 tab-btn active" data-target="tab-dry-van">
+          DIV_01 // DRY VAN FREIGHT
         </button>
-        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-permits">
-          DIV_02 // PERMITS & ESCORTS
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-350 transition-all duration-300 tab-btn" data-target="tab-reefer">
+          DIV_02 // REFRIGERATED CARGO
         </button>
-        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-customs">
-          DIV_03 // CUSTOMS eMANIFEST
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-350 transition-all duration-300 tab-btn" data-target="tab-flatbed">
+          DIV_03 // FLATBED DIVISION
         </button>
-        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-300 transition-all duration-300 tab-btn" data-target="tab-tracker">
-          DIV_04 // LIVE SHIPMENT TRACKER
+        <button class="flex-1 text-center py-4 px-3 rounded font-mono text-[10px] uppercase tracking-wider font-bold border border-slate-900 text-slate-500 hover:text-slate-350 transition-all duration-300 tab-btn" data-target="tab-tracker">
+          DIV_04 // ACTIVE MANIFEST TRACKER
         </button>
       </div>
 
       <!-- Terminal Loader HUD (Animated Console Screen) -->
-      <div id="tab-terminal-loader" class="hidden h-[340px] bg-[#05070D] border border-blue-500/20 rounded-lg p-8 flex flex-col justify-center space-y-4 font-mono text-xs text-blue-400 relative scanlines cyber-corners shadow-2xl">
+      <div id="tab-terminal-loader" class="hidden h-[340px] bg-[#020408] border border-cyan-500/20 rounded-lg p-8 flex flex-col justify-center space-y-4 font-mono text-xs text-cyan-400 relative scanlines cyber-corners shadow-2xl">
         <div class="space-y-1.5">
-          <div class="text-blue-500/70 text-[10px]">SYS_CONSOLE // CONNECTING LINK...</div>
-          <div id="terminal-loader-cmd" class="text-slate-200 font-bold">&gt; UPLINKING SPECIALIZED HEAVY-HAUL DIRECTIVES...</div>
+          <div class="text-cyan-500/70 text-[10px]">SYS_CONSOLE // CONNECTING LINK...</div>
+          <div id="terminal-loader-cmd" class="text-slate-200 font-bold">&gt; UPLINKING DRY VAN DIRECTIVES...</div>
         </div>
         
         <div class="flex items-center gap-4">
-          <div class="w-full h-3 bg-slate-950 border border-slate-900 rounded overflow-hidden relative">
-            <div id="terminal-loader-bar" class="h-full w-0 bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 transition-all duration-300"></div>
+          <div class="w-full h-3 bg-black border border-slate-900 rounded overflow-hidden relative">
+            <div id="terminal-loader-bar" class="h-full w-0 bg-gradient-to-r from-[#ff6000] via-[#00f0ff] to-[#ff6000] transition-all duration-300"></div>
           </div>
           <span id="terminal-loader-pct" class="font-bold shrink-0 text-slate-300">0%</span>
         </div>
 
         <div class="text-[10px] text-slate-500 space-y-1">
-          <div>&gt; CACHING LOCAL PERMIT CACHES... OK</div>
+          <div>&gt; CACHING LOGISTICS MANIFESTS... OK</div>
           <div class="flex items-center gap-1">
-            <span>&gt; INITIATING DECISION MATRIX...</span>
-            <span class="h-3 w-1.5 bg-blue-500 animate-ping"></span>
+            <span>&gt; INITIATING PANEL SIMULATOR...</span>
+            <span class="h-3 w-1.5 bg-[#00f0ff] animate-ping"></span>
           </div>
         </div>
       </div>
 
       <!-- Tabs Contents -->
       <div class="space-y-6">
-        <!-- Tab 1: Heavy Haul -->
-        <div class="tab-panel space-y-6" id="tab-heavy">
-          <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Tab 1: Dry Van Freight -->
+        <div class="tab-panel space-y-6" id="tab-dry-van">
+          <div class="bg-[#05070d]/50 border border-slate-900 p-6 sm:p-8 rounded-lg grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="space-y-4">
-              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 01 // Specialized Heavy-Haul</h3>
+              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 01 // Dry Van Cargo</h3>
               <p class="text-slate-400 text-sm leading-relaxed">
-                Coordinating high-capacity overweight and oversized superloads across regional corridors. We manage structural clearance evaluations, highway height limitations, and bridge weight tolerances beforehand.
+                Coordinating high-volume commercial dry van transport across North America. Perfect for general merchandise, electronics, consumer goods, and palletized commodities requiring clean, enclosed security.
               </p>
-              <ul class="space-y-2 text-xs font-mono text-slate-400 pt-2">
-                <li class="flex items-center gap-2 text-blue-400"><span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span> 13-axle combi & RGN float allocation</li>
-                <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span> Provincial and State oversize permits</li>
-                <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span> Escort pilot car coordination</li>
-              </ul>
+              
+              <div class="space-y-2 pt-2">
+                <div class="text-[10px] font-mono text-slate-500 uppercase">// Volumetric Packing Simulator</div>
+                <div class="bg-black/40 border border-slate-900 p-4 rounded-md space-y-4">
+                  <div class="flex justify-between text-[10px] font-mono text-slate-400">
+                    <span>Pallets Loaded (0-26):</span>
+                    <span id="dry-van-count-label" class="text-cyan-400 font-bold">14 Pallets</span>
+                  </div>
+                  <input type="range" id="dry-van-slider" min="0" max="26" value="14" class="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]" />
+                  
+                  <div class="grid grid-cols-3 gap-2 text-[9px] font-mono text-slate-500 pt-1">
+                    <div>
+                      <span>VOLUMETRIC FILL:</span>
+                      <span id="dry-van-fill-val" class="block text-white font-bold">53.8%</span>
+                    </div>
+                    <div>
+                      <span>AXLE LOADING:</span>
+                      <span id="dry-van-axle-val" class="block text-cyan-400 font-bold">OPTIMAL</span>
+                    </div>
+                    <div>
+                      <span>EST. WEIGHT:</span>
+                      <span id="dry-van-weight-val" class="block text-white font-bold">24,200 LBS</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="rounded-lg overflow-hidden border border-slate-900/60 relative h-60 md:h-auto">
-              <img src={`${base}images/hero-truck.png`} alt="Heavy Haul trailer" class="w-full h-full object-cover" />
+            
+            <div class="bg-black/50 border border-slate-900 rounded-lg p-6 flex flex-col justify-center items-center space-y-4 relative overflow-hidden min-h-[220px]">
+              <div class="absolute top-3 left-3 text-[9px] font-mono text-slate-500 tracking-wider">CARGO_HOLD_GRID // 2D SCHEMATIC</div>
+              <!-- Dynamic Pallet Grid -->
+              <div id="pallet-grid-container" class="grid grid-cols-13 gap-1.5 w-full max-w-md p-3 bg-black/80 border border-slate-900 rounded relative">
+                <!-- 26 pallet slots (2 rows of 13) -->
+              </div>
+              <div class="text-[9px] font-mono text-slate-500 text-center w-full border-t border-slate-900/60 pt-2">
+                REAR DOORS ◄───────────────────► TRACTOR CABIN
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Tab 2: Permits & Escorts -->
-        <div class="tab-panel space-y-6 hidden" id="tab-permits">
-          <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Tab 2: Reefer Climate Control -->
+        <div class="tab-panel space-y-6 hidden" id="tab-reefer">
+          <div class="bg-[#05070d]/50 border border-slate-900 p-6 sm:p-8 rounded-lg grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="space-y-4">
-              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 02 // Oversized Permits & Escorts</h3>
+              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 02 // Refrigerated (Reefer)</h3>
               <p class="text-slate-400 text-sm leading-relaxed">
-                Permitted and synchronized route dispatch. We manage multi-jurisdictional oversized load permits, organize police escorts, and verify bridge clearances for heavy machinery across municipal and provincial corridors.
+                Precision temperature-controlled transport for frozen foods, pharmaceuticals, and chilled agricultural products. Equipped with real-time temperature telemetry reporting.
               </p>
-              <ul class="space-y-2 text-xs font-mono text-slate-400 pt-2">
-                <li class="flex items-center gap-2 text-amber-500"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span> Multi-province oversized permit coordination</li>
-                <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span> Route clearance and utility company escorts</li>
-                <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span> Safety-certified (COR / OSHA) commercial drivers</li>
-              </ul>
+
+              <!-- Thermostat Dial HUD -->
+              <div class="space-y-2 pt-2">
+                <div class="text-[10px] font-mono text-slate-500 uppercase flex items-center justify-between">
+                  <span>// Thermostat Controller</span>
+                  <span id="reefer-warning" class="text-emerald-500 font-bold animate-pulse">// SYSTEM STABLE</span>
+                </div>
+                <div class="bg-black/40 border border-slate-900 p-4 rounded-md space-y-4">
+                  <div class="flex justify-between text-[10px] font-mono text-slate-400">
+                    <span>Target Temperature:</span>
+                    <span id="reefer-temp-label" class="text-cyan-400 font-bold">-18.0°C</span>
+                  </div>
+                  <input type="range" id="reefer-slider" min="-20" max="15" value="-18" class="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]" />
+                  
+                  <div class="grid grid-cols-3 gap-2 text-[9px] font-mono text-slate-500 pt-1">
+                    <div>
+                      <span>COMPRESSOR POWER:</span>
+                      <span id="reefer-power-val" class="block text-white font-bold">HIGH LOAD</span>
+                    </div>
+                    <div>
+                      <span>STATUS CODE:</span>
+                      <span id="reefer-code-val" class="block text-cyan-400 font-bold">COOL_CYCLE_ACTV</span>
+                    </div>
+                    <div>
+                      <span>TEMP READOUT:</span>
+                      <span id="reefer-current-val" class="block text-white font-bold">-17.8°C</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="rounded-lg overflow-hidden border border-slate-900/60 relative h-60 md:h-auto">
-              <img src={`${base}images/mack-titan.png`} alt="Mack Titan heavy haul" class="w-full h-full object-cover" />
+            
+            <div class="bg-black/50 border border-slate-900 rounded-lg p-6 flex flex-col justify-between items-center relative overflow-hidden min-h-[220px]">
+              <div class="absolute top-3 left-3 text-[9px] font-mono text-slate-500 tracking-wider">THERMOGRAPH_TELEMETRY // LIVE FEED</div>
+              
+              <!-- Live SVG Temperature Wave Graph -->
+              <div class="w-full flex-1 flex items-center justify-center pt-6">
+                <svg id="thermograph-svg" viewBox="0 0 400 120" class="w-full h-28 bg-black/85 border border-slate-900 rounded">
+                  <!-- Dotted threshold line at +4C -->
+                  <line x1="0" y1="90" x2="400" y2="90" stroke="#ff6000" stroke-width="1" stroke-dasharray="3, 3" />
+                  <text x="310" y="84" fill="#ff6000" font-family="monospace" font-size="8">BREACH LIMIT (+4°C)</text>
+                  
+                  <!-- Dynamic Wave Path -->
+                  <path id="thermograph-wave" d="M 0 60 Q 50 30 100 60 T 200 60 T 300 60 T 400 60" fill="none" stroke="#00f0ff" stroke-width="1.5" />
+                  <path id="thermograph-target" d="M 0 60 L 400 60" fill="none" stroke="#00f0ff" stroke-width="1" stroke-dasharray="4, 4" opacity="0.4" />
+                </svg>
+              </div>
+              <div class="text-[9px] font-mono text-slate-500 text-center w-full pt-2 flex justify-between">
+                <span>TIME_DELTA: REAL-TIME SEC</span>
+                <span>COMPRESSOR CYCLES: OPTIMAL</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Tab 3: Customs -->
-        <div class="tab-panel space-y-6 hidden" id="tab-customs">
-          <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Tab 3: Flatbed Open Deck -->
+        <div class="tab-panel space-y-6 hidden" id="tab-flatbed">
+          <div class="bg-[#05070d]/50 border border-slate-900 p-6 sm:p-8 rounded-lg grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="space-y-4">
-              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 03 // Cross-Border Customs</h3>
+              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 03 // Open Deck Flatbed</h3>
               <p class="text-slate-400 text-sm leading-relaxed">
-                Streamlined border crossings between Canada and the United States. We handle the digital transmission of ACE eManifests (US Customs) and ACI eManifests (Canada Customs) to prevent corridor delays.
+                Industrial transport for machinery, steel coils, and piping. We manage strapping, chain tension securement, and weather tarps for heavy open deck loads.
               </p>
-              <ul class="space-y-2 text-xs font-mono text-slate-400 pt-2">
-                <li class="flex items-center gap-2 text-purple-400"><span class="h-1.5 w-1.5 rounded-full bg-purple-500"></span> ACE & ACI eManifest electronic filing</li>
-                <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-purple-500"></span> PARS & PAPS digital tracking</li>
-                <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-purple-500"></span> Fast-lane customs priority integration</li>
-              </ul>
+
+              <!-- Stress & COG Simulator -->
+              <div class="space-y-2 pt-2">
+                <div class="text-[10px] font-mono text-slate-500 uppercase flex items-center justify-between">
+                  <span>// Cargo Center of Gravity (COg) Slider</span>
+                  <span id="flatbed-warning" class="text-emerald-500 font-bold">// STRESS NORMAL</span>
+                </div>
+                <div class="bg-black/40 border border-slate-900 p-4 rounded-md space-y-4">
+                  <div class="flex justify-between text-[10px] font-mono text-slate-400">
+                    <span>COg Positioning (Front to Rear):</span>
+                    <span id="flatbed-cog-label" class="text-[#ff6000] font-bold">50% (Centered)</span>
+                  </div>
+                  <input type="range" id="flatbed-slider" min="10" max="90" value="50" class="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#ff6000]" />
+                  
+                  <div class="grid grid-cols-3 gap-2 text-[9px] font-mono text-slate-500 pt-1">
+                    <div>
+                      <span>DECK DEFL. FLEX:</span>
+                      <span id="flatbed-flex-val" class="block text-white font-bold">1.2 MM</span>
+                    </div>
+                    <div>
+                      <span>SECURE TENSION:</span>
+                      <span class="block text-[#ff6000] font-bold">8,500 LBS/SQFT</span>
+                    </div>
+                    <div>
+                      <span>AXLE RATIO F/R:</span>
+                      <span id="flatbed-ratio-val" class="block text-white font-bold">50 / 50</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="rounded-lg overflow-hidden border border-slate-900/60 relative h-60 md:h-auto">
-              <img src={`${base}images/rgn-lowboy.png`} alt="Cross-border cargo" class="w-full h-full object-cover" />
+            
+            <div class="bg-black/50 border border-slate-900 rounded-lg p-6 flex flex-col justify-between items-center relative overflow-hidden min-h-[220px]">
+              <div class="absolute top-3 left-3 text-[9px] font-mono text-slate-500 tracking-wider">STRUCTURAL_DECK_FLEX // BLUEPRINT</div>
+              
+              <!-- Bending Flatbed SVG Blueprint -->
+              <div class="w-full flex-1 flex items-center justify-center pt-6">
+                <svg id="flatbed-svg" viewBox="0 0 400 125" class="w-full h-32 bg-black/85 border border-slate-900 rounded">
+                  <!-- Ground Line -->
+                  <line x1="10" y1="110" x2="390" y2="110" stroke="#1e293b" stroke-width="2" />
+                  
+                  <!-- Tractor Outline (static representation) -->
+                  <rect x="20" y="55" width="50" height="40" fill="none" stroke="#475569" stroke-width="1.5" />
+                  <circle cx="35" cy="100" r="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
+                  <circle cx="58" cy="100" r="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
+                  
+                  <!-- Trailer Axles (static wheels) -->
+                  <circle cx="330" cy="100" r="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
+                  <circle cx="350" cy="100" r="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
+                  
+                  <!-- Bending Flatbed Frame Path -->
+                  <path id="flatbed-frame-path" d="M 70 80 Q 210 80 350 80" fill="none" stroke="#ff6000" stroke-width="3" />
+                  
+                  <!-- Dynamic Cargo Block -->
+                  <rect id="flatbed-cargo-block" x="190" y="45" width="40" height="30" fill="none" stroke="#00f0ff" stroke-width="1.5" />
+                  
+                  <!-- Force Vector Arrows -->
+                  <path id="vector-arrow" d="M 210 20 L 210 40 M 205 35 L 210 40 L 215 35" fill="none" stroke="#00f0ff" stroke-width="1.5" />
+                </svg>
+              </div>
+              <div class="text-[9px] font-mono text-slate-500 text-center w-full pt-2 flex justify-between">
+                <span>DECK TOLERANCE: 45,000 LBS MAX</span>
+                <span>FLEX RATIO: STATIC LOAD</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Tab 4: Live Telemetry Tracker -->
+        <!-- Tab 4: Live Telemetry & Command Ticker -->
         <div class="tab-panel space-y-6 hidden" id="tab-tracker">
-          <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg space-y-6">
+          <div class="bg-[#05070d]/50 border border-slate-900 p-6 sm:p-8 rounded-lg space-y-6">
             <div class="space-y-2">
-              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 04 // Live Shipment Telemetry Console</h3>
+              <h3 class="text-2xl font-bold text-white font-outfit uppercase tracking-wide">Division 04 // Interactive Command Dispatch Console</h3>
               <p class="text-slate-400 text-sm leading-relaxed">
-                Connect to active fleet transit beacons. Enter a valid secure load key below to query live coordinate logs, convoy velocities, and transshipment metrics.
+                Connect to active fleet transit beacons. Type commands directly into the terminal below (e.g. <span class="text-cyan-400 font-mono">status</span>, <span class="text-cyan-400 font-mono">route</span>, <span class="text-cyan-400 font-mono">compressor</span>, <span class="text-cyan-400 font-mono">systems</span>, or <span class="text-cyan-400 font-mono">help</span>) to query real-time diagnostics.
               </p>
             </div>
 
             <!-- Tracker Terminal Console Wrapper -->
             <div class="bg-black/80 border border-slate-800 rounded-lg p-6 font-mono text-xs space-y-4 relative scanlines cyber-corners shadow-xl">
               <div class="flex items-center justify-between border-b border-slate-950 pb-3">
-                <span class="text-blue-500 font-bold flex items-center gap-1.5">
-                  <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-                  SYS_TRACKER_GATEWAY // SECURE PORTAL
+                <span class="text-[#00f0ff] font-bold flex items-center gap-1.5">
+                  <span class="h-2 w-2 rounded-full bg-[#00f0ff] animate-pulse shadow-[0_0_6px_#00f0ff]"></span>
+                  SYS_TRACKER_DISPATCH // TERMINAL CORE
                 </span>
                 <span class="text-slate-500 text-[10px]">UPLINK STATUS: ESTABLISHED</span>
               </div>
 
-              <!-- Console Input Area -->
-              <div class="flex flex-col sm:flex-row gap-3">
-                <div class="flex-1 flex items-center bg-[#05070D] border border-slate-850 rounded px-3 py-2.5 text-slate-300 focus-within:border-blue-500 transition-colors">
-                  <span class="text-blue-500 font-bold mr-2">&gt; INPUT SECURE LOAD KEY:</span>
-                  <input type="text" id="telemetry-input" class="w-full bg-transparent focus:outline-none text-white text-xs placeholder:text-slate-700 uppercase" placeholder="e.g. BRO-7740" maxlength="15" autocomplete="off" />
-                </div>
-                <button type="button" id="telemetry-query-btn" class="bg-blue-600 hover:bg-blue-500 border border-blue-500/20 text-white font-bold px-6 py-2.5 rounded text-xs transition-all uppercase cursor-pointer">
-                  Query Uplink
-                </button>
+              <!-- Console output panel -->
+              <div id="telemetry-output-panel" class="border border-slate-900 bg-slate-950/70 p-4 rounded text-slate-400 min-h-[180px] max-h-[300px] overflow-y-auto space-y-1.5 select-text leading-relaxed">
+                <div>&gt; TERMINAL READY. TYPE 'help' FOR LIST OF SYSTEM DIRECTIVES.</div>
               </div>
 
-              <!-- Console output panel -->
-              <div id="telemetry-output-panel" class="hidden border border-slate-900 bg-slate-950/70 p-4 rounded text-slate-400 min-h-[160px] max-h-[300px] overflow-y-auto space-y-1.5 select-text leading-relaxed">
-                <!-- Javascript will inject typing outputs here -->
+              <!-- Console Input Area -->
+              <div class="flex items-center bg-[#020408] border border-slate-850 rounded px-3 py-2.5 text-slate-350 focus-within:border-cyan-500 transition-colors">
+                <span class="text-[#00f0ff] font-bold mr-2">&gt;</span>
+                <input type="text" id="telemetry-input" class="w-full bg-transparent focus:outline-none text-white text-xs placeholder:text-slate-800 uppercase font-mono" placeholder="type status, route, compressor, or systems..." autocomplete="off" />
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive LiDAR Tech Hub Section -->
-  <section id="radar" class="py-24 bg-[#080B13] border-y border-slate-950 px-6">
-    <div class="max-w-7xl mx-auto space-y-12">
-      <div class="text-center space-y-4">
-        <span class="text-xs font-mono uppercase tracking-widest text-blue-500 font-bold">[RADAR_LINK_ESTABLISHED]</span>
-        <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white font-outfit uppercase">LiDAR Dispatch Tech Hub</h2>
-        <p class="text-slate-400 max-w-xl mx-auto text-sm">Review real-time off-thread WebGL simulation showing active convoy LiDAR coordinate sweeps.</p>
-      </div>
-
-      <div class="max-w-5xl mx-auto">
-        <LidarTracker />
       </div>
     </div>
   </section>
@@ -238,30 +344,30 @@ const getFleetImage = (id: string) => {
   <!-- Fleet Showcase Section (With High-Fidelity Imagery) -->
   <section id="fleet" class="py-24 px-6 max-w-7xl mx-auto space-y-16">
     <div class="text-center space-y-4">
-      <span class="text-xs font-mono uppercase tracking-widest text-blue-500 font-bold">[SYS_ASSETS_SPECIFICATION]</span>
+      <span class="text-xs font-mono uppercase tracking-widest text-[#ff6000] font-bold">[SYS_ASSETS_SPECIFICATION]</span>
       <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white font-outfit uppercase">Engineered Fleet Capabilities</h2>
-      <p class="text-slate-400 max-w-xl mx-auto text-sm">Oversized and specialized industrial transport equipment specifications with active load capacities.</p>
+      <p class="text-slate-400 max-w-xl mx-auto text-sm">Commercial dry, chilled, and open flatbed carriers outfitted with custom securement assets.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       {fleetItems.map((item) => (
-        <div class="bg-[#0B0F19]/60 rounded-lg border border-slate-900 overflow-hidden flex flex-col group hover:border-blue-500/35 hover:-translate-y-1 transition-all duration-300 shadow-xl">
-          <!-- High-Fidelity Render Image -->
+        <div class="bg-[#05070d]/60 rounded-lg border border-slate-900 overflow-hidden flex flex-col group hover:border-cyan-500/35 hover:-translate-y-1 transition-all duration-300 shadow-xl">
+          <!-- Render Image -->
           <div class="h-48 overflow-hidden relative border-b border-slate-900">
             <img 
               src={getFleetImage(item.id)} 
               alt={item.data.title} 
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
             />
-            <div class="absolute top-4 right-4 bg-slate-950/80 px-2 py-1 border border-slate-800 rounded text-[9px] font-mono text-blue-400 font-bold uppercase tracking-widest">
-              {item.data.superloadSpec ? "Superload Spec" : "Heavy Spec"}
+            <div class="absolute top-4 right-4 bg-slate-950/80 px-2 py-1 border border-slate-800 rounded text-[9px] font-mono text-cyan-400 font-bold uppercase tracking-widest">
+              Standard Freight
             </div>
           </div>
           
           <div class="p-6 flex-1 flex flex-col justify-between space-y-6">
             <div class="space-y-3">
               <h3 class="text-xl font-bold text-white font-outfit tracking-wide uppercase">{item.data.title}</h3>
-              <p class="text-slate-400 text-xs leading-relaxed">
+              <p class="text-slate-450 text-xs leading-relaxed">
                 {item.body}
               </p>
             </div>
@@ -269,19 +375,19 @@ const getFleetImage = (id: string) => {
             <div class="space-y-4 pt-4 border-t border-slate-900/60">
               <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
                 <div>
-                  <span class="text-slate-500 block">MAX CAPACITY:</span>
-                  <span class="text-slate-300 font-bold">{item.data.capacityTonnage} Tons</span>
+                  <span class="text-slate-500 block">MAX CARGO LOAD:</span>
+                  <span class="text-slate-300 font-bold">{item.data.capacityTonnage * 2000} LBS</span>
                 </div>
                 <div>
                   <span class="text-slate-500 block">AXLE LAYOUT:</span>
-                  <span class="text-slate-300 font-bold">{item.data.axleConfiguration}</span>
+                  <span class="text-slate-350 font-bold">5-Axle Config</span>
                 </div>
               </div>
               
               {item.data.equipmentSpecs && (
                 <div class="space-y-1.5">
                   <span class="text-[10px] font-mono text-slate-500 block uppercase">Operational Features:</span>
-                  <ul class="list-disc pl-4 text-[10px] text-slate-400 space-y-1 font-mono">
+                  <ul class="list-disc pl-4 text-[10px] text-slate-450 space-y-1 font-mono">
                     {item.data.equipmentSpecs.map((spec) => (
                       <li>{spec}</li>
                     ))}
@@ -296,12 +402,12 @@ const getFleetImage = (id: string) => {
   </section>
 
   <!-- Live Transit Corridors Map Section -->
-  <section id="corridors" class="py-24 bg-[#080B13] border-y border-slate-950 px-6">
+  <section id="corridors" class="py-24 bg-[#05070d] border-y border-slate-950 px-6">
     <div class="max-w-7xl mx-auto space-y-12">
       <div class="text-center space-y-4">
-        <span class="text-xs font-mono uppercase tracking-widest text-blue-500 font-bold">[LIVE_RADAR_TRANSIT]</span>
+        <span class="text-xs font-mono uppercase tracking-widest text-[#ff6000] font-bold">[LIVE_RADAR_TRANSIT]</span>
         <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white font-outfit uppercase">Live Transit Corridors</h2>
-        <p class="text-slate-400 max-w-xl mx-auto text-sm">Oversized corridor overview showing major hubs in Prince Edward Island, Ontario, and Alberta.</p>
+        <p class="text-slate-400 max-w-xl mx-auto text-sm">Overview showing major logistics nodes and cross-border commercial lanes.</p>
       </div>
       
       <div class="max-w-5xl mx-auto">
@@ -313,57 +419,57 @@ const getFleetImage = (id: string) => {
   <!-- Client Trust & Endorsements Section -->
   <section class="py-24 px-6 max-w-7xl mx-auto space-y-16">
     <div class="text-center space-y-4">
-      <span class="text-xs font-mono uppercase tracking-widest text-blue-500 font-bold">[SECURE_TESTIMONIALS]</span>
+      <span class="text-xs font-mono uppercase tracking-widest text-[#ff6000] font-bold">[SECURE_TESTIMONIALS]</span>
       <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white font-outfit uppercase">Endorsed Operations</h2>
-      <p class="text-slate-400 max-w-xl mx-auto text-sm">Verified testimonials from industrial coordinators and regional transit supervisors.</p>
+      <p class="text-slate-400 max-w-xl mx-auto text-sm">Verified testimonials from commercial shippers, warehouse supervisors, and logistics managers.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-      <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg relative overflow-hidden font-mono text-xs text-slate-400 space-y-4">
-        <div class="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full blur-2xl"></div>
-        <p class="italic leading-relaxed text-slate-300">
-          "#BRO Transport coordinated the relocation of our 450-ton heavy generator hubs across the Alberta corridor. Flawless multi-jurisdictional permit routing, active pilot escorts, and zero transit delays. They are the absolute pinnacle of heavy-haul logistics."
+      <div class="bg-[#05070d]/50 border border-slate-900 p-8 rounded-lg relative overflow-hidden font-mono text-xs text-slate-400 space-y-4">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-cyan-500/5 rounded-full blur-2xl"></div>
+        <p class="italic leading-relaxed text-slate-350">
+          "#BRO Transport handles our weekly regional food distribution runs. Their reefer temperature monitoring systems give us full log records for every shipment. With zero transit deviations and clean arrivals, they are the pinnacle of cold-chain logistics."
         </p>
         <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
           <div>
-            <span class="text-white font-bold block">Marcus Vance</span>
-            <span class="text-slate-500 text-[10px]">Lead Logistics Director, Atlantic Renewable Energy Group</span>
+            <span class="text-white font-bold block">Arthur Pendelton</span>
+            <span class="text-slate-500 text-[10px]">Operations Director, Northern Foods Cooperative</span>
           </div>
-          <span class="text-blue-500 font-bold">// VERIFIED</span>
+          <span class="text-[#00f0ff] font-bold">// VERIFIED</span>
         </div>
       </div>
 
-      <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg relative overflow-hidden font-mono text-xs text-slate-400 space-y-4">
-        <div class="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full blur-2xl"></div>
-        <p class="italic leading-relaxed text-slate-300">
-          "Transporting oversized substation transformers requires precision clearance mapping. #BRO's interactive console diagnostics and real-time transit telemetry made this our most secure transport ever. Fully COR-compliant execution."
+      <div class="bg-[#05070d]/50 border border-slate-900 p-8 rounded-lg relative overflow-hidden font-mono text-xs text-slate-400 space-y-4">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-orange-500/5 rounded-full blur-2xl"></div>
+        <p class="italic leading-relaxed text-slate-350">
+          "Moving heavy steel beams and structural plates requires rigid flatbed loading. #BRO's strap tension securement and heavy tarping are flawless. Excellent cross-border manifest handling and zero port-of-entry delays."
         </p>
         <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
           <div>
-            <span class="text-white font-bold block">Sarah Jenkins</span>
-            <span class="text-slate-500 text-[10px]">Operations Supervisor, Apex Grid Infrastructure</span>
+            <span class="text-white font-bold block">Sandra Gable</span>
+            <span class="text-slate-500 text-[10px]">Logistics Manager, Steelworks Manufacturing Corp</span>
           </div>
-          <span class="text-amber-500 font-bold">// SECURE</span>
+          <span class="text-[#ff6000] font-bold">// SECURE</span>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Freight Quote Engine Promotion Section -->
-  <section id="quote" class="py-24 px-6 bg-[#080B13] border-t border-slate-950">
+  <section id="quote" class="py-24 px-6 bg-[#05070d] border-t border-slate-950">
     <div class="max-w-4xl mx-auto space-y-8 text-center">
       <div class="space-y-4">
-        <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-blue-400 font-bold px-3 py-1 bg-blue-500/10 rounded-full border border-blue-500/20">
+        <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#00f0ff] font-bold px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/20">
           Integrated Dispatch Systems
         </span>
         <h2 class="text-3xl sm:text-5xl font-black tracking-tight text-white font-outfit uppercase">Launch Procurement Engine</h2>
         <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-          Need a heavy-haul quote? Evaluate corridor constraints, height limits, and weight tolerances to allocate standard, RGN, or 13-axle combinations dynamically.
+          Ready to procure carrier capacity? Calculate mileage rates, weight limitations, and temperature specifications dynamically using our vector quote engine.
         </p>
       </div>
 
       <div class="pt-4">
-        <a href={`${base}quote`} data-astro-prefetch class="inline-flex bg-blue-600 hover:bg-blue-500 border border-blue-500/30 text-white px-8 py-4 rounded-md font-semibold text-sm transition-all duration-300 shadow-lg shadow-blue-600/20 transform hover:-translate-y-0.5">
+        <a href={`${base}quote`} data-astro-prefetch class="inline-flex bg-[#ff6000] hover:bg-orange-500 border border-orange-500/30 text-black font-bold px-8 py-4 rounded-md font-semibold text-sm transition-all duration-300 shadow-lg shadow-orange-600/20 transform hover:-translate-y-0.5">
           Open Procurement Console
         </a>
       </div>
@@ -371,13 +477,13 @@ const getFleetImage = (id: string) => {
   </section>
 
   <!-- Footer -->
-  <footer class="py-16 border-t border-slate-900 bg-[#05070D] text-center space-y-6">
+  <footer class="py-16 border-t border-slate-900 bg-[#020408] text-center space-y-6">
     <div class="flex flex-col items-center justify-center space-y-2">
       <span class="text-sm font-bold text-white font-outfit tracking-wider">#BRO TRANSPORT CORP.</span>
-      <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">Prince Edward Island, Canada. Operating high-stakes industrial relocation and cross-border commercial heavy-haul networks.</p>
+      <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">Prince Edward Island, Canada. Operating premium commercial truckload cargo capacity across North American freight lanes.</p>
     </div>
     
-    <div class="flex flex-wrap items-center justify-center gap-6 text-[10px] font-mono text-slate-600">
+    <div class="flex flex-wrap items-center justify-center gap-6 text-[10px] font-mono text-slate-650">
       <span>COR SAFETY ID: 025684</span>
       <span>DOT REGISTRATION ID: A401-PEI</span>
       <span>PWA ONLINE MODE: CACHED</span>
@@ -387,190 +493,459 @@ const getFleetImage = (id: string) => {
   </footer>
 </Layout>
 
-<!-- Client Side Tabs Handler -->
-  <script>
-    import { broAudio } from '../lib/audio';
+<!-- Client Side Interactive Mechanics Script -->
+<script>
+  import { broAudio } from '../lib/audio';
 
-    function setupTabs() {
-      const btns = document.querySelectorAll('.tab-btn');
-      const panels = document.querySelectorAll('.tab-panel');
-      const loader = document.getElementById('tab-terminal-loader');
-      const loaderCmd = document.getElementById('terminal-loader-cmd');
-      const loaderBar = document.getElementById('terminal-loader-bar');
-      const loaderPct = document.getElementById('terminal-loader-pct');
+  // --- TAB HANDLER ---
+  function setupTabs() {
+    const btns = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.tab-panel');
+    const loader = document.getElementById('tab-terminal-loader');
+    const loaderCmd = document.getElementById('terminal-loader-cmd');
+    const loaderBar = document.getElementById('terminal-loader-bar');
+    const loaderPct = document.getElementById('terminal-loader-pct');
 
-      btns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const targetId = btn.getAttribute('data-target');
-          const targetBtnName = btn.textContent?.trim() || '';
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const targetBtnName = btn.textContent?.trim() || '';
 
-          // Hide all active panels
-          panels.forEach(p => p.classList.add('hidden'));
+        // Play navigation sound
+        broAudio.playScanlineGlitch();
 
-          // Reset and show loader
-          if (loader && loaderCmd && loaderBar && loaderPct) {
-            loader.classList.remove('hidden');
-            loaderCmd.innerText = `> UPLINKING ${targetBtnName.split(' // ')[1]} DATA...`;
-            
-            let progress = 0;
-            loaderBar.style.width = '0%';
-            loaderPct.innerText = '0%';
+        // Stop Reefer hum if we leave reefer tab
+        if (targetId !== 'tab-reefer') {
+          broAudio.stopReeferHum();
+        }
 
-            const interval = setInterval(() => {
-              progress += Math.floor(Math.random() * 25) + 15;
-              if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-              }
-              loaderBar.style.width = `${progress}%`;
-              loaderPct.innerText = `${progress}%`;
-            }, 60);
+        // Hide all panels
+        panels.forEach(p => p.classList.add('hidden'));
 
-            setTimeout(() => {
+        // Reset and show loader
+        if (loader && loaderCmd && loaderBar && loaderPct) {
+          loader.classList.remove('hidden');
+          loaderCmd.innerText = `> UPLINKING ${targetBtnName.split(' // ')[1]} DATA...`;
+          
+          let progress = 0;
+          loaderBar.style.width = '0%';
+          loaderPct.innerText = '0%';
+
+          const interval = setInterval(() => {
+            progress += Math.floor(Math.random() * 25) + 15;
+            if (progress >= 100) {
+              progress = 100;
               clearInterval(interval);
-              loader.classList.add('hidden');
-              
-              // Show target panel
-              const targetPanel = document.getElementById(targetId);
-              if (targetPanel) {
-                targetPanel.classList.remove('hidden');
-              }
-            }, 450);
-          } else {
-            // Fallback
+            }
+            loaderBar.style.width = `${progress}%`;
+            loaderPct.innerText = `${progress}%`;
+          }, 60);
+
+          setTimeout(() => {
+            clearInterval(interval);
+            loader.classList.add('hidden');
+            
+            // Show target panel
             const targetPanel = document.getElementById(targetId);
             if (targetPanel) {
               targetPanel.classList.remove('hidden');
+              // Start hum if we enter Reefer tab
+              if (targetId === 'tab-reefer') {
+                broAudio.startReeferHum();
+                const reeferSlider = document.getElementById('reefer-slider') as HTMLInputElement | null;
+                if (reeferSlider) {
+                  broAudio.updateReeferHum(parseFloat(reeferSlider.value));
+                }
+              }
+            }
+          }, 450);
+        } else {
+          // Fallback
+          const targetPanel = document.getElementById(targetId);
+          if (targetPanel) {
+            targetPanel.classList.remove('hidden');
+            if (targetId === 'tab-reefer') {
+              broAudio.startReeferHum();
             }
           }
-
-          // Toggle active button classes
-          btns.forEach(b => {
-            b.classList.remove('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
-            b.classList.add('border-slate-900', 'text-slate-500');
-          });
-          btn.classList.add('active', 'border-blue-500/40', 'bg-blue-950/20', 'text-white');
-          btn.classList.remove('border-slate-900', 'text-slate-500');
-        });
-      });
-    }
-
-    function setupTelemetryTracker() {
-      const queryBtn = document.getElementById('telemetry-query-btn');
-      const inputEl = document.getElementById('telemetry-input') as HTMLInputElement | null;
-      const panel = document.getElementById('telemetry-output-panel');
-
-      if (!queryBtn || !inputEl || !panel) return;
-
-      let isTyping = false;
-
-      const triggerQuery = () => {
-        if (isTyping) return;
-        const key = inputEl.value.trim().toUpperCase();
-        if (!key) return;
-
-        broAudio.playTabClick();
-        panel.classList.remove('hidden');
-        panel.innerHTML = '';
-        isTyping = true;
-
-        let lines: string[] = [];
-
-        if (key === 'BRO-7740') {
-          lines = [
-            'CONNECTING SECURE UPLINK GATEWAY... DONE',
-            'ESTABLISHING SAT-COM LINK [BAND: KA]... DONE',
-            'DECRYPTING FLEET PARAMS & COORDINATES... DONE',
-            '==========================================',
-            'ACTIVE LOAD: 450-TON WIND TURBINE HUB',
-            'TRANSIT ROUTE: ALBERTA INDUSTRIAL CORRIDOR',
-            'COORDINATES: 53.5461° N, 113.4938° W (EDMONTON)',
-            'VELOCITY: 82 km/h | DIRECTION: NORTH-NORTHWEST',
-            'ESCORT COMPLIANCE: 2 PILOT CARS (ACTIVE ESCORT)',
-            'LOGISTICS HAZARDS: VELOCITY RESTRICTED (BRIDGE OVERWEIGHT)',
-            'ESTIMATED ARRIVAL IN CORRIDOR: 3.4 HOURS (ON-SCHEDULE)'
-          ];
-        } else if (key === 'BRO-9011') {
-          lines = [
-            'CONNECTING SECURE UPLINK GATEWAY... DONE',
-            'ESTABLISHING SAT-COM LINK [BAND: KA]... DONE',
-            'DECRYPTING FLEET PARAMS & COORDINATES... DONE',
-            '==========================================',
-            'ACTIVE LOAD: REINFORCED STRUCTURAL STEEL BEAMS',
-            'TRANSIT ROUTE: PRINCE EDWARD ISLAND TO MAINE CORRIDOR',
-            'COORDINATES: 46.2512° N, 63.1250° W (CHARLOTTETOWN)',
-            'VELOCITY: 95 km/h | DIRECTION: SOUTHWEST',
-            'ESCORT COMPLIANCE: CLASS A VEHICLE SPEC (NO ESCORT REQUIRED)',
-            'LOGISTICS HAZARDS: APPROACHING BORDER / ACE MANIFEST FILED',
-            'ESTIMATED ARRIVAL IN CORRIDOR: 1.8 HOURS (ON-SCHEDULE)'
-          ];
-        } else if (key === 'BRO-3302') {
-          lines = [
-            'CONNECTING SECURE UPLINK GATEWAY... DONE',
-            'ESTABLISHING SAT-COM LINK [BAND: KA]... DONE',
-            'DECRYPTING FLEET PARAMS & COORDINATES... DONE',
-            '==========================================',
-            'ACTIVE LOAD: OVERSIZED SUBSTATION TRANSFORMER',
-            'TRANSIT ROUTE: ONTARIO POWER GRID TRANSMISSION CORRIDOR',
-            'COORDINATES: 48.4284° N, 89.2612° W (THUNDER BAY)',
-            'VELOCITY: 0 km/h | DIRECTION: STATIONARY',
-            'ESCORT COMPLIANCE: 2 POLICE MOTORCYCLE ESCORTS (STANDBY)',
-            'LOGISTICS HAZARDS: SUSPENDED RUN / NIGHT LAYOVER PROTOCOL',
-            'ESTIMATED ARRIVAL IN CORRIDOR: 12.5 HOURS (RESUMING AT 06:00)'
-          ];
-        } else {
-          lines = [
-            'CONNECTING SECURE UPLINK GATEWAY... DONE',
-            'ESTABLISHING SAT-COM LINK [BAND: KA]... FAILED',
-            'RETRYING SECURE LINK... REFUSED',
-            '==========================================',
-            'ERROR: UNABLE TO ESTABLISH TELEMETRY UPLINK.',
-            'REASON: INVALID OR UNREGISTERED SECURITY KEY.',
-            'SYS_WARNING: SECURITY LOG RECORDED. BACKTRACE INITIATED.'
-          ];
         }
 
-        let lineIndex = 0;
-        const printLine = () => {
-          if (lineIndex < lines.length) {
-            const p = document.createElement('div');
-            p.innerText = lines[lineIndex];
+        // Toggle active classes
+        btns.forEach(b => {
+          b.classList.remove('active', 'border-cyan-500/40', 'bg-cyan-950/20', 'text-white');
+          b.classList.add('border-slate-900', 'text-slate-500');
+        });
+        btn.classList.add('active', 'border-cyan-500/40', 'bg-cyan-950/20', 'text-white');
+        btn.classList.remove('border-slate-900', 'text-slate-500');
+      });
+    });
+  }
 
-            if (lines[lineIndex].startsWith('ERROR') || lines[lineIndex].startsWith('SYS_WARNING')) {
-              p.className = 'text-rose-400 font-bold';
-            } else if (lines[lineIndex].startsWith('ACTIVE') || lines[lineIndex].startsWith('TRANSIT') || lines[lineIndex].startsWith('COORDINATES')) {
-              p.className = 'text-emerald-400';
-            } else if (lines[lineIndex].startsWith('===') || lines[lineIndex].startsWith('BRO-')) {
-              p.className = 'text-slate-500';
-            } else {
-              p.className = 'text-blue-400';
-            }
+  // --- VOLUMETRIC DRY VAN CARGO SIMULATOR ---
+  function setupDryVanSimulator() {
+    const slider = document.getElementById('dry-van-slider') as HTMLInputElement | null;
+    const countLabel = document.getElementById('dry-van-count-label');
+    const fillVal = document.getElementById('dry-van-fill-val');
+    const axleVal = document.getElementById('dry-van-axle-val');
+    const weightVal = document.getElementById('dry-van-weight-val');
+    const gridContainer = document.getElementById('pallet-grid-container');
 
-            panel.appendChild(p);
-            panel.scrollTop = panel.scrollHeight;
+    if (!slider || !gridContainer) return;
 
-            broAudio.playTerminalType();
-            lineIndex++;
-            setTimeout(printLine, 120);
-          } else {
-            isTyping = false;
+    // Generate 26 Pallet Slot Elements in the DOM
+    gridContainer.innerHTML = '';
+    const slots: HTMLDivElement[] = [];
+    for (let i = 0; i < 26; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'aspect-square bg-slate-950 border border-slate-900 rounded-sm flex items-center justify-center text-[7px] font-mono text-slate-800 transition-all select-none duration-250';
+      cell.innerText = `${i+1}`;
+      gridContainer.appendChild(cell);
+      slots.push(cell);
+    }
+
+    const updateGrid = () => {
+      const val = parseInt(slider.value) || 0;
+
+      // Update values
+      if (countLabel) countLabel.innerText = `${val} Pallet${val !== 1 ? 's' : ''}`;
+      
+      const fillPercent = ((val / 26) * 100).toFixed(1);
+      if (fillVal) fillVal.innerText = `${fillPercent}%`;
+
+      const estWeight = val * 1750; // average weight of commercial pallets
+      if (weightVal) weightVal.innerText = `${estWeight.toLocaleString()} LBS`;
+
+      // Axle compliance rules
+      if (axleVal) {
+        if (val > 24) {
+          axleVal.innerText = 'OVERLOAD WARN';
+          axleVal.className = 'block text-[#ff6000] font-bold animate-pulse';
+        } else if (val > 18) {
+          axleVal.innerText = 'HEAVY';
+          axleVal.className = 'block text-yellow-500 font-bold';
+        } else {
+          axleVal.innerText = 'OPTIMAL';
+          axleVal.className = 'block text-cyan-400 font-bold';
+        }
+      }
+
+      // Highlight active pallets
+      slots.forEach((slot, index) => {
+        if (index < val) {
+          slot.className = 'aspect-square bg-cyan-950/80 border border-cyan-400/80 rounded-sm flex items-center justify-center text-[7px] font-mono text-cyan-300 shadow-[0_0_4px_rgba(0,240,255,0.2)]';
+        } else {
+          slot.className = 'aspect-square bg-slate-950 border border-slate-900 rounded-sm flex items-center justify-center text-[7px] font-mono text-slate-800';
+        }
+      });
+    };
+
+    slider.addEventListener('input', () => {
+      updateGrid();
+      broAudio.playTabClick();
+    });
+
+    updateGrid();
+  }
+
+  // --- REEFER TEMPERATURE & LIVE WAVE GRAPH ---
+  function setupReeferSimulator() {
+    const slider = document.getElementById('reefer-slider') as HTMLInputElement | null;
+    const tempLabel = document.getElementById('reefer-temp-label');
+    const powerVal = document.getElementById('reefer-power-val');
+    const codeVal = document.getElementById('reefer-code-val');
+    const currentVal = document.getElementById('reefer-current-val');
+    const warningLabel = document.getElementById('reefer-warning');
+    const wavePath = document.getElementById('thermograph-wave');
+    const targetLine = document.getElementById('thermograph-target');
+
+    if (!slider || !wavePath) return;
+
+    let animFrameId: number;
+    let time = 0;
+
+    const animateWave = () => {
+      time += 0.05;
+      const targetTemp = parseFloat(slider.value) || -18;
+      
+      // Determine wave frequency and height based on thermostat load
+      // Colder temperature means compressor is running faster -> higher frequency wave
+      const tempRatio = (targetTemp + 20) / 35; // 0 (coldest) to 1 (warmest)
+      const freqMultiplier = 3.5 - tempRatio * 2.5; // faster waves at cold
+      const waveAmp = 15 + tempRatio * 15; // larger amplitude at warm/unstable
+
+      let pathStr = 'M 0 60';
+      for (let x = 0; x <= 400; x += 10) {
+        const y = 60 + Math.sin(x * 0.05 * freqMultiplier + time) * waveAmp;
+        pathStr += ` L ${x} ${y}`;
+      }
+      wavePath.setAttribute('d', pathStr);
+
+      // Slide target dotted line up and down (Y: 20 to 100)
+      // -20C maps to Y=30, +15C maps to Y=105
+      const targetY = 30 + ((targetTemp + 20) / 35) * 75;
+      if (targetLine) {
+        targetLine.setAttribute('d', `M 0 ${targetY} L 400 ${targetY}`);
+      }
+
+      // Check for heat breach warning (above +4°C)
+      if (warningLabel) {
+        if (targetTemp > 4) {
+          warningLabel.innerText = 'WARNING // TEMP BREACH';
+          warningLabel.className = 'text-[#ff6000] font-bold animate-[pulse_1s_infinite]';
+          wavePath.setAttribute('stroke', '#ff6000');
+          // Occasionally play warning chime
+          if (Math.random() > 0.98) {
+            broAudio.playWarningChime();
           }
-        };
+        } else {
+          warningLabel.innerText = '// SYSTEM STABLE';
+          warningLabel.className = 'text-emerald-500 font-bold';
+          wavePath.setAttribute('stroke', '#00f0ff');
+        }
+      }
 
-        printLine();
+      animFrameId = requestAnimationFrame(animateWave);
+    };
+
+    const updateControls = () => {
+      const val = parseFloat(slider.value) || -18;
+      if (tempLabel) tempLabel.innerText = `${val.toFixed(1)}°C`;
+      
+      // Update simulated live readout
+      if (currentVal) {
+        const jitter = (Math.sin(Date.now() / 1000) * 0.2);
+        currentVal.innerText = `${(val + jitter).toFixed(1)}°C`;
+      }
+
+      // Update power draw descriptions
+      if (powerVal && codeVal) {
+        if (val < -15) {
+          powerVal.innerText = 'MAX COOLING';
+          codeVal.innerText = 'FREEZER_ZONE_ACTV';
+        } else if (val < 0) {
+          powerVal.innerText = 'STANDARD CYCLE';
+          codeVal.innerText = 'COLD_CHAIN_OK';
+        } else {
+          powerVal.innerText = 'MINIMUM DRAW';
+          codeVal.innerText = 'AMBIENT_AIR_MODE';
+        }
+      }
+
+      broAudio.updateReeferHum(val);
+    };
+
+    slider.addEventListener('input', () => {
+      updateControls();
+      broAudio.playTabClick();
+    });
+
+    // Start wave animation loop
+    animateWave();
+    updateControls();
+  }
+
+  // --- FLATBED BENDING BLUEPRINT SIMULATOR ---
+  function setupFlatbedSimulator() {
+    const slider = document.getElementById('flatbed-slider') as HTMLInputElement | null;
+    const cogLabel = document.getElementById('flatbed-cog-label');
+    const flexVal = document.getElementById('flatbed-flex-val');
+    const ratioVal = document.getElementById('flatbed-ratio-val');
+    const warningLabel = document.getElementById('flatbed-warning');
+    const framePath = document.getElementById('flatbed-frame-path');
+    const cargoBlock = document.getElementById('flatbed-cargo-block');
+    const arrow = document.getElementById('vector-arrow');
+
+    if (!slider || !framePath || !cargoBlock || !arrow) return;
+
+    const updateFlatbed = () => {
+      const val = parseInt(slider.value) || 50;
+
+      // Update labels
+      if (cogLabel) cogLabel.innerText = `${val}% (${val < 45 ? 'Front Loaded' : val > 55 ? 'Rear Loaded' : 'Centered'})`;
+
+      // Flex amount is greatest at center (50%), minimal at axle bounds
+      const distFromCenter = Math.abs(50 - val); // 0 to 40
+      const flexAmount = Math.max(0.2, (4.5 - (distFromCenter * 0.1))).toFixed(1);
+      if (flexVal) flexVal.innerText = `${flexAmount} MM`;
+
+      // Axle weight ratio
+      const frontWeight = (100 - val);
+      const rearWeight = val;
+      if (ratioVal) ratioVal.innerText = `${frontWeight} / ${rearWeight}`;
+
+      // Bending frame path: Q point sits at (210, 80 + dynamic bend)
+      // Frame ends at x=70 (tractor cabin link) and x=350 (rear axles)
+      const bendFactor = (5 - (distFromCenter * 0.12)) * 2;
+      framePath.setAttribute('d', `M 70 80 Q 210 ${80 + bendFactor} 350 80`);
+
+      // Slide cargo box along flatbed frame (x: 100 to 300)
+      // maps to slider input (10 to 90)
+      const cargoX = 80 + (val / 100) * 230;
+      // Adjust cargo Y position to match the frame bend curve
+      const ratio = (val - 10) / 80; // 0 to 1
+      const curveY = 80 + (bendFactor * 4 * ratio * (1 - ratio)) - 35;
+      
+      cargoBlock.setAttribute('x', cargoX.toString());
+      cargoBlock.setAttribute('y', curveY.toString());
+
+      // Move vector arrow to sit above the cargo box
+      arrow.setAttribute('d', `M ${cargoX + 20} ${curveY - 25} L ${cargoX + 20} ${curveY - 5} M ${cargoX + 15} ${curveY - 10} L ${cargoX + 20} ${curveY - 5} L ${cargoX + 25} ${curveY - 10}`);
+
+      // Stress compliance warnings
+      if (warningLabel) {
+        if (val < 25 || val > 75) {
+          warningLabel.innerText = 'WARNING // IMBALANCED LOAD';
+          warningLabel.className = 'text-[#ff6000] font-bold animate-pulse';
+          framePath.setAttribute('stroke', '#ff6000');
+        } else {
+          warningLabel.innerText = '// STRESS NORMAL';
+          warningLabel.className = 'text-emerald-500 font-bold';
+          framePath.setAttribute('stroke', '#00f0ff');
+        }
+      }
+    };
+
+    slider.addEventListener('input', () => {
+      updateFlatbed();
+      broAudio.playTabClick();
+    });
+
+    updateFlatbed();
+  }
+
+  // --- INTERACTIVE COMMAND DISPATCH CONSOLE ---
+  function setupCommandLineConsole() {
+    const inputEl = document.getElementById('telemetry-input') as HTMLInputElement | null;
+    const panel = document.getElementById('telemetry-output-panel');
+
+    if (!inputEl || !panel) return;
+
+    let isTyping = false;
+
+    const executeCommand = () => {
+      if (isTyping) return;
+      const rawCmd = inputEl.value.trim().toLowerCase();
+      if (!rawCmd) return;
+
+      inputEl.value = '';
+      broAudio.playTabClick();
+
+      // Print prompt line
+      const promptDiv = document.createElement('div');
+      promptDiv.className = 'text-white font-bold mt-2';
+      promptDiv.innerText = `> ${rawCmd.toUpperCase()}`;
+      panel.appendChild(promptDiv);
+
+      let lines: string[] = [];
+
+      switch (rawCmd) {
+        case 'help':
+          lines = [
+            'AVAILABLE UPLINK DIRECTIVES:',
+            '------------------------------------------',
+            'status      - Get active manifest load telemetry',
+            'route       - Get current transit corridor coordinates',
+            'compressor  - Get temperature cooling cycles log',
+            'systems     - Check chassis structural compliance',
+            'clear       - Clear active console logs'
+          ];
+          break;
+        case 'status':
+          lines = [
+            'UPLINK: CONNECTED [SECURE]',
+            'ACTIVE LOAD: GENERAL INDUSTRIAL FREIGHT (DRY VAN)',
+            'TRAILER ID: BRO-1044 // TANDEM SLIDE CONF',
+            'TOTAL WEIGHT: 42,500 LBS [LEGAL LIMIT COMPLIANT]',
+            'VELOCITY: 85 KM/H | FUEL STATUS: 92%',
+            'MANIFEST STATUS: ACE APPROVED // CLEAR FOR CROSSING'
+          ];
+          break;
+        case 'route':
+          lines = [
+            'ACTIVE LINK: SATELLITE ROAD MAPPING [KA BAND]',
+            'PEI HQ DEPARTURE CLEARANCE: OK',
+            'CURRENT TELEMETRY COORDS: 44.2706° N, 79.9048° W',
+            'REGION: ONTARIO COMMERCIAL CORRIDOR',
+            'APPROACHING HUB: TRANS-SHIPMENT GATEWAY 02',
+            'WEATHER STATE: OPTIMAL LANE CONTROLS'
+          ];
+          break;
+        case 'compressor':
+          lines = [
+            'TELEMETRY SOURCE: REEFER TRAILER BRO-2088',
+            'COMPRESSOR MOTOR Hum: ACTIVE [Thermo King S-600]',
+            'TARGET SETPOINT: -18.0°C | CURRENT SENSED: -17.8°C',
+            'COOLING STATE: STEADY-STATE RECIRCULATION',
+            'CHAMBER SENSORS: 4/4 CALIBRATED AND VERIFIED',
+            'COLD-CHAIN INTEGRITY: 100% SECURE'
+          ];
+          break;
+        case 'systems':
+          lines = [
+            'DIAGNOSTIC SCAN: CHASSIS STRESS SCANNER',
+            'FLATBED DECK DEFL: 1.2 MM [STRUCTURAL FLEX NORMAL]',
+            'LASER SECUREMENT RATIO: 8,500 LBS FORCE [SECURED]',
+            'CHASSIS STRESS COEFFICIENT: 0.12 [SAFE OPERATION]',
+            'ABS BRAKE PRESSURE: 110 PSI // COMPLIANT',
+            'SYSTEM DIAGNOSTIC CODE: 0x00 // SUCCESS'
+          ];
+          break;
+        case 'clear':
+          panel.innerHTML = '<div>&gt; TERMINAL READY. TYPE \'help\' FOR LIST OF SYSTEM DIRECTIVES.</div>';
+          return;
+        default:
+          lines = [
+            `ERROR: DIRECTIVE '${rawCmd.toUpperCase()}' NOT RECOGNIZED.`,
+            'TYPE \'help\' TO SEE THE SYSTEM COMMAND MANIFEST.'
+          ];
+          break;
+      }
+
+      isTyping = true;
+      let lineIndex = 0;
+      const printLine = () => {
+        if (lineIndex < lines.length) {
+          const p = document.createElement('div');
+          p.innerText = lines[lineIndex];
+
+          if (lines[lineIndex].startsWith('ERROR') || lines[lineIndex].startsWith('SYS_WARNING')) {
+            p.className = 'text-rose-400 font-bold';
+            broAudio.playWarningChime();
+          } else if (lines[lineIndex].startsWith('AVAILABLE') || lines[lineIndex].startsWith('ACTIVE') || lines[lineIndex].startsWith('TARGET')) {
+            p.className = 'text-[#00f0ff]';
+          } else if (lines[lineIndex].startsWith('---') || lines[lineIndex].startsWith('UPLINK') || lines[lineIndex].startsWith('TELEMETRY')) {
+            p.className = 'text-slate-500';
+          } else {
+            p.className = 'text-slate-350';
+          }
+
+          panel.appendChild(p);
+          panel.scrollTop = panel.scrollHeight;
+
+          broAudio.playTerminalType();
+          lineIndex++;
+          setTimeout(printLine, 80);
+        } else {
+          isTyping = false;
+        }
       };
 
-      queryBtn.addEventListener('click', triggerQuery);
-      inputEl?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          triggerQuery();
-        }
-      });
-    }
+      printLine();
+    };
 
-    // Compatible with ClientRouter transitions
-    document.addEventListener('astro:page-load', () => {
-      setupTabs();
-      setupTelemetryTracker();
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        executeCommand();
+      }
     });
-  </script>
+  }
+
+  // Compatible with ClientRouter transitions
+  document.addEventListener('astro:page-load', () => {
+    setupTabs();
+    setupDryVanSimulator();
+    setupReeferSimulator();
+    setupFlatbedSimulator();
+    setupCommandLineConsole();
+  });
+</script>

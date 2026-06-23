@@ -8,8 +8,8 @@ interface Props {
 }
 
 const { 
-  title = "#BRO Transport Corp. | Elite Heavy-Haul Logistics & Dispatch", 
-  description = "High-performance specialized heavy-haul dispatching and logistics coordinator. Managed cross-border operations, oversized permit loads, and safety compliance."
+  title = "#BRO Transport Corp. | Elite Commercial Freight Logistics & Dispatch", 
+  description = "High-performance Dry Van, Reefer, and Flatbed commercial freight dispatching. Managed cross-border logistics, cold-chain temperature control, and industrial open-deck operations."
 } = Astro.props;
 const base = import.meta.env.BASE_URL;
 ---
@@ -39,16 +39,16 @@ const base = import.meta.env.BASE_URL;
     <!-- Cloudflare Turnstile API (Explicit render mode) -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   </head>
-  <body class="bg-[#05070D] futuristic-grid text-slate-100 min-h-screen selection:bg-blue-500/30 selection:text-blue-200 relative pb-16 md:pb-0">
+  <body class="bg-[#020408] futuristic-grid text-slate-100 min-h-screen selection:bg-cyan-500/30 selection:text-cyan-200 relative pb-16 md:pb-0">
     <!-- Top cyber status accent line -->
-    <div class="h-[2px] w-full bg-gradient-to-r from-blue-500 via-cyan-500 to-amber-500 sticky top-0 z-50"></div>
+    <div class="h-[2px] w-full bg-gradient-to-r from-[#ff6000] via-[#00f0ff] to-[#ff6000] sticky top-0 z-50"></div>
     
     <slot />
 
     <!-- Floating Audio HUD Control -->
     <div class="fixed bottom-6 right-6 z-[99] flex items-center gap-2">
-      <button id="bro-audio-toggle" class="bg-[#0B0F19]/90 border border-slate-800 hover:border-blue-500/50 backdrop-blur-md px-3.5 py-2.5 rounded text-[10px] font-mono font-bold tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-2 shadow-2xl hover:shadow-[0_0_15px_rgba(59,130,246,0.15)] cursor-pointer" style="content-visibility: auto;">
-        <span id="bro-audio-dot" class="h-2 w-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+      <button id="bro-audio-toggle" class="bg-[#020408]/90 border border-slate-900 hover:border-cyan-500/50 backdrop-blur-md px-3.5 py-2.5 rounded text-[10px] font-mono font-bold tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-2 shadow-2xl hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] cursor-pointer animate-[pulse_3s_infinite]" style="content-visibility: auto;">
+        <span id="bro-audio-dot" class="h-2 w-2 rounded-full bg-slate-650 transition-all duration-300"></span>
         <span id="bro-audio-label">AUDIO: OFF</span>
       </button>
     </div>
@@ -65,10 +65,12 @@ const base = import.meta.env.BASE_URL;
         function updateUI() {
           if (!dot || !label) return;
           if (broAudio.isEnabled()) {
-            dot.className = 'h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse';
+            dot.className = 'h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse';
+            label.className = 'text-cyan-400';
             label.innerText = 'AUDIO: ON';
           } else {
-            dot.className = 'h-2 w-2 rounded-full bg-slate-600';
+            dot.className = 'h-2 w-2 rounded-full bg-slate-650';
+            label.className = 'text-slate-400';
             label.innerText = 'AUDIO: OFF';
           }
         }
@@ -101,7 +103,7 @@ const base = import.meta.env.BASE_URL;
         }
 
         // Apply interactive micro hover sounds to clickable console elements
-        document.querySelectorAll('a, button, select, input[type="checkbox"], input[type="text"], input[type="tel"]').forEach(element => {
+        document.querySelectorAll('a, button, select, input[type="checkbox"], input[type="radio"], input[type="range"], input[type="text"], input[type="tel"]').forEach(element => {
           element.addEventListener('mouseenter', () => {
             broAudio.playTabClick();
           });

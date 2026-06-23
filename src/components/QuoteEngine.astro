@@ -1,170 +1,224 @@
 ---
+const base = import.meta.env.BASE_URL;
 ---
 
-<div class="bg-[#111827]/40 border border-slate-800/70 p-8 rounded-lg shadow-xl relative overflow-hidden max-w-4xl mx-auto" id="quote-container">
+<div class="bg-[#020408]/90 border border-slate-900 p-8 rounded-lg shadow-2xl relative overflow-hidden max-w-4xl mx-auto scanlines cyber-corners" id="quote-container">
   <!-- Progress Header -->
-  <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-4">
+  <div class="flex items-center justify-between mb-8 border-b border-slate-900 pb-4">
     <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_PROCUREMENT: STEP <span id="current-step-num">1</span> OF 4</span>
     <div class="flex gap-2">
-      <div class="h-1.5 w-6 rounded-full bg-blue-600 step-dot"></div>
-      <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
-      <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
-      <div class="h-1.5 w-6 rounded-full bg-slate-800 step-dot"></div>
+      <div class="h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot"></div>
+      <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
+      <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
+      <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
     </div>
   </div>
 
   <form id="quote-form" class="space-y-6">
-    <!-- STEP 1: Operations Division Selection -->
+    <!-- STEP 1: Trailer Type Selection -->
     <div class="step-panel space-y-4" data-step="1">
       <div class="space-y-2">
-        <h3 class="text-xl font-bold text-white font-outfit uppercase">Select Operations Division</h3>
-        <p class="text-slate-400 text-sm">Choose the operational framework for your shipment to apply correct regulatory routing.</p>
+        <h3 class="text-xl font-bold text-white font-outfit uppercase">Select Equipment Class</h3>
+        <p class="text-slate-400 text-sm">Choose the specific trailer configuration to allocate for this manifest.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-        <!-- Division Option 1 -->
-        <label class="border-2 border-slate-800 bg-[#0B0F19]/60 hover:bg-[#0b0f19] p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none" id="div-commercial">
-          <input type="radio" name="logisticsType" value="commercial" class="absolute top-4 right-4 h-4 w-4 text-blue-600 focus:ring-0 focus:ring-offset-0 border-slate-800" checked />
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+        <!-- Option 1: Dry Van -->
+        <label class="border border-slate-900 bg-slate-950/60 hover:bg-slate-950 p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none hover:border-cyan-500/30" id="card-dry-van">
+          <input type="radio" name="trailerType" value="dry-van" class="absolute top-4 right-4 h-4 w-4 text-cyan-400 focus:ring-0 focus:ring-offset-0 border-slate-900" checked />
           <div class="space-y-2">
-            <span class="text-xs font-semibold uppercase tracking-widest text-blue-400">Division 01 // COM</span>
-            <h4 class="text-lg font-bold text-white font-outfit">Commercial Cross-Border</h4>
-            <p class="text-slate-400 text-xs leading-relaxed">
-              Standard commercial oversized, flatbed, or stepdeck loads across regional corridors and Canada/US borders.
+            <span class="text-xs font-semibold uppercase tracking-widest text-cyan-400 font-mono">DIV_01 // DRY</span>
+            <h4 class="text-lg font-bold text-white font-outfit uppercase">Enclosed Dry Van</h4>
+            <p class="text-slate-455 text-xs leading-relaxed">
+              Standard 53ft aluminum box trailer. Fully weatherproof security for general commodities and palletized dry goods.
             </p>
           </div>
         </label>
 
-        <!-- Division Option 2 -->
-        <label class="border-2 border-slate-800 bg-[#0B0F19]/60 hover:bg-[#0b0f19] p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none" id="div-industrial">
-          <input type="radio" name="logisticsType" value="industrial" class="absolute top-4 right-4 h-4 w-4 text-blue-600 focus:ring-0 focus:ring-offset-0 border-slate-800" />
+        <!-- Option 2: Reefer -->
+        <label class="border border-slate-900 bg-slate-950/60 hover:bg-slate-950 p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none hover:border-cyan-500/30" id="card-reefer">
+          <input type="radio" name="trailerType" value="reefer" class="absolute top-4 right-4 h-4 w-4 text-cyan-400 focus:ring-0 focus:ring-offset-0 border-slate-900" />
           <div class="space-y-2">
-            <span class="text-xs font-semibold uppercase tracking-widest text-amber-400">Division 02 // IND</span>
-            <h4 class="text-lg font-bold text-white font-outfit">Specialized Industrial</h4>
-            <p class="text-slate-400 text-xs leading-relaxed">
-              Superload specs, heavy industrial machinery, and infrastructure components requiring route surveys and specialized permits.
+            <span class="text-xs font-semibold uppercase tracking-widest text-cyan-400 font-mono">DIV_02 // REF</span>
+            <h4 class="text-lg font-bold text-white font-outfit uppercase">Refrigerated Reefer</h4>
+            <p class="text-slate-455 text-xs leading-relaxed">
+              53ft insulated climate-controlled trailer. High-performance Thermo King unit for temperature-sensitive cargo.
+            </p>
+          </div>
+        </label>
+
+        <!-- Option 3: Flatbed -->
+        <label class="border border-slate-900 bg-slate-950/60 hover:bg-slate-950 p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none hover:border-blaze/30" id="card-flatbed">
+          <input type="radio" name="trailerType" value="flatbed" class="absolute top-4 right-4 h-4 w-4 text-blaze focus:ring-0 focus:ring-offset-0 border-slate-900" />
+          <div class="space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-widest text-[#ff6000] font-mono">DIV_03 // FLT</span>
+            <h4 class="text-lg font-bold text-white font-outfit uppercase">Open Deck Flatbed</h4>
+            <p class="text-slate-455 text-xs leading-relaxed">
+              53ft steel open platform. Specially outfitted with securement gear, straps, chains, and heavy weather tarps.
             </p>
           </div>
         </label>
       </div>
     </div>
 
-    <!-- STEP 2: Dimensional Configurations -->
+    <!-- STEP 2: Load Specifications -->
     <div class="step-panel space-y-4 hidden" data-step="2">
       <div class="space-y-2">
-        <h3 class="text-xl font-bold text-white font-outfit uppercase">Load Specifications</h3>
-        <p class="text-slate-400 text-sm">Provide exact load dimensions. System will evaluate equipment specs in real-time.</p>
+        <h3 class="text-xl font-bold text-white font-outfit uppercase">Chassis Load Specifications</h3>
+        <p class="text-slate-400 text-sm">Provide exact weight parameters. System will evaluate structural axle flex in real-time.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-        <!-- Input fields -->
-        <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="length" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Length (ft)</label>
-              <input type="number" id="length" min="1" step="0.5" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="48" />
-            </div>
-            <div>
-              <label for="width" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Width (ft)</label>
-              <input type="number" id="width" min="1" step="0.5" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="8.5" />
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
+        <div class="space-y-6">
+          <!-- Weight Input Slider -->
+          <div class="space-y-2">
+            <label for="weight" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">Cargo Weight (LBS):</label>
+            <div class="bg-black/50 border border-slate-900 p-4 rounded-md space-y-3">
+              <div class="flex justify-between items-center text-xs font-mono">
+                <span class="text-slate-500">Legal limit: 45,000 lbs</span>
+                <span id="weight-slider-val" class="text-cyan-400 font-bold text-sm">30,000 LBS</span>
+              </div>
+              <input type="range" id="weight" min="1000" max="45000" step="500" value="30000" class="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]" />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="height" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Height (ft)</label>
-              <input type="number" id="height" min="1" step="0.5" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="13.5" />
-            </div>
-            <div>
-              <label for="weight" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Weight (lbs)</label>
-              <input type="number" id="weight" min="1" step="50" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="45000" />
+
+          <!-- Temperature setpoint (Only visible for Reefer) -->
+          <div class="space-y-2 hidden" id="temp-input-wrapper">
+            <label for="tempSetpoint" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">Reefer Temperature (°C):</label>
+            <div class="bg-black/50 border border-slate-900 p-4 rounded-md space-y-3">
+              <div class="flex justify-between items-center text-xs font-mono">
+                <span class="text-slate-500">Range: -20°C to 15°C</span>
+                <span id="temp-slider-val" class="text-cyan-400 font-bold text-sm">-18°C</span>
+              </div>
+              <input type="range" id="tempSetpoint" min="-20" max="15" step="1" value="-18" class="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]" />
             </div>
           </div>
         </div>
 
         <!-- Live Blueprint Visualizer Card -->
-        <div class="bg-[#05070D] border border-slate-900 rounded-lg p-6 flex flex-col justify-between font-mono text-[9px] text-slate-500 relative scanlines min-h-60 overflow-hidden">
-          <!-- Cyber Corner Accents -->
-          <div class="absolute top-2 left-2 text-[8px] text-blue-500/80 font-bold uppercase tracking-wider flex items-center gap-1 select-none">// LIVE_BLUEPRINT_FOOTPRINT</div>
-          
-          <!-- Warning Indicator -->
-          <div id="blueprint-warning" class="absolute top-2 right-2 px-1.5 py-0.5 rounded border border-rose-500/30 bg-rose-950/20 text-rose-400 font-bold hidden animate-pulse">OVERSIZED SUPERLOAD</div>
+        <div class="bg-[#020408]/90 border border-slate-900 rounded-lg p-6 flex flex-col justify-between font-mono text-[9px] text-slate-500 relative scanlines min-h-60 overflow-hidden">
+          <div class="absolute top-2 left-2 text-[8px] text-[#00f0ff] font-bold uppercase tracking-wider flex items-center gap-1 select-none">// DYNAMIC_BLUEPRINT_HUD</div>
+          <div id="blueprint-warning" class="absolute top-2 right-2 px-1.5 py-0.5 rounded border border-rose-500/30 bg-rose-950/20 text-rose-400 font-bold hidden animate-pulse">MAX WEIGHT LIMIT</div>
 
-          <!-- SVG Visualizer Canvas -->
+          <!-- Dynamic SVG Blueprint Canvas -->
           <div class="flex-1 flex items-center justify-center py-4">
-            <svg id="blueprint-svg" viewBox="0 0 300 120" class="w-full h-28 max-w-xs overflow-visible">
-              <!-- Grid Background inside SVG -->
+            <svg id="blueprint-svg" viewBox="0 0 300 120" class="w-full h-28 max-w-xs overflow-visible bg-black/55 border border-slate-900 rounded">
+              <!-- Grid Pattern -->
               <defs>
-                <pattern id="blueprint-svg-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(59, 130, 246, 0.08)" stroke-width="0.5"/>
+                <pattern id="blueprint-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(0, 240, 255, 0.05)" stroke-width="0.5"/>
                 </pattern>
               </defs>
-              <rect width="100%" height="100%" fill="url(#blueprint-svg-grid)" rx="4"/>
+              <rect width="100%" height="100%" fill="url(#blueprint-grid)" rx="4"/>
               
-              <!-- Ground Reference line -->
-              <line x1="10" y1="105" x2="290" y2="105" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+              <!-- Ground Line -->
+              <line x1="10" y1="105" x2="290" y2="105" stroke="rgba(255, 255, 255, 0.1)" stroke-width="1" stroke-dasharray="2,2"/>
 
-              <!-- Semi Truck Cab Reference (static) -->
-              <path d="M 220,105 L 220,75 L 240,75 L 247,88 L 260,88 L 260,105 Z" fill="rgba(255, 255, 255, 0.04)" stroke="rgba(255, 255, 255, 0.25)" stroke-width="1"/>
-              <!-- Wheels Cab -->
-              <circle cx="227" cy="105" r="4.5" fill="#05070D" stroke="rgba(255, 255, 255, 0.3)"/>
-              <circle cx="250" cy="105" r="4.5" fill="#05070D" stroke="rgba(255, 255, 255, 0.3)"/>
+              <!-- Tractor Cabin Outline -->
+              <path d="M 215,105 L 215,75 L 235,75 L 242,88 L 255,88 L 255,105 Z" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1"/>
+              <circle cx="222" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
+              <circle cx="245" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
 
-              <!-- Trailer flatbed template (static) -->
-              <line x1="20" y1="92" x2="220" y2="92" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2"/>
-              <circle cx="35" cy="105" r="4.5" fill="#05070D" stroke="rgba(255, 255, 255, 0.3)"/>
-              <circle cx="47" cy="105" r="4.5" fill="#05070D" stroke="rgba(255, 255, 255, 0.3)"/>
+              <!-- Wheels (static trailer tandems) -->
+              <circle cx="35" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
+              <circle cx="47" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
 
-              <!-- Dynamic Cargo Footprint Box -->
-              <rect id="blueprint-cargo-box" x="55" y="52" width="160" height="40" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" stroke-width="1" class="transition-all duration-300"/>
-              
-              <!-- Blueprint annotations -->
-              <text id="blueprint-len-text" x="135" y="45" fill="rgba(255, 255, 255, 0.5)" text-anchor="middle">L: 48.0ft</text>
-              <text id="blueprint-hgt-text" x="45" y="75" fill="rgba(255, 255, 255, 0.5)" text-anchor="end">H: 13.5ft</text>
+              <!-- DYNAMIC TRAILER BLUEPRINT PATHS -->
+              <!-- Dry Van Shell -->
+              <g id="svg-dry-van" class="transition-all duration-300">
+                <rect x="20" y="50" width="190" height="42" fill="none" stroke="#00f0ff" stroke-width="1.5" />
+                <line x1="20" y1="50" x2="20" y2="92" stroke="#00f0ff" stroke-width="1" stroke-dasharray="2,2" />
+                <!-- Pallets in Dry Van -->
+                <rect x="30" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
+                <rect x="60" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
+                <rect x="90" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
+                <rect x="120" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
+              </g>
+
+              <!-- Reefer Shell -->
+              <g id="svg-reefer" class="hidden transition-all duration-300">
+                <!-- Insulated Box -->
+                <rect x="25" y="50" width="185" height="42" fill="none" stroke="#00f0ff" stroke-width="1.5" />
+                <!-- Nosemount cooling unit -->
+                <path d="M 210,55 L 210,75 L 218,75 L 218,55 Z" fill="rgba(0, 240, 255, 0.2)" stroke="#00f0ff" stroke-width="1" />
+                <circle cx="214" cy="65" r="2.5" fill="none" stroke="#00f0ff" stroke-width="0.5" class="animate-pulse" />
+                <!-- Cooling zone gradient overlay -->
+                <rect x="30" y="53" width="175" height="36" fill="rgba(0, 240, 255, 0.05)" />
+                <text x="110" y="74" fill="#00f0ff" font-family="monospace" font-size="7" id="blueprint-temp-overlay" opacity="0.8">TEMP: -18°C</text>
+              </g>
+
+              <!-- Flatbed Shell -->
+              <g id="svg-flatbed" class="hidden transition-all duration-300">
+                <!-- Flat platform deck (bends based on weight) -->
+                <path id="blueprint-flatbed-deck" d="M 20 92 Q 115 92 210 92" fill="none" stroke="#ff6000" stroke-width="3" />
+                <!-- Load outline on top of deck (Cargo box) -->
+                <rect id="blueprint-flatbed-cargo" x="80" y="62" width="70" height="30" fill="rgba(255, 96, 0, 0.15)" stroke="#ff6000" stroke-width="1" />
+                <!-- Cargo straps -->
+                <line id="blueprint-strap-1" x1="95" y1="62" x2="95" y2="92" stroke="#ff6000" stroke-width="0.75" />
+                <line id="blueprint-strap-2" x1="115" y1="62" x2="115" y2="92" stroke="#ff6000" stroke-width="0.75" />
+                <line id="blueprint-strap-3" x1="135" y1="62" x2="135" y2="92" stroke="#ff6000" stroke-width="0.75" />
+              </g>
             </svg>
           </div>
 
           <!-- Bottom Telemetry specs -->
           <div class="flex justify-between border-t border-slate-900 pt-2 text-slate-500 font-mono text-[9px] select-none">
-            <span>WEIGHT: <span id="blueprint-weight-text" class="text-slate-300">45,000 LBS</span></span>
-            <span>WIDTH: <span id="blueprint-width-text" class="text-slate-300">8.5 FT</span></span>
+            <span>AXLE FLEX: <span id="blueprint-flex-text" class="text-slate-300">NORMAL</span></span>
+            <span>TONNAGE: <span id="blueprint-ton-text" class="text-slate-300">15.0 TONS</span></span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- STEP 3: Real-Time Regulatory Review -->
+    <!-- STEP 3: Real-Time Rates & Compliance -->
     <div class="step-panel space-y-4 hidden" data-step="3">
       <div class="space-y-2">
-        <h3 class="text-xl font-bold text-white font-outfit uppercase">Regulatory Evaluation</h3>
-        <p class="text-slate-400 text-sm">Lidar and permit calculations based on your physical specifications.</p>
+        <h3 class="text-xl font-bold text-white font-outfit uppercase">Telemetry Rate Assessment</h3>
+        <p class="text-slate-400 text-sm">Calculated operational pricing coordinates based on dispatch algorithms.</p>
       </div>
 
       <!-- Real-Time Evaluation Report Widget -->
-      <div class="bg-[#0B0F19] rounded-lg border border-slate-800 p-6 space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+      <div class="bg-[#05070d] rounded-lg border border-slate-900 p-6 space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-900 pb-4">
           <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_REPORT // AUTO_DIAGNOSTIC</span>
-          <span class="text-xs px-2 py-1 rounded font-mono" id="permit-badge">EVALUATING</span>
+          <span class="text-xs px-2 py-1 rounded font-mono bg-cyan-950/40 text-cyan-400 border border-cyan-900/30" id="permit-badge">ESTIMATING RATE</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-1.5">
-            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Asset Allocation Suggestions:</span>
-            <div class="text-base font-bold text-white" id="allocated-trailer">Calculating Optimal Trailer...</div>
+          <div class="space-y-2">
+            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Assigned Asset:</span>
+            <div class="text-base font-bold text-white uppercase" id="allocated-trailer">53FT Enclosed Carrier</div>
             <p class="text-xs text-slate-400 leading-relaxed" id="allocated-desc">
-              Analyzing dimensions to select flatbed, RGN, or heavy 13-axle combinations.
+              Standard commercial enclosed asset suited for dry van loads.
             </p>
           </div>
 
-          <div class="space-y-2">
-            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Special Directives Required:</span>
-            <ul class="text-xs space-y-1.5 text-slate-300" id="directive-list">
-              <li>- Operational clearance check</li>
-            </ul>
+          <div class="space-y-3">
+            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Pricing Variables:</span>
+            <div class="bg-black/60 border border-slate-900 p-4 rounded space-y-2 font-mono text-[10px]">
+              <div class="flex justify-between">
+                <span class="text-slate-500">BASE MILEAGE RATE:</span>
+                <span class="text-white font-bold" id="rate-base">$2.20 / MILE</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">SURCHARGES (WEIGHT/TEMP):</span>
+                <span class="text-[#ff6000] font-bold" id="rate-surcharges">$0.00 / MILE</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">CROSS-BORDER MANIFEST FEE:</span>
+                <span class="text-white font-bold">$75.00</span>
+              </div>
+              <div class="border-t border-slate-900 pt-2 flex justify-between text-xs">
+                <span class="text-slate-400 font-bold">TOTAL MILEAGE RATE:</span>
+                <span class="text-[#00f0ff] font-bold" id="rate-total">$2.20 / MILE</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- STEP 4: Corridor Contact -->
+    <!-- STEP 4: Corridor Routing & Contact -->
     <div class="step-panel space-y-4 hidden" data-step="4">
       <div class="space-y-2">
         <h3 class="text-xl font-bold text-white font-outfit uppercase">Secure Routing Detail</h3>
@@ -172,28 +226,28 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label for="origin" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Transit Origin</label>
-          <input type="text" id="origin" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., Charlottetown, PE" />
+        <div class="space-y-1">
+          <label for="origin" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Transit Origin</label>
+          <input type="text" id="origin" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="e.g. Charlottetown, PE" />
         </div>
-        <div>
-          <label for="destination" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Transit Destination</label>
-          <input type="text" id="destination" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="e.g., Fort McMurray, AB" />
+        <div class="space-y-1">
+          <label for="destination" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Transit Destination</label>
+          <input type="text" id="destination" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="e.g. Toronto, ON" />
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label for="contactName" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Contact Name</label>
-          <input type="text" id="contactName" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="Alex Carter" />
+        <div class="space-y-1">
+          <label for="contactName" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Contact Name</label>
+          <input type="text" id="contactName" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="Alex Carter" />
         </div>
-        <div>
-          <label for="contactEmail" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
-          <input type="email" id="contactEmail" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="alex@carrier.com" />
+        <div class="space-y-1">
+          <label for="contactEmail" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Email Address</label>
+          <input type="email" id="contactEmail" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="alex@carrier.com" />
         </div>
-        <div>
-          <label for="contactPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Direct Phone</label>
-          <input type="tel" id="contactPhone" class="w-full bg-[#0B0F19] border border-slate-800 focus:border-blue-500 focus:outline-none rounded-md px-4 py-3 text-white text-sm" placeholder="902-555-0144" />
+        <div class="space-y-1">
+          <label for="contactPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Direct Phone</label>
+          <input type="tel" id="contactPhone" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="902-555-0144" />
         </div>
       </div>
       
@@ -204,15 +258,15 @@
     </div>
 
     <!-- Error/Status Box -->
-    <div id="validation-errors" class="hidden text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
+    <div id="validation-errors" class="hidden text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
 
     <!-- Navigation Buttons -->
-    <div class="flex justify-between items-center pt-4 border-t border-slate-800/50">
-      <button type="button" id="prev-btn" class="hidden bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white px-6 py-3 rounded-md font-semibold text-sm transition-all duration-300">
+    <div class="flex justify-between items-center pt-4 border-t border-slate-900">
+      <button type="button" id="prev-btn" class="hidden bg-slate-950 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-white px-6 py-3 rounded font-semibold text-sm transition-all duration-300">
         Previous Step
       </button>
       <div class="flex-1"></div>
-      <button type="button" id="next-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10">
+      <button type="button" id="next-btn" class="bg-cyan-500 hover:bg-[#00f0ff] text-black px-8 py-3.5 rounded font-bold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10">
         Next Step
       </button>
     </div>
@@ -222,6 +276,7 @@
 <!-- Client-side Quote Engine Processing -->
 <script>
   import { QuoteSchema } from '../lib/schemas';
+  import { broAudio } from '../lib/audio';
 
   // State Management
   let currentStep = 1;
@@ -241,7 +296,16 @@
   const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
   const errorBox = document.getElementById('validation-errors');
 
-  // Input Elements
+  // SVG Blueprints
+  const svgDryVan = document.getElementById('svg-dry-van');
+  const svgReefer = document.getElementById('svg-reefer');
+  const svgFlatbed = document.getElementById('svg-flatbed');
+  const flatbedDeck = document.getElementById('blueprint-flatbed-deck');
+  const flatbedCargo = document.getElementById('blueprint-flatbed-cargo');
+  const strap1 = document.getElementById('blueprint-strap-1');
+  const strap2 = document.getElementById('blueprint-strap-2');
+  const strap3 = document.getElementById('blueprint-strap-3');
+
   const getRadioVal = (name: string) => {
     const el = document.querySelector(`input[name="${name}"]:checked`) as HTMLInputElement | null;
     return el ? el.value : '';
@@ -272,7 +336,7 @@
 
     try {
       turnstileWidgetId = turnstile.render('#turnstile-quote-widget', {
-        sitekey: '1x00000000000000000000AA', // Testing sitekey (always passes)
+        sitekey: '1x00000000000000000000AA', // Testing sitekey
         theme: 'dark',
         callback: function(token: string) {
           turnstileToken = token;
@@ -297,9 +361,9 @@
 
     dots.forEach((d, idx) => {
       if (idx + 1 <= step) {
-        d.className = 'h-1.5 w-6 rounded-full bg-blue-600 step-dot';
+        d.className = 'h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot';
       } else {
-        d.className = 'h-1.5 w-6 rounded-full bg-slate-800 step-dot';
+        d.className = 'h-1.5 w-6 rounded-full bg-slate-900 step-dot';
       }
     });
 
@@ -314,10 +378,10 @@
 
     if (step === totalSteps) {
       nextBtn.innerText = 'Submit Quote Request';
-      nextBtn.className = 'bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
+      nextBtn.className = 'bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
     } else {
       nextBtn.innerText = 'Next Step';
-      nextBtn.className = 'bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-md font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-blue-600/10';
+      nextBtn.className = 'bg-cyan-500 hover:bg-[#00f0ff] text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10';
     }
 
     if (step === 3) {
@@ -331,73 +395,57 @@
 
   // Real-Time Evaluation logic for Step 3
   function runEvaluation() {
-    const logisticsType = getRadioVal('logisticsType');
-    const length = getNumberVal('length');
-    const width = getNumberVal('width');
-    const height = getNumberVal('height');
+    const trailerType = getRadioVal('trailerType');
     const weight = getNumberVal('weight');
+    const tempSetpoint = getNumberVal('tempSetpoint');
 
-    const badge = document.getElementById('permit-badge');
     const allocatedTrailer = document.getElementById('allocated-trailer');
     const allocatedDesc = document.getElementById('allocated-desc');
-    const directiveList = document.getElementById('directive-list');
+    const rateBase = document.getElementById('rate-base');
+    const rateSurcharges = document.getElementById('rate-surcharges');
+    const rateTotal = document.getElementById('rate-total');
 
-    if (!badge || !allocatedTrailer || !allocatedDesc || !directiveList) return;
+    if (!allocatedTrailer || !allocatedDesc || !rateBase || !rateSurcharges || !rateTotal) return;
 
-    // Check if Oversized
-    const isOversized = width > 8.5 || height > 13.5 || length > 53 || weight > 45000;
-    const isIndustrial = logisticsType === 'industrial';
+    let basePrice = 2.20;
+    let surchargePrice = 0.00;
 
-    // Reset styles
-    badge.className = 'text-xs px-2 py-1 rounded font-mono';
-    directiveList.innerHTML = '';
-
-    // Set Status Badge
-    if (isOversized) {
-      badge.innerText = 'OVERSIZED SUPERLOAD';
-      badge.classList.add('bg-rose-950/40', 'text-rose-400', 'border', 'border-rose-900/30');
-    } else {
-      badge.innerText = 'STANDARD LOAD';
-      badge.classList.add('bg-emerald-950/40', 'text-emerald-400', 'border', 'border-emerald-900/30');
-    }
-
-    // Allocate Equipment
-    if (weight > 75000 || (width > 11 && weight > 50000)) {
-      allocatedTrailer.innerText = '13-Axle Transport Combo';
-      allocatedDesc.innerText = 'Allocated due to excessive load tonnage and oversized load width footprint. Jeeps and boosters will distribute ground pressure to clear regional highway bridges.';
-    } else if (isOversized) {
-      allocatedTrailer.innerText = 'Extendable RGN Lowboy Float';
-      allocatedDesc.innerText = 'Removable Gooseneck selected. RGN configuration accommodates height restrictions by lowering structural clearance down to 12 inches.';
-    } else {
-      allocatedTrailer.innerText = 'Standard Stepdeck / Flatbed';
-      allocatedDesc.innerText = 'Standard freight parameters detected. Cargo fits within standard commercial Flatbed or Stepdeck loading parameters.';
-    }
-
-    // Directives
-    if (isIndustrial) {
-      directiveList.innerHTML += `<li class="text-amber-400 font-mono">📋 Route survey & infrastructure assessment active</li>`;
-      directiveList.innerHTML += `<li class="text-slate-300 font-mono">- Multi-jurisdictional permit filings required</li>`;
-      directiveList.innerHTML += `<li class="text-slate-300 font-mono">- ACI eManifest customs transmission mandatory</li>`;
-    } else {
-      directiveList.innerHTML += `<li class="text-slate-400 font-mono">- Standard commercial shipping regulations</li>`;
-    }
-
-    if (isOversized) {
-      directiveList.innerHTML += `<li class="text-rose-400 font-mono">⚠️ Oversized Load Permits (Ontario corridor)</li>`;
-      if (width > 10) {
-        directiveList.innerHTML += `<li class="text-rose-400 font-mono">⚠️ Escort Vehicles & Pilot Cars required</li>`;
+    if (trailerType === 'dry-van') {
+      allocatedTrailer.innerText = '53FT Enclosed Carrier';
+      allocatedDesc.innerText = 'Assigned standard dry van. Perfect for palletized freight requiring weather-enclosed security.';
+      basePrice = 2.20;
+    } else if (trailerType === 'reefer') {
+      allocatedTrailer.innerText = '53FT Climate-Controlled Reefer';
+      allocatedDesc.innerText = `Assigned insulated reefer. Temperature setpoint lock verified at ${tempSetpoint}°C.`;
+      basePrice = 2.55;
+      // reefer temperature surcharge
+      if (tempSetpoint < -10) {
+        surchargePrice += 0.10; // deep freeze power surcharge
       }
+    } else if (trailerType === 'flatbed') {
+      allocatedTrailer.innerText = '53FT Open Deck Flatbed';
+      allocatedDesc.innerText = 'Assigned open flatbed. Payloads require tie-down securement and optional tarps.';
+      basePrice = 2.45;
     }
+
+    // Weight surcharge: over 40,000 lbs
+    if (weight > 40000) {
+      surchargePrice += 0.15;
+    }
+
+    const totalRate = basePrice + surchargePrice;
+
+    rateBase.innerText = `$${basePrice.toFixed(2)} / MILE`;
+    rateSurcharges.innerText = `$${surchargePrice.toFixed(2)} / MILE`;
+    rateTotal.innerText = `$${totalRate.toFixed(2)} / MILE`;
   }
 
   // Local Storage Save
   function saveFlowData() {
     const data = {
-      logisticsType: getRadioVal('logisticsType'),
-      length: getNumberVal('length'),
-      width: getNumberVal('width'),
-      height: getNumberVal('height'),
+      trailerType: getRadioVal('trailerType'),
       weight: getNumberVal('weight'),
+      tempSetpoint: getNumberVal('tempSetpoint'),
       origin: getStringVal('origin'),
       destination: getStringVal('destination'),
       contactName: getStringVal('contactName'),
@@ -416,21 +464,16 @@
     try {
       const data = JSON.parse(saved);
       
-      // Set Radios
-      const radio = document.querySelector(`input[name="logisticsType"][value="${data.logisticsType}"]`) as HTMLInputElement | null;
+      const radio = document.querySelector(`input[name="trailerType"][value="${data.trailerType}"]`) as HTMLInputElement | null;
       if (radio) radio.checked = true;
 
-      // Set Numbers
       const setNum = (id: string, val: number) => {
         const el = document.getElementById(id) as HTMLInputElement | null;
         if (el && val) el.value = val.toString();
       };
-      setNum('length', data.length);
-      setNum('width', data.width);
-      setNum('height', data.height);
       setNum('weight', data.weight);
+      setNum('tempSetpoint', data.tempSetpoint);
 
-      // Set Strings
       const setStr = (id: string, val: string) => {
         const el = document.getElementById(id) as HTMLInputElement | null;
         if (el && val) el.value = val;
@@ -441,62 +484,83 @@
       setStr('contactEmail', data.contactEmail);
       setStr('contactPhone', data.contactPhone);
 
-      // Set step if cached
       if (data.currentStep) {
         currentStep = data.currentStep;
         showStep(currentStep);
       }
       updateBlueprint();
     } catch (e) {
-      console.error('Failed to restore cached quote progress', e);
+      console.error('Failed to restore cached progress', e);
     }
   }
 
   function updateBlueprint() {
-    const length = getNumberVal('length') || 48;
-    const width = getNumberVal('width') || 8.5;
-    const height = getNumberVal('height') || 13.5;
-    const weight = getNumberVal('weight') || 45000;
+    const trailerType = getRadioVal('trailerType');
+    const weight = getNumberVal('weight') || 30000;
+    const tempSetpoint = getNumberVal('tempSetpoint') || -18;
 
-    const cargoBox = document.getElementById('blueprint-cargo-box');
     const warning = document.getElementById('blueprint-warning');
-    
-    const lenText = document.getElementById('blueprint-len-text');
-    const hgtText = document.getElementById('blueprint-hgt-text');
-    const wdtText = document.getElementById('blueprint-width-text');
-    const wgtText = document.getElementById('blueprint-weight-text');
+    const sliderVal = document.getElementById('weight-slider-val');
+    const tempInputVal = document.getElementById('temp-slider-val');
+    const tempInputWrapper = document.getElementById('temp-input-wrapper');
 
-    if (!cargoBox) return;
+    const blueprintFlex = document.getElementById('blueprint-flex-text');
+    const blueprintTon = document.getElementById('blueprint-ton-text');
+    const blueprintTempOverlay = document.getElementById('blueprint-temp-overlay');
 
-    // Scale mapping (max length 53, height 16)
-    const mappedWidth = Math.max(30, Math.min(180, (length / 53) * 160));
-    const mappedHeight = Math.max(10, Math.min(65, (height / 16) * 45));
+    // Toggle temp input visibility
+    if (trailerType === 'reefer') {
+      if (tempInputWrapper) tempInputWrapper.classList.remove('hidden');
+    } else {
+      if (tempInputWrapper) tempInputWrapper.classList.add('hidden');
+    }
 
-    // Position box relative to wheels (cargo bed is at y = 92)
-    const nextX = 220 - mappedWidth;
-    const nextY = 92 - mappedHeight;
+    // Toggle blueprint visible groups
+    if (svgDryVan && svgReefer && svgFlatbed) {
+      svgDryVan.classList.add('hidden');
+      svgReefer.classList.add('hidden');
+      svgFlatbed.classList.add('hidden');
 
-    cargoBox.setAttribute('x', nextX.toString());
-    cargoBox.setAttribute('y', nextY.toString());
-    cargoBox.setAttribute('width', mappedWidth.toString());
-    cargoBox.setAttribute('height', mappedHeight.toString());
+      if (trailerType === 'dry-van') {
+        svgDryVan.classList.remove('hidden');
+      } else if (trailerType === 'reefer') {
+        svgReefer.classList.remove('hidden');
+        if (blueprintTempOverlay) {
+          blueprintTempOverlay.textContent = `TEMP: ${tempSetpoint.toFixed(1)}°C`;
+        }
+      } else if (trailerType === 'flatbed') {
+        svgFlatbed.classList.remove('hidden');
+        // Flatbed deck bending flex logic based on weight
+        const maxFlex = 6;
+        const flexRatio = weight / 45000; // 0 to 1
+        const bend = flexRatio * maxFlex;
+        if (flatbedDeck && flatbedCargo && strap1 && strap2 && strap3) {
+          flatbedDeck.setAttribute('d', `M 20 92 Q 115 ${92 + bend} 210 92`);
+          // adjust cargo Y based on bend
+          flatbedCargo.setAttribute('y', (62 + bend/2).toString());
+          // adjust straps Y
+          strap1.setAttribute('y2', (92 + bend/2).toString());
+          strap2.setAttribute('y2', (92 + bend).toString());
+          strap3.setAttribute('y2', (92 + bend/2).toString());
+        }
+      }
+    }
 
     // Update labels
-    if (lenText) lenText.textContent = `L: ${length.toFixed(1)}ft`;
-    if (hgtText) hgtText.textContent = `H: ${height.toFixed(1)}ft`;
-    if (wdtText) wdtText.textContent = `${width.toFixed(1)} FT`;
-    if (wgtText) wgtText.textContent = `${weight.toLocaleString()} LBS`;
+    if (sliderVal) sliderVal.innerText = `${weight.toLocaleString()} LBS`;
+    if (tempInputVal) tempInputVal.innerText = `${tempSetpoint.toFixed(1)}°C`;
+    if (blueprintTon) blueprintTon.innerText = `${(weight / 2000).toFixed(1)} TONS`;
 
-    // Oversized status check
-    const isOversized = width > 8.5 || height > 13.5 || length > 53 || weight > 45000;
-    if (isOversized) {
-      cargoBox.setAttribute('stroke', '#f97316'); // Orange
-      cargoBox.setAttribute('fill', 'rgba(249, 115, 22, 0.15)');
-      if (warning) warning.classList.remove('hidden');
-    } else {
-      cargoBox.setAttribute('stroke', '#3b82f6'); // Blue
-      cargoBox.setAttribute('fill', 'rgba(59, 130, 246, 0.15)');
-      if (warning) warning.classList.add('hidden');
+    if (blueprintFlex) {
+      if (weight > 40000) {
+        blueprintFlex.innerText = 'HIGH DECK STRESS';
+        blueprintFlex.className = 'text-[#ff6000] font-bold animate-pulse';
+        if (warning) warning.classList.remove('hidden');
+      } else {
+        blueprintFlex.innerText = 'NORMAL';
+        blueprintFlex.className = 'text-slate-350';
+        if (warning) warning.classList.add('hidden');
+      }
     }
   }
 
@@ -507,14 +571,11 @@
   nextBtn?.addEventListener('click', () => {
     if (errorBox) errorBox.classList.add('hidden');
 
-    // If on Step 4, validate everything with Zod and submit
     if (currentStep === totalSteps) {
       const payload = {
-        logisticsType: getRadioVal('logisticsType'),
-        length: getNumberVal('length'),
-        width: getNumberVal('width'),
-        height: getNumberVal('height'),
+        trailerType: getRadioVal('trailerType'),
         weight: getNumberVal('weight'),
+        tempSetpoint: getRadioVal('trailerType') === 'reefer' ? getNumberVal('tempSetpoint') : undefined,
         origin: getStringVal('origin'),
         destination: getStringVal('destination'),
         contactName: getStringVal('contactName'),
@@ -523,20 +584,20 @@
         turnstileToken: turnstileToken
       };
 
-      // Zod Validation
       const result = QuoteSchema.safeParse(payload);
       if (!result.success) {
         if (errorBox) {
           errorBox.innerHTML = result.error.errors.map((e) => `• ${e.message}`).join('<br />');
+          errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
           errorBox.classList.remove('hidden');
         }
         return;
       }
 
-      // Successful Validation - submit payload
+      // Successful Validation
       if (errorBox) {
-        errorBox.className = 'text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-md';
-        errorBox.innerText = 'Payload verified. Transmitting secure payload to edge Cloudflare Workers...';
+        errorBox.className = 'text-xs text-cyan-400 bg-cyan-950/20 border border-cyan-900/40 p-4 rounded-md';
+        errorBox.innerText = 'Manifest payload verified. Transmitting encrypted route metrics...';
         errorBox.classList.remove('hidden');
       }
 
@@ -554,47 +615,33 @@
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || 'Server rejected the request.');
+          throw new Error(data.error || 'Uplink transmission rejected.');
         }
         return data;
       })
       .then((data) => {
-        alert(`Quote submitted successfully! Decoupled edge worker response: ${data.message}`);
+        broAudio.playBiometricSuccess();
+        alert(`Procurement request successfully logged! Edge server reply: ${data.message}`);
         localStorage.removeItem(STORAGE_KEY);
         form.reset();
         currentStep = 1;
         showStep(1);
         if (errorBox) errorBox.classList.add('hidden');
-        // Reset turnstile widget
         if (turnstileWidgetId !== null && (window as any).turnstile) {
           (window as any).turnstile.reset(turnstileWidgetId);
           turnstileToken = '';
         }
       })
       .catch((err) => {
+        broAudio.playWarningChime();
         if (errorBox) {
-          errorBox.innerText = `Submission failed: ${err.message}`;
-          errorBox.className = 'text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
+          errorBox.innerText = `Uplink failed: ${err.message}`;
+          errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
           errorBox.classList.remove('hidden');
         }
       });
 
       return;
-    }
-
-    // Step-by-Step input safety checks
-    if (currentStep === 2) {
-      const l = getNumberVal('length');
-      const w = getNumberVal('width');
-      const h = getNumberVal('height');
-      const wt = getNumberVal('weight');
-      if (l <= 0 || w <= 0 || h <= 0 || wt <= 0) {
-        if (errorBox) {
-          errorBox.innerText = 'Please enter valid dimension metrics (must be greater than 0).';
-          errorBox.classList.remove('hidden');
-        }
-        return;
-      }
     }
 
     currentStep++;
@@ -612,7 +659,6 @@
     }
   });
 
-  // Save changes on input
   form?.addEventListener('input', () => {
     saveFlowData();
     updateBlueprint();
@@ -620,18 +666,17 @@
 </script>
 
 <style>
-  /* Styling tweaks to highlight the active radio card */
-  input[type="radio"]:checked + div {
-    border-color: #3b82f6;
+  /* Highlight active cards */
+  #card-dry-van:has(input[type="radio"]:checked) {
+    border-color: #00f0ff;
+    background-color: rgba(0, 240, 255, 0.05);
   }
-  
-  #div-commercial:has(input[type="radio"]:checked) {
-    border-color: #3b82f6;
-    background-color: rgba(59, 130, 246, 0.05);
+  #card-reefer:has(input[type="radio"]:checked) {
+    border-color: #00f0ff;
+    background-color: rgba(0, 240, 255, 0.05);
   }
-
-  #div-industrial:has(input[type="radio"]:checked) {
-    border-color: #f59e0b;
-    background-color: rgba(245, 158, 11, 0.05);
+  #card-flatbed:has(input[type="radio"]:checked) {
+    border-color: #ff6000;
+    background-color: rgba(255, 96, 0, 0.05);
   }
 </style>
