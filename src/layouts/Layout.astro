@@ -11,6 +11,7 @@ const {
   title = "#BRO Transport Corp. | Elite Heavy-Haul Logistics & Dispatch", 
   description = "High-performance specialized heavy-haul dispatching and logistics coordinator. Managed cross-border operations, oversized permit loads, and safety compliance."
 } = Astro.props;
+const base = import.meta.env.BASE_URL;
 ---
 
 <!DOCTYPE html>
@@ -18,7 +19,7 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     <meta name="generator" content={Astro.generator} />
     
     <!-- SEO Meta Tags -->
@@ -29,8 +30,8 @@ const {
     <meta property="og:type" content="website" />
     
     <!-- Preload Local WOFF2 Fonts -->
-    <link rel="preload" href={`${import.meta.env.BASE_URL}fonts/outfit-latin.woff2`} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={`${import.meta.env.BASE_URL}fonts/inter-latin.woff2`} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={`${base}fonts/outfit-latin.woff2`} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={`${base}fonts/inter-latin.woff2`} as="font" type="font/woff2" crossorigin />
     
     <!-- Client Router for seamless Transitions -->
     <ClientRouter />
@@ -38,9 +39,81 @@ const {
     <!-- Cloudflare Turnstile API (Explicit render mode) -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   </head>
-  <body class="bg-[#05070D] futuristic-grid text-slate-100 min-h-screen selection:bg-blue-500/30 selection:text-blue-200 relative">
+  <body class="bg-[#05070D] futuristic-grid text-slate-100 min-h-screen selection:bg-blue-500/30 selection:text-blue-200 relative pb-16 md:pb-0">
     <!-- Top cyber status accent line -->
     <div class="h-[2px] w-full bg-gradient-to-r from-blue-500 via-cyan-500 to-amber-500 sticky top-0 z-50"></div>
+    
     <slot />
+
+    <!-- Floating Audio HUD Control -->
+    <div class="fixed bottom-6 right-6 z-[99] flex items-center gap-2">
+      <button id="bro-audio-toggle" class="bg-[#0B0F19]/90 border border-slate-800 hover:border-blue-500/50 backdrop-blur-md px-3.5 py-2.5 rounded text-[10px] font-mono font-bold tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-2 shadow-2xl hover:shadow-[0_0_15px_rgba(59,130,246,0.15)] cursor-pointer" style="content-visibility: auto;">
+        <span id="bro-audio-dot" class="h-2 w-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+        <span id="bro-audio-label">AUDIO: OFF</span>
+      </button>
+    </div>
+
+    <script>
+      import { broAudio } from '../lib/audio';
+
+      // Setup UI handlers and interaction listeners
+      function initAudioLayout() {
+        const toggleBtn = document.getElementById('bro-audio-toggle');
+        const dot = document.getElementById('bro-audio-dot');
+        const label = document.getElementById('bro-audio-label');
+
+        function updateUI() {
+          if (!dot || !label) return;
+          if (broAudio.isEnabled()) {
+            dot.className = 'h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse';
+            label.innerText = 'AUDIO: ON';
+          } else {
+            dot.className = 'h-2 w-2 rounded-full bg-slate-600';
+            label.innerText = 'AUDIO: OFF';
+          }
+        }
+
+        // Initialize state on load
+        updateUI();
+
+        // Safe initialize on first user gesture
+        const safeInit = () => {
+          broAudio.init();
+          window.removeEventListener('click', safeInit);
+          window.removeEventListener('keydown', safeInit);
+          window.removeEventListener('mouseenter', safeInit);
+        };
+        window.addEventListener('click', safeInit);
+        window.addEventListener('keydown', safeInit);
+        window.addEventListener('mouseenter', safeInit);
+
+        if (toggleBtn) {
+          toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (broAudio.isEnabled()) {
+              broAudio.disable();
+            } else {
+              broAudio.enable();
+            }
+            updateUI();
+            broAudio.playTabClick();
+          });
+        }
+
+        // Apply interactive micro hover sounds to clickable console elements
+        document.querySelectorAll('a, button, select, input[type="checkbox"], input[type="text"], input[type="tel"]').forEach(element => {
+          element.addEventListener('mouseenter', () => {
+            broAudio.playTabClick();
+          });
+        });
+      }
+
+      // Safe page swaps glitch sound
+      document.addEventListener('astro:after-swap', () => {
+        broAudio.playScanlineGlitch();
+      });
+
+      document.addEventListener('astro:page-load', initAudioLayout);
+    </script>
   </body>
 </html>

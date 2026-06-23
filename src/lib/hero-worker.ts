@@ -177,6 +177,8 @@ function resize(w: number, h: number) {
 }
 
 let lastTime = 0;
+let lastZ = 0;
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -186,7 +188,14 @@ function animate() {
 
   // Animate sweep line back and forth
   if (radarLine) {
-    radarLine.position.z = Math.sin(time * 0.6 * scanFreqMultiplier) * 90;
+    const currentZ = Math.sin(time * 0.6 * scanFreqMultiplier) * 90;
+    radarLine.position.z = currentZ;
+
+    // Detect zero-crossing (crossing the center line of the grid)
+    if ((lastZ < 0 && currentZ >= 0) || (lastZ > 0 && currentZ <= 0)) {
+      self.postMessage({ type: 'ping', z: currentZ });
+    }
+    lastZ = currentZ;
   }
 
   // Smooth mouse rotation dampening

@@ -1,13 +1,37 @@
 ---
+const base = import.meta.env.BASE_URL;
 ---
 <div class="space-y-4">
   <div class="text-[10px] font-mono tracking-widest text-slate-500 uppercase flex items-center gap-2 select-none">
     <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-    SYS_CORRIDOR_GRID // LIVE RADAR TRANSIT corridors
+    SYS_CORRIDOR_GRID // LIVE RADAR TRANSIT CORRIDORS
   </div>
   <div id="corridor-map" class="h-96 w-full rounded-lg bg-slate-900 border border-slate-800/80 shadow-2xl relative z-0">
     <div id="map-loader" class="absolute inset-0 flex items-center justify-center text-xs font-mono text-slate-500 bg-slate-950/80 rounded-lg">
       [WAITING FOR SCAN TARGET TO SCROLL INTO VIEW]
+    </div>
+  </div>
+
+  <!-- Live GPS Telemetry Dashboard Panel -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-black/60 border border-slate-900 rounded-lg text-[10px] font-mono text-slate-500 shadow-xl relative overflow-hidden scanlines">
+    <div class="space-y-1">
+      <span class="text-slate-500 block uppercase">Convoy Unit:</span>
+      <span class="text-white font-bold block flex items-center gap-1.5">
+        <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping"></span>
+        CONVOY_BRO_ALPHA
+      </span>
+    </div>
+    <div class="space-y-1">
+      <span class="text-slate-500 block uppercase">Telemetry GPS:</span>
+      <span id="telemetry-gps" class="text-emerald-400 font-bold block">46.2507° N, 63.1375° W</span>
+    </div>
+    <div class="space-y-1">
+      <span class="text-slate-500 block uppercase">Convoy Velocity:</span>
+      <span id="telemetry-velocity" class="text-blue-400 font-bold block">82 km/h</span>
+    </div>
+    <div class="space-y-1">
+      <span class="text-slate-500 block uppercase">Active Route:</span>
+      <span class="text-slate-300 font-bold block">PEI -> ON -> AB LINK</span>
     </div>
   </div>
 </div>
@@ -39,7 +63,6 @@
     script.crossOrigin = '';
     
     script.onload = () => {
-      // Leaflet global L is now available in browser scope
       const L = (window as any).L;
       if (!L) return;
 
@@ -92,8 +115,71 @@
         dashArray: '5, 10'
       }).addTo(map);
 
+      // Moving convoy marker
+      const convoyIcon = L.divIcon({
+        className: 'custom-radar-icon',
+        html: `<div class="relative flex items-center justify-center">
+          <span class="absolute inline-flex h-4 w-4 rounded-full bg-amber-500/40 animate-ping"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500 shadow-[0_0_8px_#f59e0b] border border-white/60"></span>
+        </div>`,
+        iconSize: [10, 10],
+        iconAnchor: [5, 5]
+      });
+
+      const convoyMarker = L.marker(hubs[0].coords, { icon: convoyIcon }).addTo(map);
+
       // Fit bounds nicely
       map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+
+      // Animate convoy along the polyline path
+      let pathProgress = 0;
+      let direction = 1;
+
+      const gpsLabel = document.getElementById('telemetry-gps');
+      const velLabel = document.getElementById('telemetry-velocity');
+
+      function animateConvoy() {
+        pathProgress += 0.0006 * direction;
+        if (pathProgress >= 1) {
+          pathProgress = 1;
+          direction = -1;
+        } else if (pathProgress <= 0) {
+          pathProgress = 0;
+          direction = 1;
+        }
+
+        let currentCoords;
+        if (pathProgress < 0.5) {
+          const t = pathProgress * 2;
+          const lat = hubs[0].coords[0] + (hubs[1].coords[0] - hubs[0].coords[0]) * t;
+          const lng = hubs[0].coords[1] + (hubs[1].coords[1] - hubs[0].coords[1]) * t;
+          currentCoords = [lat, lng];
+        } else {
+          const t = (pathProgress - 0.5) * 2;
+          const lat = hubs[1].coords[0] + (hubs[2].coords[0] - hubs[1].coords[0]) * t;
+          const lng = hubs[1].coords[1] + (hubs[2].coords[1] - hubs[1].coords[1]) * t;
+          currentCoords = [lat, lng];
+        }
+
+        convoyMarker.setLatLng(currentCoords);
+
+        // Update GPS Text readout
+        if (gpsLabel) {
+          gpsLabel.innerText = `${currentCoords[0].toFixed(4)}° N, ${Math.abs(currentCoords[1]).toFixed(4)}° W`;
+        }
+
+        // Drifting Velocity readout
+        if (velLabel) {
+          const baseVel = 80;
+          const drift = Math.floor(Math.sin(Date.now() / 1500) * 6);
+          velLabel.innerText = `${baseVel + drift} km/h`;
+        }
+
+        requestAnimationFrame(animateConvoy);
+      }
+
+      // Start Convoy Animation loop
+      requestAnimationFrame(animateConvoy);
     };
 
     document.body.appendChild(script);
@@ -108,22 +194,20 @@
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           initMap();
-          observer.disconnect(); // Only run once
+          observer.disconnect();
         }
       });
     }, {
-      rootMargin: '100px' // Load 100px before scrolling into view
+      rootMargin: '100px'
     });
 
     observer.observe(mapEl);
   };
 
-  // Astro ClientRouter compatible
   document.addEventListener('astro:page-load', setupObserver);
 </script>
 
 <style is:global>
-  /* Custom styles for Leaflet elements inside our dark theme */
   .custom-radar-icon {
     background: transparent !important;
     border: none !important;

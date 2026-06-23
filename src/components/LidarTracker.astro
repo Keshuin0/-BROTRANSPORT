@@ -88,6 +88,8 @@
 </div>
 
 <script>
+  import { broAudio } from '../lib/audio';
+
   async function initRadar3D() {
     const canvas = document.getElementById('radar-3d-canvas') as HTMLCanvasElement | null;
     if (!canvas) return;
@@ -110,6 +112,26 @@
         h: canvas.clientHeight
       }, [offscreen]);
 
+      // HUD Slider Elements
+      const freqSlider = document.getElementById('scan-freq-slider') as HTMLInputElement | null;
+      const noiseSlider = document.getElementById('sensor-noise-slider') as HTMLInputElement | null;
+      const rotSlider = document.getElementById('rotation-rate-slider') as HTMLInputElement | null;
+
+      const freqVal = document.getElementById('scan-freq-val');
+      const noiseVal = document.getElementById('sensor-noise-val');
+      const rotVal = document.getElementById('rotation-rate-val');
+
+      // Listen for sweep crossing messages from Web Worker to play synchronized audio pings
+      worker.onmessage = (event) => {
+        const { type } = event.data;
+        if (type === 'ping') {
+          const freqValNum = parseFloat(freqSlider?.value || '1.0');
+          // Scale frequency based on sweep rate
+          const pitch = 850 + (freqValNum * 150);
+          broAudio.playSonarPing(pitch);
+        }
+      };
+
       const resizeObserver = new ResizeObserver((entries) => {
         for (let entry of entries) {
           const { width, height } = entry.contentRect;
@@ -131,15 +153,6 @@
           my
         });
       });
-
-      // HUD Slider Elements & Listeners
-      const freqSlider = document.getElementById('scan-freq-slider') as HTMLInputElement | null;
-      const noiseSlider = document.getElementById('sensor-noise-slider') as HTMLInputElement | null;
-      const rotSlider = document.getElementById('rotation-rate-slider') as HTMLInputElement | null;
-
-      const freqVal = document.getElementById('scan-freq-val');
-      const noiseVal = document.getElementById('sensor-noise-val');
-      const rotVal = document.getElementById('rotation-rate-val');
 
       freqSlider?.addEventListener('input', () => {
         const val = parseFloat(freqSlider.value);

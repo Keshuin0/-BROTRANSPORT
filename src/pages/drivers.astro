@@ -42,6 +42,33 @@ const base = import.meta.env.BASE_URL;
   <!-- Multi-Step Driver Intake Form -->
   <section class="py-16 px-6">
     <div class="max-w-3xl mx-auto">
+      <!-- Driver Compensation & Assigned Fleet Specs Matrix -->
+      <div class="bg-[#0B0F19]/50 border border-slate-900 p-8 rounded-lg mb-12 space-y-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl"></div>
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <h2 class="text-xs font-mono uppercase tracking-widest text-slate-400">SYS_COMPENSATION // ASSIGNED FLEET SPEC & PAYOUT MATRIX</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 font-mono text-[10px] text-slate-400">
+          <div class="border border-slate-900/60 p-4 rounded bg-[#05070D]/40 space-y-2 hover:border-amber-500/35 transition-all">
+            <span class="text-amber-500 font-bold block">// BASE MILEAGE RATE</span>
+            <div class="text-base font-bold text-white tracking-tight">$0.78 - $0.92 / mile</div>
+            <p class="text-slate-500 leading-normal text-[9px]">Heavy specimen cargo, specialized trailers, and RGN combination loads.</p>
+          </div>
+          <div class="border border-slate-900/60 p-4 rounded bg-[#05070D]/40 space-y-2 hover:border-amber-500/35 transition-all">
+            <span class="text-amber-500 font-bold block">// ESCORT & LAYOVER BONUS</span>
+            <div class="text-base font-bold text-white tracking-tight">+$0.15/mi | $180/day</div>
+            <p class="text-slate-500 leading-normal text-[9px]">Oversized routes requiring pilot escorts + guaranteed layover allowance.</p>
+          </div>
+          <div class="border border-slate-900/60 p-4 rounded bg-[#05070D]/40 space-y-2 hover:border-amber-500/35 transition-all">
+            <span class="text-amber-500 font-bold block">// eMANIFEST / BORDER CROSS</span>
+            <div class="text-base font-bold text-white tracking-tight">$75.00 / crossing</div>
+            <p class="text-slate-500 leading-normal text-[9px]">Cleared through automated eManifest ACI (Canada) & ACE (US) channels.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-[#111827]/40 border border-slate-800/70 p-8 rounded-lg shadow-xl relative overflow-hidden" id="driver-portal-container">
         <!-- Progress Steps -->
         <div class="flex items-center justify-between mb-8 border-b border-slate-800/50 pb-4">
@@ -98,7 +125,8 @@ const base = import.meta.env.BASE_URL;
 
             <div class="space-y-4 pt-2">
               <!-- Checkbox 1 -->
-              <label class="flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-emerald-500/70 shadow-[0_0_8px_#10b981] pointer-events-none opacity-0"></div>
                 <div class="flex items-start gap-4">
                   <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
                   <div class="space-y-0.5">
@@ -112,7 +140,8 @@ const base = import.meta.env.BASE_URL;
               </label>
 
               <!-- Checkbox 2 -->
-              <label class="flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-emerald-500/70 shadow-[0_0_8px_#10b981] pointer-events-none opacity-0"></div>
                 <div class="flex items-start gap-4">
                   <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
                   <div class="space-y-0.5">
@@ -126,7 +155,8 @@ const base = import.meta.env.BASE_URL;
               </label>
 
               <!-- Checkbox 3 -->
-              <label class="flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-[#0B0F19]/45 border border-slate-850 hover:border-slate-800 cursor-pointer transition-all select-none justify-between">
+                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-emerald-500/70 shadow-[0_0_8px_#10b981] pointer-events-none opacity-0"></div>
                 <div class="flex items-start gap-4">
                   <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-0 border-slate-800 bg-slate-900" />
                   <div class="space-y-0.5">
@@ -195,6 +225,7 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { DriverApplicationSchema } from '../lib/schemas';
+  import { broAudio } from '../lib/audio';
 
   // State Management
   let currentStep = 1;
@@ -390,9 +421,34 @@ const base = import.meta.env.BASE_URL;
     }
   }
 
+  function initChecklistEffects() {
+    const checkboxes = ['class1OrAz', 'safetyCertified', 'hasCleanAbstract'];
+    checkboxes.forEach(id => {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      el?.addEventListener('change', () => {
+        if (el.checked) {
+          broAudio.playScanlineGlitch();
+          const label = el.closest('label');
+          const bar = label?.querySelector('.scanner-bar');
+          if (bar) {
+            bar.classList.remove('active-scan');
+            void (bar as HTMLElement).offsetWidth; // trigger reflow
+            bar.classList.add('active-scan');
+          }
+          setTimeout(() => {
+            broAudio.playSonarPing(1300);
+          }, 600);
+        } else {
+          broAudio.playTabClick();
+        }
+      });
+    });
+  }
+
   // Initialize Data
   loadDriverProgress();
   updateChecklistStatus();
+  initChecklistEffects();
 
   // Drag & Drop Mock Trigger
   uploadZone?.addEventListener('click', () => {
@@ -532,3 +588,15 @@ const base = import.meta.env.BASE_URL;
     updateChecklistStatus();
   });
 </script>
+
+<style>
+  @keyframes scanSweep {
+    0% { top: 0%; opacity: 1; }
+    50% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  .scanner-bar.active-scan {
+    opacity: 1 !important;
+    animation: scanSweep 0.6s ease-in-out forwards;
+  }
+</style>
