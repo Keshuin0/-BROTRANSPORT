@@ -37,7 +37,8 @@ const base = import.meta.env.BASE_URL;
       linesGroup: THREE.Group | null = null,
       fleetsGroup: THREE.Group | null = null;
   
-  let isDragging = false;
+  let shouldSpin = true;
+  let resumeSpinTimeout: ReturnType<typeof setTimeout> | null = null;
   let animationFrameId: number | null = null;
 
   const locations = {
@@ -122,12 +123,13 @@ const base = import.meta.env.BASE_URL;
 
   // ═══════════════════════════════════════════════════════════════════════
   // World Map Texture Generator — Real Geographic Data (Natural Earth 110m)
-  // Renders 177 country polygons via topojson-client onto a 4096×2048 canvas
+  // Renders 177 country polygons via topojson-client onto an 8192×4096 canvas
   // with multi-layer cyber-neon styling, BRO corridor highlight, and hub markers.
   // ═══════════════════════════════════════════════════════════════════════
   function createWorldMapTexture(): THREE.CanvasTexture | null {
     const canvas = document.createElement('canvas');
-    const W = 4096, H = 2048;
+    const W = 8192, H = 4096;
+    const S = 2; // scale factor for line widths / radii relative to 4096×2048 base
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d');
@@ -140,7 +142,7 @@ const base = import.meta.env.BASE_URL;
     // ── 2. COORDINATE GRID ──────────────────────────────────────────────
     // Longitude lines every 15°
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.025)';
-    ctx.lineWidth = 0.5;
+    ctx.lineWidth = 0.5 * S;
     for (let lon = -180; lon <= 180; lon += 15) {
       const x = (lon + 180) * (W / 360);
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -152,7 +154,7 @@ const base = import.meta.env.BASE_URL;
     }
     // Special lines — Equator, Tropics, Arctic / Antarctic circles
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.06)';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 * S;
     [0, 23.44, -23.44, 66.56, -66.56].forEach(lat => {
       const y = (90 - lat) * (H / 180);
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
@@ -192,7 +194,7 @@ const base = import.meta.env.BASE_URL;
 
     // ── 5. LAYER 1 — LAND FILL (merged mass, subtle cyan) ───────────────
     ctx.save();
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 8 * S;
     ctx.shadowColor = 'rgba(0, 240, 255, 0.15)';
     ctx.fillStyle = 'rgba(0, 240, 255, 0.055)';
     if ('features' in landGeo) {
@@ -214,10 +216,10 @@ const base = import.meta.env.BASE_URL;
 
     // ── 6. LAYER 2 — COUNTRY BORDERS (neon outlines with glow) ──────────
     ctx.save();
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 10 * S;
     ctx.shadowColor = 'rgba(0, 240, 255, 0.3)';
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
-    ctx.lineWidth = 1.0;
+    ctx.lineWidth = 1.0 * S;
     if ('features' in countriesGeo) {
       countriesGeo.features.forEach((feat: any) => {
         forEachPolygon(feat.geometry, (coords) => {
@@ -232,7 +234,7 @@ const base = import.meta.env.BASE_URL;
     // ── 7. LAYER 3 — SHARP COASTLINE PASS (no shadow, crisp edges) ──────
     ctx.save();
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.22)';
-    ctx.lineWidth = 0.5;
+    ctx.lineWidth = 0.5 * S;
     if ('features' in countriesGeo) {
       countriesGeo.features.forEach((feat: any) => {
         forEachPolygon(feat.geometry, (coords) => {
@@ -246,7 +248,7 @@ const base = import.meta.env.BASE_URL;
 
     // ── 8. BRO NORTH AMERICA CORRIDOR HIGHLIGHT ─────────────────────────
     ctx.save();
-    ctx.shadowBlur = 30;
+    ctx.shadowBlur = 30 * S;
     ctx.shadowColor = 'rgba(255, 170, 0, 0.12)';
     ctx.fillStyle = 'rgba(255, 170, 0, 0.025)';
     ctx.beginPath();
@@ -294,36 +296,36 @@ const base = import.meta.env.BASE_URL;
 
       // Outer pulse ring
       ctx.save();
-      ctx.shadowBlur = 25;
+      ctx.shadowBlur = 25 * S;
       ctx.shadowColor = color;
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.5 * S;
       ctx.globalAlpha = 0.35;
       ctx.beginPath();
-      ctx.arc(x, y, 18, 0, Math.PI * 2);
+      ctx.arc(x, y, 18 * S, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
 
       // Inner glow ring
       ctx.save();
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 12 * S;
       ctx.shadowColor = color;
       ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 * S;
       ctx.globalAlpha = 0.65;
       ctx.beginPath();
-      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.arc(x, y, 10 * S, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
 
       // Center dot
       ctx.save();
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 10 * S;
       ctx.shadowColor = color;
       ctx.fillStyle = color;
       ctx.globalAlpha = 0.95;
       ctx.beginPath();
-      ctx.arc(x, y, primary ? 5 : 3.5, 0, Math.PI * 2);
+      ctx.arc(x, y, (primary ? 5 : 3.5) * S, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     });
@@ -346,6 +348,11 @@ const base = import.meta.env.BASE_URL;
       cancelAnimationFrame(animationFrameId);
       animationFrameId = null;
     }
+    if (resumeSpinTimeout) {
+      clearTimeout(resumeSpinTimeout);
+      resumeSpinTimeout = null;
+    }
+    shouldSpin = true;
     if (controls) {
       controls.dispose();
       controls = null;
@@ -401,8 +408,19 @@ const base = import.meta.env.BASE_URL;
     controls.maxDistance = 250;
     controls.enablePan = false;
 
-    controls.addEventListener('start', () => { isDragging = true; });
-    controls.addEventListener('end', () => { isDragging = false; });
+    // Spin control: stop on hover/touch, resume 5s after cursor leaves
+    const stopSpin = () => {
+      shouldSpin = false;
+      if (resumeSpinTimeout) { clearTimeout(resumeSpinTimeout); resumeSpinTimeout = null; }
+    };
+    const scheduleResume = () => {
+      if (resumeSpinTimeout) clearTimeout(resumeSpinTimeout);
+      resumeSpinTimeout = setTimeout(() => { shouldSpin = true; }, 5000);
+    };
+    container.addEventListener('mouseenter', stopSpin);
+    container.addEventListener('mouseleave', scheduleResume);
+    container.addEventListener('touchstart', stopSpin, { passive: true });
+    container.addEventListener('touchend', scheduleResume);
 
     // 5. Globe Layers (Obsidian Core + Holographic Wireframe)
     const globeGeometry = new THREE.SphereGeometry(50, 64, 64);
@@ -460,8 +478,8 @@ const base = import.meta.env.BASE_URL;
     function animateLoop() {
       animationFrameId = requestAnimationFrame(animateLoop);
 
-      // Slow elegant satellite drift when not dragging
-      if (!isDragging && globeMesh && innerGlobe && linesGroup && fleetsGroup) {
+      // Slow elegant satellite drift — paused while user hovers
+      if (shouldSpin && globeMesh && innerGlobe && linesGroup && fleetsGroup) {
         globeMesh.rotation.y += 0.0003;
         innerGlobe.rotation.y += 0.0003;
         linesGroup.rotation.y += 0.0003;
