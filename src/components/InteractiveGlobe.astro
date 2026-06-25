@@ -23,6 +23,10 @@ const base = import.meta.env.BASE_URL;
 <script>
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+  import { feature } from 'topojson-client';
+  import type { Topology } from 'topojson-specification';
+  // @ts-ignore — world-atlas ships JSON data files without type declarations
+  import worldTopo from 'world-atlas/countries-110m.json';
 
   let scene: THREE.Scene | null = null, 
       camera: THREE.PerspectiveCamera | null = null, 
@@ -82,6 +86,204 @@ const base = import.meta.env.BASE_URL;
     return new THREE.Vector3(x, y, z);
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // World Map Texture Generator — Real Geographic Data (Natural Earth 110m)
+  // Renders 177 country polygons via topojson-client onto a 4096×2048 canvas
+  // with multi-layer cyber-neon styling, BRO corridor highlight, and hub markers.
+  // ═══════════════════════════════════════════════════════════════════════
+  function createWorldMapTexture(): THREE.CanvasTexture | null {
+    const canvas = document.createElement('canvas');
+    const W = 4096, H = 2048;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // ── 1. DEEP OCEAN BASE ──────────────────────────────────────────────
+    ctx.fillStyle = '#020205';
+    ctx.fillRect(0, 0, W, H);
+
+    // ── 2. COORDINATE GRID ──────────────────────────────────────────────
+    // Longitude lines every 15°
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.025)';
+    ctx.lineWidth = 0.5;
+    for (let lon = -180; lon <= 180; lon += 15) {
+      const x = (lon + 180) * (W / 360);
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    // Latitude lines every 15°
+    for (let lat = -90; lat <= 90; lat += 15) {
+      const y = (90 - lat) * (H / 180);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    // Special lines — Equator, Tropics, Arctic / Antarctic circles
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.06)';
+    ctx.lineWidth = 1;
+    [0, 23.44, -23.44, 66.56, -66.56].forEach(lat => {
+      const y = (90 - lat) * (H / 180);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    });
+
+    // ── 3. EQUIRECTANGULAR PROJECTION ────────────────────────────────────
+    const project = (lon: number, lat: number): [number, number] => [
+      (lon + 180) * (W / 360),
+      (90 - lat) * (H / 180)
+    ];
+
+    // ── 4. DECODE TOPOJSON → GEOJSON ────────────────────────────────────
+    const topo = worldTopo as unknown as Topology;
+    const countriesGeo = feature(topo, topo.objects.countries as any);
+    const landGeo = feature(topo, topo.objects.land as any);
+
+    // Helper: trace a GeoJSON ring onto the current canvas path
+    const traceRing = (ring: number[][]) => {
+      ring.forEach(([lon, lat], i) => {
+        const [x, y] = project(lon, lat);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+    };
+
+    // Helper: iterate polygons from a GeoJSON geometry
+    const forEachPolygon = (
+      geom: any,
+      fn: (coordinates: number[][][]) => void
+    ) => {
+      if (!geom) return;
+      if (geom.type === 'Polygon') fn(geom.coordinates);
+      else if (geom.type === 'MultiPolygon')
+        geom.coordinates.forEach((poly: number[][][]) => fn(poly));
+    };
+
+    // ── 5. LAYER 1 — LAND FILL (merged mass, subtle cyan) ───────────────
+    ctx.save();
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.15)';
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.055)';
+    if ('features' in landGeo) {
+      landGeo.features.forEach((feat: any) => {
+        forEachPolygon(feat.geometry, (coords) => {
+          ctx.beginPath();
+          coords.forEach(ring => traceRing(ring));
+          ctx.fill('evenodd');
+        });
+      });
+    } else {
+      forEachPolygon((landGeo as any).geometry, (coords: number[][][]) => {
+        ctx.beginPath();
+        coords.forEach(ring => traceRing(ring));
+        ctx.fill('evenodd');
+      });
+    }
+    ctx.restore();
+
+    // ── 6. LAYER 2 — COUNTRY BORDERS (neon outlines with glow) ──────────
+    ctx.save();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.3)';
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+    ctx.lineWidth = 1.0;
+    if ('features' in countriesGeo) {
+      countriesGeo.features.forEach((feat: any) => {
+        forEachPolygon(feat.geometry, (coords) => {
+          ctx.beginPath();
+          coords.forEach(ring => traceRing(ring));
+          ctx.stroke();
+        });
+      });
+    }
+    ctx.restore();
+
+    // ── 7. LAYER 3 — SHARP COASTLINE PASS (no shadow, crisp edges) ──────
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.22)';
+    ctx.lineWidth = 0.5;
+    if ('features' in countriesGeo) {
+      countriesGeo.features.forEach((feat: any) => {
+        forEachPolygon(feat.geometry, (coords) => {
+          ctx.beginPath();
+          coords.forEach(ring => traceRing(ring));
+          ctx.stroke();
+        });
+      });
+    }
+    ctx.restore();
+
+    // ── 8. BRO NORTH AMERICA CORRIDOR HIGHLIGHT ─────────────────────────
+    ctx.save();
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = 'rgba(255, 170, 0, 0.12)';
+    ctx.fillStyle = 'rgba(255, 170, 0, 0.025)';
+    ctx.beginPath();
+    const corridor: [number, number][] = [
+      [-140, 55], [-50, 55], [-50, 10], [-140, 10]
+    ];
+    corridor.forEach(([lon, lat], i) => {
+      const [x, y] = project(lon, lat);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // ── 9. BRO LOGISTICS HUB MARKERS ────────────────────────────────────
+    const hubs = [
+      { lon: -63.14, lat: 46.25, primary: true },   // PEI HQ
+      { lon: -71.06, lat: 42.36, primary: false },   // BOSTON
+      { lon: -87.63, lat: 41.88, primary: false },   // CHICAGO
+      { lon: -79.38, lat: 43.65, primary: false },   // TORONTO
+      { lon: -118.24, lat: 34.05, primary: false },  // LOS ANGELES
+      { lon: -95.37, lat: 29.76, primary: false },   // HOUSTON
+      { lon: -80.19, lat: 25.76, primary: false },   // MIAMI
+      { lon: -122.33, lat: 47.61, primary: false },  // SEATTLE
+      { lon: -99.13, lat: 19.43, primary: false },   // MEXICO CITY
+      { lon: -123.12, lat: 49.28, primary: false },  // VANCOUVER
+    ];
+
+    hubs.forEach(({ lon, lat, primary }) => {
+      const [x, y] = project(lon, lat);
+      const color = primary ? '#ffaa00' : '#00f0ff';
+
+      // Outer pulse ring
+      ctx.save();
+      ctx.shadowBlur = 25;
+      ctx.shadowColor = color;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.arc(x, y, 18, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Inner glow ring
+      ctx.save();
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = color;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.65;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Center dot
+      ctx.save();
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = color;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.95;
+      ctx.beginPath();
+      ctx.arc(x, y, primary ? 5 : 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    return new THREE.CanvasTexture(canvas);
+  }
+
   function initGlobe() {
     const container = document.getElementById('globe-canvas-container');
     const loader = document.getElementById('globe-loader');
@@ -92,7 +294,7 @@ const base = import.meta.env.BASE_URL;
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // 0. Clean Up Previous WebGL Instances (Prevents cumulative speedups & memory leaks)
+    // 0. Clean Up Previous WebGL Instances
     if (animationFrameId !== null) {
       cancelAnimationFrame(animationFrameId);
       animationFrameId = null;
@@ -110,8 +312,12 @@ const base = import.meta.env.BASE_URL;
         if (object.geometry) object.geometry.dispose();
         if (object.material) {
           if (Array.isArray(object.material)) {
-            object.material.forEach((mat: any) => mat.dispose());
+            object.material.forEach((mat: any) => {
+              if (mat.map) mat.map.dispose();
+              mat.dispose();
+            });
           } else {
+            if (object.material.map) object.material.map.dispose();
             object.material.dispose();
           }
         }
@@ -152,23 +358,32 @@ const base = import.meta.env.BASE_URL;
     controls.addEventListener('end', () => { isDragging = false; });
 
     // 5. Globe Layers (Obsidian Core + Holographic Wireframe)
-    const globeGeometry = new THREE.SphereGeometry(50, 40, 40);
+    const globeGeometry = new THREE.SphereGeometry(50, 64, 64);
     const globeMaterial = new THREE.MeshStandardMaterial({
       color: 0x0e111f,
       wireframe: true,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.12,
       roughness: 0.9,
       metalness: 0.1
     });
     globeMesh = new THREE.Mesh(globeGeometry, globeMaterial);
     scene.add(globeMesh);
 
-    const innerGeometry = new THREE.SphereGeometry(49.6, 40, 40);
+    // Generate World Map Texture from Natural Earth 110m data
+    const mapTexture = createWorldMapTexture();
+    if (mapTexture && renderer) {
+      mapTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      mapTexture.minFilter = THREE.LinearMipmapLinearFilter;
+      mapTexture.magFilter = THREE.LinearFilter;
+      mapTexture.generateMipmaps = true;
+    }
+    const innerGeometry = new THREE.SphereGeometry(49.6, 64, 64);
     const innerMaterial = new THREE.MeshBasicMaterial({
-      color: 0x030307,
+      map: mapTexture || undefined,
+      color: mapTexture ? undefined : 0x030307,
       transparent: true,
-      opacity: 0.94
+      opacity: 0.96
     });
     innerGlobe = new THREE.Mesh(innerGeometry, innerMaterial);
     scene.add(innerGlobe);
