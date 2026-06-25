@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
       <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan animate-ping"></span>
       LIVE CARGO VECTOR ENGINE
     </div>
-    <div>ACTIVE_ROUTES: <span class="text-slate-350">10 // 3D_ARCS</span></div>
+    <div>ACTIVE_ROUTES: <span class="text-slate-350">28 // 3D_ARCS</span></div>
     <div>SATELLITE_UPLINK: <span class="text-bro-gold font-bold">ACTIVE</span></div>
   </div>
 
@@ -41,29 +41,63 @@ const base = import.meta.env.BASE_URL;
   let animationFrameId: number | null = null;
 
   const locations = {
+    // ── CANADA ──
     PEI: { lat: 46.2507, lon: -63.1375, name: "PEI HQ" },
-    BOSTON: { lat: 42.3601, lon: -71.0589, name: "BOSTON HUB" },
-    CHICAGO: { lat: 41.8781, lon: -87.6298, name: "CHICAGO TERM" },
+    HALIFAX: { lat: 44.6488, lon: -63.5752, name: "HALIFAX PORT" },
+    MONTREAL: { lat: 45.5017, lon: -73.5673, name: "MONTREAL HUB" },
     TORONTO: { lat: 43.6532, lon: -79.3832, name: "TORONTO CORR" },
-    LOS_ANGELES: { lat: 34.0522, lon: -118.2437, name: "LA TERM" },
-    HOUSTON: { lat: 29.7604, lon: -95.3698, name: "HOUSTON HUB" },
+    WINNIPEG: { lat: 49.8951, lon: -97.1384, name: "WINNIPEG GATE" },
+    CALGARY: { lat: 51.0447, lon: -114.0719, name: "CALGARY TERM" },
+    EDMONTON: { lat: 53.5461, lon: -113.4938, name: "EDMONTON YARD" },
+    VANCOUVER: { lat: 49.2827, lon: -123.1207, name: "VANCOUVER GATE" },
+    // ── UNITED STATES ──
+    BOSTON: { lat: 42.3601, lon: -71.0589, name: "BOSTON HUB" },
+    NEW_YORK: { lat: 40.7128, lon: -74.0060, name: "NEW YORK TERM" },
+    DETROIT: { lat: 42.3314, lon: -83.0458, name: "DETROIT X-BORDER" },
+    CHICAGO: { lat: 41.8781, lon: -87.6298, name: "CHICAGO TERM" },
+    MEMPHIS: { lat: 35.1495, lon: -90.0490, name: "MEMPHIS FREIGHT" },
+    ATLANTA: { lat: 33.7490, lon: -84.3880, name: "ATLANTA HUB" },
     MIAMI: { lat: 25.7617, lon: -80.1918, name: "MIAMI DIVISION" },
+    DALLAS: { lat: 32.7767, lon: -96.7970, name: "DALLAS FW TERM" },
+    HOUSTON: { lat: 29.7604, lon: -95.3698, name: "HOUSTON HUB" },
+    DENVER: { lat: 39.7392, lon: -104.9903, name: "DENVER CORR" },
+    LOS_ANGELES: { lat: 34.0522, lon: -118.2437, name: "LA TERM" },
     SEATTLE: { lat: 47.6062, lon: -122.3321, name: "SEATTLE TERM" },
-    MEXICO_CITY: { lat: 19.4326, lon: -99.1332, name: "MEXICO CITY" },
-    VANCOUVER: { lat: 49.2827, lon: -123.1207, name: "VANCOUVER GATE" }
+    MEXICO_CITY: { lat: 19.4326, lon: -99.1332, name: "MEXICO CITY" }
   };
 
   const routes = [
-    { from: locations.PEI, to: locations.BOSTON, color: 0x00f0ff },
-    { from: locations.PEI, to: locations.TORONTO, color: 0x00f0ff },
-    { from: locations.TORONTO, to: locations.CHICAGO, color: 0xffaa00 },
-    { from: locations.CHICAGO, to: locations.HOUSTON, color: 0x00f0ff },
-    { from: locations.HOUSTON, to: locations.MEXICO_CITY, color: 0xffaa00 },
-    { from: locations.CHICAGO, to: locations.LOS_ANGELES, color: 0xffaa00 },
-    { from: locations.VANCOUVER, to: locations.SEATTLE, color: 0x00f0ff },
-    { from: locations.SEATTLE, to: locations.LOS_ANGELES, color: 0x00f0ff },
-    { from: locations.LOS_ANGELES, to: locations.HOUSTON, color: 0xffaa00 },
-    { from: locations.BOSTON, to: locations.MIAMI, color: 0x00f0ff }
+    // ── CANADIAN CORRIDORS ──────────────────────────────────────────────
+    { from: locations.PEI, to: locations.HALIFAX, color: 0x00f0ff },        // Maritime
+    { from: locations.PEI, to: locations.MONTREAL, color: 0x00f0ff },       // Quebec link
+    { from: locations.PEI, to: locations.BOSTON, color: 0x00f0ff },         // Cross-border Maritime
+    { from: locations.HALIFAX, to: locations.MONTREAL, color: 0x00f0ff },   // Maritime → Quebec
+    { from: locations.MONTREAL, to: locations.TORONTO, color: 0xffaa00 },   // QC–ON corridor (major)
+    { from: locations.TORONTO, to: locations.WINNIPEG, color: 0xffaa00 },   // Trans-Canada central
+    { from: locations.WINNIPEG, to: locations.CALGARY, color: 0xffaa00 },   // Prairie corridor
+    { from: locations.CALGARY, to: locations.EDMONTON, color: 0x00f0ff },   // Alberta corridor
+    { from: locations.CALGARY, to: locations.VANCOUVER, color: 0x00f0ff },  // Trans-Canada west
+    // ── CROSS-BORDER CORRIDORS ──────────────────────────────────────────
+    { from: locations.TORONTO, to: locations.DETROIT, color: 0xffaa00 },    // Ambassador Bridge
+    { from: locations.TORONTO, to: locations.CHICAGO, color: 0xffaa00 },    // ON–IL corridor
+    { from: locations.VANCOUVER, to: locations.SEATTLE, color: 0x00f0ff },  // Pacific Gateway
+    { from: locations.HOUSTON, to: locations.MEXICO_CITY, color: 0xffaa00 },// USMCA south
+    // ── US CORRIDORS ────────────────────────────────────────────────────
+    { from: locations.BOSTON, to: locations.NEW_YORK, color: 0x00f0ff },    // I-95 Northeast
+    { from: locations.NEW_YORK, to: locations.ATLANTA, color: 0xffaa00 },   // I-95 Southeast
+    { from: locations.ATLANTA, to: locations.MIAMI, color: 0x00f0ff },      // Florida corridor
+    { from: locations.ATLANTA, to: locations.DALLAS, color: 0xffaa00 },     // Southern cross
+    { from: locations.ATLANTA, to: locations.MEMPHIS, color: 0x00f0ff },    // I-20/I-22
+    { from: locations.DALLAS, to: locations.HOUSTON, color: 0xffaa00 },     // Texas Triangle
+    { from: locations.MEMPHIS, to: locations.DALLAS, color: 0xffaa00 },     // I-30/I-40
+    { from: locations.CHICAGO, to: locations.DETROIT, color: 0x00f0ff },    // Great Lakes auto
+    { from: locations.CHICAGO, to: locations.MEMPHIS, color: 0x00f0ff },    // I-57 corridor
+    { from: locations.CHICAGO, to: locations.DENVER, color: 0xffaa00 },     // I-80/I-76 West
+    { from: locations.DENVER, to: locations.LOS_ANGELES, color: 0x00f0ff }, // I-15/I-70 Mountain
+    { from: locations.SEATTLE, to: locations.LOS_ANGELES, color: 0x00f0ff },// I-5 Pacific
+    { from: locations.LOS_ANGELES, to: locations.HOUSTON, color: 0xffaa00 },// I-10 Southern
+    { from: locations.LOS_ANGELES, to: locations.DALLAS, color: 0xffaa00 }, // I-10/I-20 Southwest
+    { from: locations.HOUSTON, to: locations.MIAMI, color: 0x00f0ff },      // Gulf Coast
   ];
 
   interface FleetUnit {
@@ -229,16 +263,29 @@ const base = import.meta.env.BASE_URL;
 
     // ── 9. BRO LOGISTICS HUB MARKERS ────────────────────────────────────
     const hubs = [
-      { lon: -63.14, lat: 46.25, primary: true },   // PEI HQ
-      { lon: -71.06, lat: 42.36, primary: false },   // BOSTON
-      { lon: -87.63, lat: 41.88, primary: false },   // CHICAGO
+      // Canada
+      { lon: -63.14, lat: 46.25, primary: true },    // PEI HQ
+      { lon: -63.58, lat: 44.65, primary: false },   // HALIFAX
+      { lon: -73.57, lat: 45.50, primary: false },   // MONTREAL
       { lon: -79.38, lat: 43.65, primary: false },   // TORONTO
-      { lon: -118.24, lat: 34.05, primary: false },  // LOS ANGELES
-      { lon: -95.37, lat: 29.76, primary: false },   // HOUSTON
+      { lon: -97.14, lat: 49.90, primary: false },   // WINNIPEG
+      { lon: -114.07, lat: 51.04, primary: false },  // CALGARY
+      { lon: -113.49, lat: 53.55, primary: false },  // EDMONTON
+      { lon: -123.12, lat: 49.28, primary: false },  // VANCOUVER
+      // United States
+      { lon: -71.06, lat: 42.36, primary: false },   // BOSTON
+      { lon: -74.01, lat: 40.71, primary: false },   // NEW YORK
+      { lon: -83.05, lat: 42.33, primary: false },   // DETROIT
+      { lon: -87.63, lat: 41.88, primary: false },   // CHICAGO
+      { lon: -90.05, lat: 35.15, primary: false },   // MEMPHIS
+      { lon: -84.39, lat: 33.75, primary: false },   // ATLANTA
       { lon: -80.19, lat: 25.76, primary: false },   // MIAMI
+      { lon: -96.80, lat: 32.78, primary: false },   // DALLAS
+      { lon: -95.37, lat: 29.76, primary: false },   // HOUSTON
+      { lon: -104.99, lat: 39.74, primary: false },  // DENVER
+      { lon: -118.24, lat: 34.05, primary: false },  // LOS ANGELES
       { lon: -122.33, lat: 47.61, primary: false },  // SEATTLE
       { lon: -99.13, lat: 19.43, primary: false },   // MEXICO CITY
-      { lon: -123.12, lat: 49.28, primary: false },  // VANCOUVER
     ];
 
     hubs.forEach(({ lon, lat, primary }) => {
