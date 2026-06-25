@@ -24,16 +24,17 @@ const base = import.meta.env.BASE_URL;
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-  let scene: THREE.Scene, 
-      camera: THREE.PerspectiveCamera, 
-      renderer: THREE.WebGLRenderer, 
-      controls: OrbitControls;
-  let globeMesh: THREE.Mesh, 
-      innerGlobe: THREE.Mesh,
-      linesGroup: THREE.Group,
-      fleetsGroup: THREE.Group;
+  let scene: THREE.Scene | null = null, 
+      camera: THREE.PerspectiveCamera | null = null, 
+      renderer: THREE.WebGLRenderer | null = null, 
+      controls: OrbitControls | null = null;
+  let globeMesh: THREE.Mesh | null = null, 
+      innerGlobe: THREE.Mesh | null = null,
+      linesGroup: THREE.Group | null = null,
+      fleetsGroup: THREE.Group | null = null;
   
   let isDragging = false;
+  let animationFrameId: number | null = null;
 
   const locations = {
     PEI: { lat: 46.2507, lon: -63.1375, name: "PEI HQ" },
@@ -81,9 +82,37 @@ const base = import.meta.env.BASE_URL;
     const width = container.clientWidth;
     const height = container.clientHeight;
 
+    // 0. Clean Up Previous WebGL Instances (Prevents cumulative speedups & memory leaks)
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+    if (controls) {
+      controls.dispose();
+      controls = null;
+    }
+    if (renderer) {
+      renderer.dispose();
+      renderer = null;
+    }
+    if (scene) {
+      scene.traverse((object: any) => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach((mat: any) => mat.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
+      scene = null;
+    }
+    fleetUnits.length = 0;
+
     // 1. Scene Setup
     scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x030307, 0.002);
+    scene.fog = new THREE.FogExp2(0x030307, 0.0025);
 
     // 2. Camera Setup
     camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
@@ -118,7 +147,7 @@ const base = import.meta.env.BASE_URL;
       color: 0x0e111f,
       wireframe: true,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.22,
       roughness: 0.9,
       metalness: 0.1
     });
@@ -129,7 +158,7 @@ const base = import.meta.env.BASE_URL;
     const innerMaterial = new THREE.MeshBasicMaterial({
       color: 0x030307,
       transparent: true,
-      opacity: 0.92
+      opacity: 0.94
     });
     innerGlobe = new THREE.Mesh(innerGeometry, innerMaterial);
     scene.add(innerGlobe);
@@ -157,25 +186,27 @@ const base = import.meta.env.BASE_URL;
 
     // 8. Animation & Render Loop
     function animateLoop() {
-      requestAnimationFrame(animateLoop);
+      animationFrameId = requestAnimationFrame(animateLoop);
 
-      // Slow idle rotation when not dragging
-      if (!isDragging) {
-        globeMesh.rotation.y += 0.0008;
-        innerGlobe.rotation.y += 0.0008;
-        linesGroup.rotation.y += 0.0008;
-        fleetsGroup.rotation.y += 0.0008;
+      // Slow elegant satellite drift when not dragging
+      if (!isDragging && globeMesh && innerGlobe && linesGroup && fleetsGroup) {
+        globeMesh.rotation.y += 0.0003;
+        innerGlobe.rotation.y += 0.0003;
+        linesGroup.rotation.y += 0.0003;
+        fleetsGroup.rotation.y += 0.0003;
       }
 
-      // Animate cargo particle vectors along Bezier paths
+      // Animate cargo particle vectors slowly along Bezier paths
       fleetUnits.forEach(unit => {
         unit.progress = (unit.progress + unit.speed) % 1.0;
         const position = unit.curve.getPointAt(unit.progress);
         unit.mesh.position.copy(position);
       });
 
-      controls.update();
-      renderer.render(scene, camera);
+      if (controls && renderer && scene && camera) {
+        controls.update();
+        renderer.render(scene, camera);
+      }
     }
 
     animateLoop();
@@ -194,7 +225,8 @@ const base = import.meta.env.BASE_URL;
   }
 
   function setupRoutes() {
-    const markerGeometry = new THREE.SphereGeometry(0.8, 12, 12);
+    // Sharp high-tech terminal markers (radius 0.5)
+    const markerGeometry = new THREE.SphereGeometry(0.5, 16, 16);
 
     routes.forEach(route => {
       const pStart = latLonToVector3(route.from.lat, route.from.lon, 50);
@@ -203,7 +235,6 @@ const base = import.meta.env.BASE_URL;
       // Create arched control point based on distance between terminals
       const midPoint = new THREE.Vector3().addVectors(pStart, pEnd).multiplyScalar(0.5);
       const distance = pStart.distanceTo(pEnd);
-      // Elevate midpoint above sphere surface
       midPoint.normalize().multiplyScalar(50 + distance * 0.22);
 
       // Construct Quadratic Bezier Curve
@@ -215,47 +246,47 @@ const base = import.meta.env.BASE_URL;
       const pathMaterial = new THREE.LineBasicMaterial({
         color: route.color,
         transparent: true,
-        opacity: 0.45
+        opacity: 0.35
       });
       const pathLine = new THREE.Line(pathGeometry, pathMaterial);
-      linesGroup.add(pathLine);
+      linesGroup!.add(pathLine);
 
       // Draw Terminal Markers
       const startMarkerMat = new THREE.MeshBasicMaterial({ color: route.color });
       const startMarker = new THREE.Mesh(markerGeometry, startMarkerMat);
       startMarker.position.copy(pStart);
-      linesGroup.add(startMarker);
+      linesGroup!.add(startMarker);
 
       const endMarkerMat = new THREE.MeshBasicMaterial({ color: route.color });
       const endMarker = new THREE.Mesh(markerGeometry, endMarkerMat);
       endMarker.position.copy(pEnd);
-      linesGroup.add(endMarker);
+      linesGroup!.add(endMarker);
 
-      // Initialize Cargo Vector Particles (mesh objects)
-      const particleGeo = new THREE.SphereGeometry(0.7, 8, 8);
+      // Sleek cargo vectors (radius 0.32)
+      const particleGeo = new THREE.SphereGeometry(0.32, 12, 12);
       const particleMat = new THREE.MeshBasicMaterial({
         color: route.color === 0xffaa00 ? 0xffaa00 : 0x00f0ff,
         transparent: true,
         opacity: 0.95
       });
 
-      // Spawn 1-2 particles per route at staggered intervals
+      // Spawn staggered particles gliding smoothly and slowly (0.001 speed)
       const particleMesh1 = new THREE.Mesh(particleGeo, particleMat);
-      fleetsGroup.add(particleMesh1);
+      fleetsGroup!.add(particleMesh1);
       fleetUnits.push({
         mesh: particleMesh1,
         curve: curve,
         progress: Math.random(),
-        speed: 0.003 + Math.random() * 0.002
+        speed: 0.0008 + Math.random() * 0.0006
       });
 
       const particleMesh2 = new THREE.Mesh(particleGeo, particleMat);
-      fleetsGroup.add(particleMesh2);
+      fleetsGroup!.add(particleMesh2);
       fleetUnits.push({
         mesh: particleMesh2,
         curve: curve,
         progress: (Math.random() + 0.5) % 1.0,
-        speed: 0.003 + Math.random() * 0.002
+        speed: 0.0008 + Math.random() * 0.0006
       });
     });
   }
