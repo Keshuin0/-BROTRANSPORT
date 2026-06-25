@@ -29,7 +29,7 @@ const base = import.meta.env.BASE_URL;
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     
-    <!-- Preconnect and Load Google Fonts (Roboto Flex & JetBrains Mono) -->
+    <!-- Load Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap" rel="stylesheet" />
@@ -37,89 +37,99 @@ const base = import.meta.env.BASE_URL;
     <!-- Preload Local WOFF2 Fonts -->
     <link rel="preload" href={`${base}fonts/inter-latin.woff2`} as="font" type="font/woff2" crossorigin />
     
-    <!-- Client Router for seamless Transitions -->
     <ClientRouter />
 
-    <!-- Cloudflare Turnstile API (Explicit render mode) -->
+    <!-- Cloudflare Turnstile API -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   </head>
-  <body class="bg-bro-obsidian bg-cyber-grid text-bro-ice min-h-screen selection:bg-bro-cyan/30 selection:text-bro-cyan relative pb-16 md:pb-0">
-    <!-- Top cyber status accent line -->
-    <div class="h-[2px] w-full bg-gradient-to-r from-bro-gold via-bro-cyan to-bro-gold sticky top-0 z-50"></div>
-    
-    <slot />
+  <body class="bg-bro-obsidian bg-cyber-grid text-bro-ice min-h-screen selection:bg-bro-cyan/30 selection:text-bro-cyan relative flex flex-col justify-between">
+    <div>
+      <!-- Top glowing status accent line -->
+      <div class="h-[2px] w-full bg-gradient-to-r from-bro-gold via-bro-cyan to-bro-gold sticky top-0 z-50"></div>
+      
+      <!-- Unified Header -->
+      <header class="sticky top-0 z-40 backdrop-blur-md bg-bro-obsidian/85 border-b border-slate-900/80">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <a href={base} class="flex items-center gap-2 group">
+            <div class="h-2.5 w-2.5 bg-bro-cyan rounded-full animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.4)] group-hover:bg-bro-cyan transition-colors shrink-0"></div>
+            <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-10 sm:h-12 w-auto object-contain transition-opacity group-hover:opacity-90" />
+          </a>
+          
+          <nav class="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-wider text-slate-350">
+            <a href={base} class="hover:text-bro-cyan transition-colors">Home</a>
+            <a href={`${base}quote`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Quote Engine</a>
+            <a href={`${base}drivers`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Driver Gateway</a>
+            <a href={`${base}customs`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Customs Docs</a>
+          </nav>
 
-    <!-- Floating Audio HUD Control -->
-    <div class="fixed bottom-6 right-6 z-[99] flex items-center gap-2">
-      <button id="bro-audio-toggle" class="bg-[#020408]/90 border border-slate-900 hover:border-cyan-500/50 backdrop-blur-md px-3.5 py-2.5 rounded text-[10px] font-mono font-bold tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-2 shadow-2xl hover:shadow-[0_0_15px_rgba(0,240,255,0.15)] cursor-pointer animate-[pulse_3s_infinite]" style="content-visibility: auto;">
-        <span id="bro-audio-dot" class="h-2 w-2 rounded-full bg-slate-650 transition-all duration-300"></span>
-        <span id="bro-audio-label">AUDIO: OFF</span>
-      </button>
+          <div class="flex items-center gap-4">
+            <!-- Ally Support Trigger Button -->
+            <button id="ally-support-btn" class="relative flex items-center gap-3 px-4 py-2 border border-bro-cyan/30 text-bro-cyan hover:border-bro-cyan hover:shadow-neon-glow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden font-mono text-[10px] tracking-wider uppercase group cursor-pointer select-none">
+              <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-cyber-grid bg-[size:8px_8px] pointer-events-none"></div>
+              <span class="relative flex h-2 w-2">
+                <span id="ally-beacon-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-bro-cyan"></span>
+                <span id="ally-beacon-dot" class="relative inline-flex rounded-full h-2 w-2 bg-bro-cyan"></span>
+              </span>
+              <span id="ally-label" class="relative z-10 font-bold">REQUEST A BRO</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="w-full">
+        <slot />
+      </main>
     </div>
 
+    <!-- Unified Footer -->
+    <footer class="w-full border-t border-slate-900 bg-bro-obsidian/95 py-8 mt-16">
+      <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 font-mono text-[10px]">
+        <div>
+          <span class="text-white font-bold tracking-wider">#BRO TRANSPORT CORP.</span>
+          <span class="ml-2 font-light">| NORTH AMERICAN FREIGHT NETWORK</span>
+        </div>
+        <div>
+          <span>© 2026 #BRO Transport Corp. All rights reserved.</span>
+        </div>
+      </div>
+    </footer>
+
     <script>
-      import { broAudio } from '../lib/audio';
+      function initAllyButton() {
+        const btn = document.getElementById('ally-support-btn');
+        const ping = document.getElementById('ally-beacon-ping');
+        const dot = document.getElementById('ally-beacon-dot');
+        const label = document.getElementById('ally-label');
 
-      // Setup UI handlers and interaction listeners
-      function initAudioLayout() {
-        const toggleBtn = document.getElementById('bro-audio-toggle');
-        const dot = document.getElementById('bro-audio-dot');
-        const label = document.getElementById('bro-audio-label');
+        if (!btn || !ping || !dot || !label) return;
 
-        function updateUI() {
-          if (!dot || !label) return;
-          if (broAudio.isEnabled()) {
-            dot.className = 'h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse';
-            label.className = 'text-cyan-400';
-            label.innerText = 'AUDIO: ON';
+        // Load persisted state
+        let isActive = sessionStorage.getItem('bro_hotline_active') === 'true';
+
+        function updateState() {
+          if (isActive) {
+            btn.className = 'relative flex items-center gap-3 px-4 py-2 border border-bro-crimson bg-bro-crimson/10 text-bro-crimson shadow-neon-alert transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden font-mono text-[10px] tracking-wider uppercase group cursor-pointer select-none';
+            ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-bro-crimson';
+            dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-bro-crimson';
+            label.innerText = 'BRO HOTLINE ACTIVE';
           } else {
-            dot.className = 'h-2 w-2 rounded-full bg-slate-650';
-            label.className = 'text-slate-400';
-            label.innerText = 'AUDIO: OFF';
+            btn.className = 'relative flex items-center gap-3 px-4 py-2 border border-bro-cyan/30 text-bro-cyan hover:border-bro-cyan hover:shadow-neon-glow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden font-mono text-[10px] tracking-wider uppercase group cursor-pointer select-none';
+            ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-bro-cyan';
+            dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-bro-cyan';
+            label.innerText = 'REQUEST A BRO';
           }
         }
 
-        // Initialize state on load
-        updateUI();
+        updateState();
 
-        // Safe initialize on first user gesture
-        const safeInit = () => {
-          broAudio.init();
-          window.removeEventListener('click', safeInit);
-          window.removeEventListener('keydown', safeInit);
-          window.removeEventListener('mouseenter', safeInit);
-        };
-        window.addEventListener('click', safeInit);
-        window.addEventListener('keydown', safeInit);
-        window.addEventListener('mouseenter', safeInit);
-
-        if (toggleBtn) {
-          toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (broAudio.isEnabled()) {
-              broAudio.disable();
-            } else {
-              broAudio.enable();
-            }
-            updateUI();
-            broAudio.playTabClick();
-          });
-        }
-
-        // Apply interactive micro hover sounds to clickable console elements
-        document.querySelectorAll('a, button, select, input[type="checkbox"], input[type="radio"], input[type="range"], input[type="text"], input[type="tel"]').forEach(element => {
-          element.addEventListener('mouseenter', () => {
-            broAudio.playTabClick();
-          });
+        btn.addEventListener('click', () => {
+          isActive = !isActive;
+          sessionStorage.setItem('bro_hotline_active', String(isActive));
+          updateState();
         });
       }
 
-      // Safe page swaps glitch sound
-      document.addEventListener('astro:after-swap', () => {
-        broAudio.playScanlineGlitch();
-      });
-
-      document.addEventListener('astro:page-load', initAudioLayout);
+      document.addEventListener('astro:page-load', initAllyButton);
     </script>
   </body>
 </html>

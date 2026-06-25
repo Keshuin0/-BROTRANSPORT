@@ -1,682 +1,427 @@
 ---
 const base = import.meta.env.BASE_URL;
 ---
-
-<div class="bg-[#020408]/90 border border-slate-900 p-8 rounded-lg shadow-2xl relative overflow-hidden max-w-4xl mx-auto scanlines cyber-corners" id="quote-container">
-  <!-- Progress Header -->
-  <div class="flex items-center justify-between mb-8 border-b border-slate-900 pb-4">
-    <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_PROCUREMENT: STEP <span id="current-step-num">1</span> OF 4</span>
-    <div class="flex gap-2">
-      <div class="h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot"></div>
-      <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
-      <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
-      <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
+<div class="w-full max-w-2xl mx-auto bg-bro-steel/20 border border-slate-900 rounded-lg p-6 md:p-8 shadow-2xl relative overflow-hidden backdrop-blur-md">
+  
+  <!-- Step Progress Header -->
+  <div class="flex justify-between items-center mb-8 border-b border-slate-900/60 pb-4">
+    <div class="space-y-1">
+      <span class="text-[9px] font-mono text-slate-500 uppercase tracking-widest">// RATE_ENGINE_STEP</span>
+      <h3 class="text-sm font-bold text-white font-mono uppercase" id="step-title">01 // Cargo & Route</h3>
+    </div>
+    <div class="text-right">
+      <span class="text-[10px] font-mono text-bro-cyan font-bold" id="step-fraction">Step 1 of 3</span>
+      <div class="w-24 h-1.5 bg-[#030307] rounded-full mt-1.5 overflow-hidden">
+        <div class="h-full bg-bro-cyan transition-all duration-300" id="step-progress-bar" style="width: 33.3%;"></div>
+      </div>
     </div>
   </div>
 
-  <form id="quote-form" class="space-y-6">
-    <!-- STEP 1: Trailer Type Selection -->
-    <div class="step-panel space-y-4" data-step="1">
-      <div class="space-y-2">
-        <h3 class="text-xl font-bold text-white font-display uppercase">Select Equipment Class</h3>
-        <p class="text-slate-400 text-sm">Choose the specific trailer configuration to allocate for this manifest.</p>
-      </div>
+  <!-- Main Rate Form -->
+  <form id="quote-flow-form" class="space-y-6">
+    
+    <!-- STEP 1: Trailer Type & Route -->
+    <div id="step-card-1" class="space-y-6">
+      <div class="space-y-3">
+        <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Select Equipment Configuration:</label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- Dry Van Card -->
+          <label id="card-dry-van" class="flex flex-col items-center justify-center p-4 border border-slate-900 rounded bg-[#030307]/40 cursor-pointer hover:border-bro-cyan/30 transition-all select-none group">
+            <input type="radio" name="trailerType" value="dry-van" class="sr-only" checked />
+            <span class="text-[11px] font-bold text-slate-400 group-hover:text-white uppercase font-mono mb-1">Dry Van</span>
+            <span class="text-[8px] text-slate-500 font-mono text-center">Standard 53ft Enclosed Cargo</span>
+          </label>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-        <!-- Option 1: Dry Van -->
-        <label class="border border-slate-900 bg-slate-950/60 hover:bg-slate-950 p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none hover:border-cyan-500/30" id="card-dry-van">
-          <input type="radio" name="trailerType" value="dry-van" class="absolute top-4 right-4 h-4 w-4 text-cyan-400 focus:ring-0 focus:ring-offset-0 border-slate-900" checked />
-          <div class="space-y-2">
-            <span class="text-xs font-semibold uppercase tracking-widest text-cyan-400 font-mono">DIV_01 // DRY</span>
-            <h4 class="text-lg font-bold text-white font-display uppercase">Enclosed Dry Van</h4>
-            <p class="text-slate-455 text-xs leading-relaxed">
-              Standard 53ft aluminum box trailer. Fully weatherproof security for general commodities and palletized dry goods.
-            </p>
-          </div>
-        </label>
+          <!-- Reefer Card -->
+          <label id="card-reefer" class="flex flex-col items-center justify-center p-4 border border-slate-900 rounded bg-[#030307]/40 cursor-pointer hover:border-bro-cyan/30 transition-all select-none group">
+            <input type="radio" name="trailerType" value="reefer" class="sr-only" />
+            <span class="text-[11px] font-bold text-slate-400 group-hover:text-white uppercase font-mono mb-1">Reefer</span>
+            <span class="text-[8px] text-slate-500 font-mono text-center">Climate-Controlled (-20°F to 80°F)</span>
+          </label>
 
-        <!-- Option 2: Reefer -->
-        <label class="border border-slate-900 bg-slate-950/60 hover:bg-slate-950 p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none hover:border-cyan-500/30" id="card-reefer">
-          <input type="radio" name="trailerType" value="reefer" class="absolute top-4 right-4 h-4 w-4 text-cyan-400 focus:ring-0 focus:ring-offset-0 border-slate-900" />
-          <div class="space-y-2">
-            <span class="text-xs font-semibold uppercase tracking-widest text-cyan-400 font-mono">DIV_02 // REF</span>
-            <h4 class="text-lg font-bold text-white font-display uppercase">Refrigerated Reefer</h4>
-            <p class="text-slate-455 text-xs leading-relaxed">
-              53ft insulated climate-controlled trailer. High-performance Thermo King unit for temperature-sensitive cargo.
-            </p>
-          </div>
-        </label>
-
-        <!-- Option 3: Flatbed -->
-        <label class="border border-slate-900 bg-slate-950/60 hover:bg-slate-950 p-6 rounded-lg cursor-pointer flex flex-col justify-between transition-all relative group select-none hover:border-blaze/30" id="card-flatbed">
-          <input type="radio" name="trailerType" value="flatbed" class="absolute top-4 right-4 h-4 w-4 text-blaze focus:ring-0 focus:ring-offset-0 border-slate-900" />
-          <div class="space-y-2">
-            <span class="text-xs font-semibold uppercase tracking-widest text-[#ff6000] font-mono">DIV_03 // FLT</span>
-            <h4 class="text-lg font-bold text-white font-display uppercase">Open Deck Flatbed</h4>
-            <p class="text-slate-455 text-xs leading-relaxed">
-              53ft steel open platform. Specially outfitted with securement gear, straps, chains, and heavy weather tarps.
-            </p>
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <!-- STEP 2: Load Specifications -->
-    <div class="step-panel space-y-4 hidden" data-step="2">
-      <div class="space-y-2">
-        <h3 class="text-xl font-bold text-white font-display uppercase">Chassis Load Specifications</h3>
-        <p class="text-slate-400 text-sm">Provide exact weight parameters. System will evaluate structural axle flex in real-time.</p>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
-        <div class="space-y-6">
-          <!-- Weight Input Slider -->
-          <div class="space-y-2">
-            <label for="weight" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">Cargo Weight (LBS):</label>
-            <div class="bg-black/50 border border-slate-900 p-4 rounded-md space-y-3">
-              <div class="flex justify-between items-center text-xs font-mono">
-                <span class="text-slate-500">Legal limit: 45,000 lbs</span>
-                <span id="weight-slider-val" class="text-cyan-400 font-bold text-sm">30,000 LBS</span>
-              </div>
-              <input type="range" id="weight" min="1000" max="45000" step="500" value="30000" class="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]" />
-            </div>
-          </div>
-
-          <!-- Temperature setpoint (Only visible for Reefer) -->
-          <div class="space-y-2 hidden" id="temp-input-wrapper">
-            <label for="tempSetpoint" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">Reefer Temperature (°C):</label>
-            <div class="bg-black/50 border border-slate-900 p-4 rounded-md space-y-3">
-              <div class="flex justify-between items-center text-xs font-mono">
-                <span class="text-slate-500">Range: -20°C to 15°C</span>
-                <span id="temp-slider-val" class="text-cyan-400 font-bold text-sm">-18°C</span>
-              </div>
-              <input type="range" id="tempSetpoint" min="-20" max="15" step="1" value="-18" class="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]" />
-            </div>
-          </div>
+          <!-- Flatbed Card -->
+          <label id="card-flatbed" class="flex flex-col items-center justify-center p-4 border border-slate-900 rounded bg-[#030307]/40 cursor-pointer hover:border-bro-cyan/30 transition-all select-none group">
+            <input type="radio" name="trailerType" value="flatbed" class="sr-only" />
+            <span class="text-[11px] font-bold text-slate-400 group-hover:text-white uppercase font-mono mb-1">Flatbed</span>
+            <span class="text-[8px] text-slate-500 font-mono text-center">Heavy Open-Deck Equipment</span>
+          </label>
         </div>
+      </div>
 
-        <!-- Live Blueprint Visualizer Card -->
-        <div class="bg-[#020408]/90 border border-slate-900 rounded-lg p-6 flex flex-col justify-between font-mono text-[9px] text-slate-500 relative scanlines min-h-60 overflow-hidden">
-          <div class="absolute top-2 left-2 text-[8px] text-[#00f0ff] font-bold uppercase tracking-wider flex items-center gap-1 select-none">// DYNAMIC_BLUEPRINT_HUD</div>
-          <div id="blueprint-warning" class="absolute top-2 right-2 px-1.5 py-0.5 rounded border border-rose-500/30 bg-rose-950/20 text-rose-400 font-bold hidden animate-pulse">MAX WEIGHT LIMIT</div>
-
-          <!-- Dynamic SVG Blueprint Canvas -->
-          <div class="flex-1 flex items-center justify-center py-4">
-            <svg id="blueprint-svg" viewBox="0 0 300 120" class="w-full h-28 max-w-xs overflow-visible bg-black/55 border border-slate-900 rounded">
-              <!-- Grid Pattern -->
-              <defs>
-                <pattern id="blueprint-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(0, 240, 255, 0.05)" stroke-width="0.5"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#blueprint-grid)" rx="4"/>
-              
-              <!-- Ground Line -->
-              <line x1="10" y1="105" x2="290" y2="105" stroke="rgba(255, 255, 255, 0.1)" stroke-width="1" stroke-dasharray="2,2"/>
-
-              <!-- Tractor Cabin Outline -->
-              <path d="M 215,105 L 215,75 L 235,75 L 242,88 L 255,88 L 255,105 Z" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1"/>
-              <circle cx="222" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
-              <circle cx="245" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
-
-              <!-- Wheels (static trailer tandems) -->
-              <circle cx="35" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
-              <circle cx="47" cy="105" r="4" fill="#020408" stroke="rgba(255, 255, 255, 0.2)"/>
-
-              <!-- DYNAMIC TRAILER BLUEPRINT PATHS -->
-              <!-- Dry Van Shell -->
-              <g id="svg-dry-van" class="transition-all duration-300">
-                <rect x="20" y="50" width="190" height="42" fill="none" stroke="#00f0ff" stroke-width="1.5" />
-                <line x1="20" y1="50" x2="20" y2="92" stroke="#00f0ff" stroke-width="1" stroke-dasharray="2,2" />
-                <!-- Pallets in Dry Van -->
-                <rect x="30" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
-                <rect x="60" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
-                <rect x="90" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
-                <rect x="120" y="65" width="20" height="27" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="0.5" />
-              </g>
-
-              <!-- Reefer Shell -->
-              <g id="svg-reefer" class="hidden transition-all duration-300">
-                <!-- Insulated Box -->
-                <rect x="25" y="50" width="185" height="42" fill="none" stroke="#00f0ff" stroke-width="1.5" />
-                <!-- Nosemount cooling unit -->
-                <path d="M 210,55 L 210,75 L 218,75 L 218,55 Z" fill="rgba(0, 240, 255, 0.2)" stroke="#00f0ff" stroke-width="1" />
-                <circle cx="214" cy="65" r="2.5" fill="none" stroke="#00f0ff" stroke-width="0.5" class="animate-pulse" />
-                <!-- Cooling zone gradient overlay -->
-                <rect x="30" y="53" width="175" height="36" fill="rgba(0, 240, 255, 0.05)" />
-                <text x="110" y="74" fill="#00f0ff" font-family="monospace" font-size="7" id="blueprint-temp-overlay" opacity="0.8">TEMP: -18°C</text>
-              </g>
-
-              <!-- Flatbed Shell -->
-              <g id="svg-flatbed" class="hidden transition-all duration-300">
-                <!-- Flat platform deck (bends based on weight) -->
-                <path id="blueprint-flatbed-deck" d="M 20 92 Q 115 92 210 92" fill="none" stroke="#ff6000" stroke-width="3" />
-                <!-- Load outline on top of deck (Cargo box) -->
-                <rect id="blueprint-flatbed-cargo" x="80" y="62" width="70" height="30" fill="rgba(255, 96, 0, 0.15)" stroke="#ff6000" stroke-width="1" />
-                <!-- Cargo straps -->
-                <line id="blueprint-strap-1" x1="95" y1="62" x2="95" y2="92" stroke="#ff6000" stroke-width="0.75" />
-                <line id="blueprint-strap-2" x1="115" y1="62" x2="115" y2="92" stroke="#ff6000" stroke-width="0.75" />
-                <line id="blueprint-strap-3" x1="135" y1="62" x2="135" y2="92" stroke="#ff6000" stroke-width="0.75" />
-              </g>
-            </svg>
-          </div>
-
-          <!-- Bottom Telemetry specs -->
-          <div class="flex justify-between border-t border-slate-900 pt-2 text-slate-500 font-mono text-[9px] select-none">
-            <span>AXLE FLEX: <span id="blueprint-flex-text" class="text-slate-300">NORMAL</span></span>
-            <span>TONNAGE: <span id="blueprint-ton-text" class="text-slate-300">15.0 TONS</span></span>
-          </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Origin Location:</label>
+          <input type="text" name="origin" id="input-origin" placeholder="City, State/Province (e.g. Charlottetown, PE)" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Destination Location:</label>
+          <input type="text" name="destination" id="input-destination" placeholder="City, State/Province (e.g. Boston, MA)" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
         </div>
       </div>
     </div>
 
-    <!-- STEP 3: Real-Time Rates & Compliance -->
-    <div class="step-panel space-y-4 hidden" data-step="3">
-      <div class="space-y-2">
-        <h3 class="text-xl font-bold text-white font-display uppercase">Telemetry Rate Assessment</h3>
-        <p class="text-slate-400 text-sm">Calculated operational pricing coordinates based on dispatch algorithms.</p>
+    <!-- STEP 2: Parameters & Load Weight -->
+    <div id="step-card-2" class="space-y-6 hidden">
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Total Cargo Weight:</label>
+          <span id="weight-display" class="text-xs font-bold text-bro-cyan font-mono">20,000 LBS</span>
+        </div>
+        <input type="range" name="weight" id="slider-weight" min="1" max="45000" step="100" value="20000" class="w-full h-1 bg-[#030307] rounded-lg appearance-none cursor-pointer accent-bro-cyan" />
+        <div class="flex justify-between text-[8px] font-mono text-slate-650">
+          <span>0 LBS</span>
+          <span>MAX LEGAL LIMIT: 45,000 LBS</span>
+        </div>
       </div>
 
-      <!-- Real-Time Evaluation Report Widget -->
-      <div class="bg-[#05070d] rounded-lg border border-slate-900 p-6 space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-900 pb-4">
-          <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_REPORT // AUTO_DIAGNOSTIC</span>
-          <span class="text-xs px-2 py-1 rounded font-mono bg-cyan-950/40 text-cyan-400 border border-cyan-900/30" id="permit-badge">ESTIMATING RATE</span>
+      <!-- Conditional Reefer Temp Panel -->
+      <div id="temp-control-panel" class="space-y-3 hidden border-t border-slate-900/60 pt-4">
+        <div class="flex justify-between items-center">
+          <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Refrigerated Temperature Setpoint:</label>
+          <span id="temp-display" class="text-xs font-bold text-bro-cyan font-mono">-18.0°C</span>
         </div>
+        <input type="range" name="tempSetpoint" id="slider-temp" min="-25" max="25" step="0.5" value="-18" class="w-full h-1 bg-[#030307] rounded-lg appearance-none cursor-pointer accent-bro-cyan" />
+        <div class="flex justify-between text-[8px] font-mono text-slate-650">
+          <span>-25°C (Frozen)</span>
+          <span>+25°C (Warm)</span>
+        </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Assigned Asset:</span>
-            <div class="text-base font-bold text-white uppercase" id="allocated-trailer">53FT Enclosed Carrier</div>
-            <p class="text-xs text-slate-400 leading-relaxed" id="allocated-desc">
-              Standard commercial enclosed asset suited for dry van loads.
-            </p>
-          </div>
-
-          <div class="space-y-3">
-            <span class="text-[10px] uppercase tracking-widest text-slate-500 block font-mono">Pricing Variables:</span>
-            <div class="bg-black/60 border border-slate-900 p-4 rounded space-y-2 font-mono text-[10px]">
-              <div class="flex justify-between">
-                <span class="text-slate-500">BASE MILEAGE RATE:</span>
-                <span class="text-white font-bold" id="rate-base">$2.20 / MILE</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-500">SURCHARGES (WEIGHT/TEMP):</span>
-                <span class="text-[#ff6000] font-bold" id="rate-surcharges">$0.00 / MILE</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-500">CROSS-BORDER MANIFEST FEE:</span>
-                <span class="text-white font-bold">$75.00</span>
-              </div>
-              <div class="border-t border-slate-900 pt-2 flex justify-between text-xs">
-                <span class="text-slate-400 font-bold">TOTAL MILEAGE RATE:</span>
-                <span class="text-[#00f0ff] font-bold" id="rate-total">$2.20 / MILE</span>
-              </div>
-            </div>
-          </div>
+      <!-- Conditional Flatbed Equipment Checkboxes -->
+      <div id="flatbed-control-panel" class="space-y-3 hidden border-t border-slate-900/60 pt-4 font-mono text-[9px] text-slate-450">
+        <label class="block text-[10px] text-slate-500 uppercase tracking-wider">Flatbed Loading Requirements:</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="flex items-center gap-2.5 p-3 bg-[#030307]/30 border border-slate-900 rounded cursor-pointer select-none">
+            <input type="checkbox" name="requiresTarp" value="true" class="accent-bro-cyan" />
+            <span>Heavy-Duty Weather Tarping</span>
+          </label>
+          <label class="flex items-center gap-2.5 p-3 bg-[#030307]/30 border border-slate-900 rounded cursor-pointer select-none">
+            <input type="checkbox" name="requiresStrapping" value="true" class="accent-bro-cyan" />
+            <span>Strap Tension Securement</span>
+          </label>
         </div>
       </div>
     </div>
 
-    <!-- STEP 4: Corridor Routing & Contact -->
-    <div class="step-panel space-y-4 hidden" data-step="4">
-      <div class="space-y-2">
-        <h3 class="text-xl font-bold text-white font-display uppercase">Secure Routing Detail</h3>
-        <p class="text-slate-400 text-sm">Enter destination and contact profiles to dispatch pricing summaries to the edge Workers.</p>
+    <!-- STEP 3: Contact & Submit -->
+    <div id="step-card-3" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 gap-4">
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Full Representative Name:</label>
+          <input type="text" name="contactName" id="input-contactName" placeholder="e.g. John Miller" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Corporate Email:</label>
+            <input type="email" name="contactEmail" id="input-contactEmail" placeholder="e.g. j.miller@corp.com" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-mono text-slate-500 uppercase tracking-wider">Direct Phone (10-Digit):</label>
+            <input type="tel" name="contactPhone" id="input-contactPhone" placeholder="e.g. 9029166936" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
+          </div>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="space-y-1">
-          <label for="origin" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Transit Origin</label>
-          <input type="text" id="origin" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="e.g. Charlottetown, PE" />
-        </div>
-        <div class="space-y-1">
-          <label for="destination" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Transit Destination</label>
-          <input type="text" id="destination" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="e.g. Toronto, ON" />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="space-y-1">
-          <label for="contactName" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Contact Name</label>
-          <input type="text" id="contactName" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="Alex Carter" />
-        </div>
-        <div class="space-y-1">
-          <label for="contactEmail" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Email Address</label>
-          <input type="email" id="contactEmail" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="alex@carrier.com" />
-        </div>
-        <div class="space-y-1">
-          <label for="contactPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono">Direct Phone</label>
-          <input type="tel" id="contactPhone" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="902-555-0144" />
-        </div>
-      </div>
-      
-      <!-- Cloudflare Turnstile Challenge -->
-      <div class="flex justify-center pt-6" id="turnstile-quote-wrapper">
-        <div id="turnstile-quote-widget"></div>
+      <!-- Cloudflare Security challenge container -->
+      <div class="flex justify-center py-2.5">
+        <div id="turnstile-quote-container" class="min-h-[65px]"></div>
       </div>
     </div>
 
-    <!-- Error/Status Box -->
-    <div id="validation-errors" class="hidden text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
+    <!-- Error/Notice Info Box -->
+    <div id="quote-error-box" class="hidden text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded"></div>
 
-    <!-- Navigation Buttons -->
-    <div class="flex justify-between items-center pt-4 border-t border-slate-900">
-      <button type="button" id="prev-btn" class="hidden bg-slate-950 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-white px-6 py-3 rounded font-semibold text-sm transition-all duration-300">
-        Previous Step
+    <!-- Wizard Navigation buttons -->
+    <div class="flex gap-4 border-t border-slate-900/60 pt-6">
+      <button type="button" id="btn-prev" class="flex-1 py-3 border border-slate-800 hover:border-bro-cyan/40 text-slate-400 hover:text-white rounded font-mono text-xs uppercase tracking-wider transition-colors duration-300 disabled:opacity-30 disabled:pointer-events-none cursor-pointer" disabled>
+        Back
       </button>
-      <div class="flex-1"></div>
-      <button type="button" id="next-btn" class="bg-cyan-500 hover:bg-[#00f0ff] text-black px-8 py-3.5 rounded font-bold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10">
+      <button type="button" id="btn-next" class="flex-1 py-3 bg-bro-cyan text-black hover:bg-bro-cyan/90 font-bold rounded font-mono text-xs uppercase tracking-wider transition-colors duration-300 cursor-pointer">
         Next Step
       </button>
     </div>
+
   </form>
 </div>
 
-<!-- Client-side Quote Engine Processing -->
 <script>
   import { QuoteSchema } from '../lib/schemas';
-  import { broAudio } from '../lib/audio';
 
-  // State Management
   let currentStep = 1;
-  const totalSteps = 4;
-  const STORAGE_KEY = 'bro_quote_flow_v5';
+  const totalSteps = 3;
+  const STORAGE_KEY = 'bro_quote_redesign_v1';
 
-  // Turnstile State
-  let turnstileWidgetId: any = null;
   let turnstileToken = '';
+  let turnstileWidgetId: string | null = null;
 
-  // DOM Elements
-  const form = document.getElementById('quote-form') as HTMLFormElement;
-  const panels = document.querySelectorAll('.step-panel');
-  const dots = document.querySelectorAll('.step-dot');
-  const currentStepNum = document.getElementById('current-step-num');
-  const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
-  const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
-  const errorBox = document.getElementById('validation-errors');
+  const form = document.getElementById('quote-flow-form') as HTMLFormElement;
+  const card1 = document.getElementById('step-card-1');
+  const card2 = document.getElementById('step-card-2');
+  const card3 = document.getElementById('step-card-3');
 
-  // SVG Blueprints
-  const svgDryVan = document.getElementById('svg-dry-van');
-  const svgReefer = document.getElementById('svg-reefer');
-  const svgFlatbed = document.getElementById('svg-flatbed');
-  const flatbedDeck = document.getElementById('blueprint-flatbed-deck');
-  const flatbedCargo = document.getElementById('blueprint-flatbed-cargo');
-  const strap1 = document.getElementById('blueprint-strap-1');
-  const strap2 = document.getElementById('blueprint-strap-2');
-  const strap3 = document.getElementById('blueprint-strap-3');
+  const btnPrev = document.getElementById('btn-prev') as HTMLButtonElement;
+  const btnNext = document.getElementById('btn-next') as HTMLButtonElement;
 
-  const getRadioVal = (name: string) => {
-    const el = document.querySelector(`input[name="${name}"]:checked`) as HTMLInputElement | null;
-    return el ? el.value : '';
-  };
-  const getNumberVal = (id: string) => {
-    const el = document.getElementById(id) as HTMLInputElement | null;
-    return el ? parseFloat(el.value) || 0 : 0;
-  };
-  const getStringVal = (id: string) => {
-    const el = document.getElementById(id) as HTMLInputElement | null;
-    return el ? el.value.trim() : '';
-  };
+  const stepTitle = document.getElementById('step-title');
+  const stepFraction = document.getElementById('step-fraction');
+  const progressBar = document.getElementById('step-progress-bar');
+  const errorBox = document.getElementById('quote-error-box');
 
-  function renderTurnstileWidget() {
-    const container = document.getElementById('turnstile-quote-widget');
-    if (!container) return;
+  const sliderWeight = document.getElementById('slider-weight') as HTMLInputElement;
+  const weightDisplay = document.getElementById('weight-display');
+  const sliderTemp = document.getElementById('slider-temp') as HTMLInputElement;
+  const tempDisplay = document.getElementById('temp-display');
 
-    if (!(window as any).turnstile) {
-      setTimeout(renderTurnstileWidget, 500);
-      return;
-    }
+  const tempPanel = document.getElementById('temp-control-panel');
+  const flatbedPanel = document.getElementById('flatbed-control-panel');
 
-    const turnstile = (window as any).turnstile;
-    if (turnstileWidgetId !== null) {
-      turnstile.reset(turnstileWidgetId);
-      return;
-    }
+  const trailerRadios = document.getElementsByName('trailerType') as NodeListOf<HTMLInputElement>;
 
-    try {
-      turnstileWidgetId = turnstile.render('#turnstile-quote-widget', {
-        sitekey: '1x00000000000000000000AA', // Testing sitekey
-        theme: 'dark',
-        callback: function(token: string) {
-          turnstileToken = token;
-          if (errorBox) errorBox.classList.add('hidden');
-        }
-      });
-    } catch (e) {
-      console.error('Failed to render Turnstile widget', e);
-    }
-  }
-
-  // Setup Step Changes
+  // Show selected step UI card
   function showStep(step: number) {
-    panels.forEach((p) => {
-      const panelStep = parseInt(p.getAttribute('data-step') || '1');
-      if (panelStep === step) {
-        p.classList.remove('hidden');
-      } else {
-        p.classList.add('hidden');
-      }
-    });
+    if (!card1 || !card2 || !card3 || !stepTitle || !stepFraction || !progressBar || !btnPrev || !btnNext) return;
 
-    dots.forEach((d, idx) => {
-      if (idx + 1 <= step) {
-        d.className = 'h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot';
-      } else {
-        d.className = 'h-1.5 w-6 rounded-full bg-slate-900 step-dot';
-      }
-    });
+    card1.classList.add('hidden');
+    card2.classList.add('hidden');
+    card3.classList.add('hidden');
 
-    if (currentStepNum) currentStepNum.innerText = step.toString();
-
-    // Toggle Nav Buttons
     if (step === 1) {
-      prevBtn.classList.add('hidden');
-    } else {
-      prevBtn.classList.remove('hidden');
-    }
-
-    if (step === totalSteps) {
-      nextBtn.innerText = 'Submit Quote Request';
-      nextBtn.className = 'bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
-    } else {
-      nextBtn.innerText = 'Next Step';
-      nextBtn.className = 'bg-cyan-500 hover:bg-[#00f0ff] text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10';
-    }
-
-    if (step === 3) {
-      runEvaluation();
-    }
-
-    if (step === 4) {
-      renderTurnstileWidget();
+      card1.classList.remove('hidden');
+      stepTitle.innerText = "01 // Cargo & Route";
+      stepFraction.innerText = "Step 1 of 3";
+      progressBar.style.width = "33.3%";
+      btnPrev.disabled = true;
+      btnNext.innerText = "Next Step";
+    } else if (step === 2) {
+      card2.classList.remove('hidden');
+      stepTitle.innerText = "02 // Load Parameters";
+      stepFraction.innerText = "Step 2 of 3";
+      progressBar.style.width = "66.6%";
+      btnPrev.disabled = false;
+      btnNext.innerText = "Next Step";
+      updateConditionalPanels();
+    } else if (step === 3) {
+      card3.classList.remove('hidden');
+      stepTitle.innerText = "03 // Contact Details";
+      stepFraction.innerText = "Step 3 of 3";
+      progressBar.style.width = "100%";
+      btnPrev.disabled = false;
+      btnNext.innerText = "Request Quote";
+      initTurnstile();
     }
   }
 
-  // Real-Time Evaluation logic for Step 3
-  function runEvaluation() {
-    const trailerType = getRadioVal('trailerType');
-    const weight = getNumberVal('weight');
-    const tempSetpoint = getNumberVal('tempSetpoint');
+  function getTrailerType() {
+    let checked = 'dry-van';
+    trailerRadios.forEach(radio => {
+      if (radio.checked) checked = radio.value;
+    });
+    return checked;
+  }
 
-    const allocatedTrailer = document.getElementById('allocated-trailer');
-    const allocatedDesc = document.getElementById('allocated-desc');
-    const rateBase = document.getElementById('rate-base');
-    const rateSurcharges = document.getElementById('rate-surcharges');
-    const rateTotal = document.getElementById('rate-total');
+  function updateConditionalPanels() {
+    if (!tempPanel || !flatbedPanel) return;
+    const type = getTrailerType();
+    
+    tempPanel.classList.add('hidden');
+    flatbedPanel.classList.add('hidden');
 
-    if (!allocatedTrailer || !allocatedDesc || !rateBase || !rateSurcharges || !rateTotal) return;
+    if (type === 'reefer') {
+      tempPanel.classList.remove('hidden');
+    } else if (type === 'flatbed') {
+      flatbedPanel.classList.remove('hidden');
+    }
+  }
 
-    let basePrice = 2.20;
-    let surchargePrice = 0.00;
+  // Handle Turnstile Initialization
+  function initTurnstile() {
+    if (turnstileWidgetId !== null) return;
+    const container = document.getElementById('turnstile-quote-container');
+    if (!container || !(window as any).turnstile) return;
 
-    if (trailerType === 'dry-van') {
-      allocatedTrailer.innerText = '53FT Enclosed Carrier';
-      allocatedDesc.innerText = 'Assigned standard dry van. Perfect for palletized freight requiring weather-enclosed security.';
-      basePrice = 2.20;
-    } else if (trailerType === 'reefer') {
-      allocatedTrailer.innerText = '53FT Climate-Controlled Reefer';
-      allocatedDesc.innerText = `Assigned insulated reefer. Temperature setpoint lock verified at ${tempSetpoint}°C.`;
-      basePrice = 2.55;
-      // reefer temperature surcharge
-      if (tempSetpoint < -10) {
-        surchargePrice += 0.10; // deep freeze power surcharge
+    turnstileWidgetId = (window as any).turnstile.render(container, {
+      sitekey: '0x4AAAAAAA2I6F9JkSivv8tZ', // Public Turnstile Demo key or actual sitekey
+      callback: function(token: string) {
+        turnstileToken = token;
+        if (errorBox) errorBox.classList.add('hidden');
       }
-    } else if (trailerType === 'flatbed') {
-      allocatedTrailer.innerText = '53FT Open Deck Flatbed';
-      allocatedDesc.innerText = 'Assigned open flatbed. Payloads require tie-down securement and optional tarps.';
-      basePrice = 2.45;
-    }
-
-    // Weight surcharge: over 40,000 lbs
-    if (weight > 40000) {
-      surchargePrice += 0.15;
-    }
-
-    const totalRate = basePrice + surchargePrice;
-
-    rateBase.innerText = `$${basePrice.toFixed(2)} / MILE`;
-    rateSurcharges.innerText = `$${surchargePrice.toFixed(2)} / MILE`;
-    rateTotal.innerText = `$${totalRate.toFixed(2)} / MILE`;
+    });
   }
 
-  // Local Storage Save
-  function saveFlowData() {
-    const data = {
-      trailerType: getRadioVal('trailerType'),
-      weight: getNumberVal('weight'),
-      tempSetpoint: getNumberVal('tempSetpoint'),
-      origin: getStringVal('origin'),
-      destination: getStringVal('destination'),
-      contactName: getStringVal('contactName'),
-      contactEmail: getStringVal('contactEmail'),
-      contactPhone: getStringVal('contactPhone'),
-      currentStep
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  // Update slider displays
+  if (sliderWeight && weightDisplay) {
+    sliderWeight.addEventListener('input', () => {
+      weightDisplay.innerText = `${parseInt(sliderWeight.value).toLocaleString()} LBS`;
+    });
   }
 
-  // Local Storage Load
-  function loadFlowData() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
+  if (sliderTemp && tempDisplay) {
+    sliderTemp.addEventListener('input', () => {
+      tempDisplay.innerText = `${parseFloat(sliderTemp.value).toFixed(1)}°C`;
+    });
+  }
 
+  // Radio selection card styles toggler
+  function updateCardStyles() {
+    const type = getTrailerType();
+    ['dry-van', 'reefer', 'flatbed'].forEach(t => {
+      const card = document.getElementById(`card-${t}`);
+      if (card) {
+        if (t === type) {
+          card.classList.add('border-bro-cyan', 'bg-bro-cyan/10');
+          card.classList.remove('border-slate-900', 'bg-[#030307]/40');
+        } else {
+          card.classList.remove('border-bro-cyan', 'bg-bro-cyan/10');
+          card.classList.add('border-slate-900', 'bg-[#030307]/40');
+        }
+      }
+    });
+  }
+
+  trailerRadios.forEach(radio => {
+    radio.addEventListener('change', updateCardStyles);
+  });
+
+  updateCardStyles();
+
+  // Load / Save Session Form Data
+  function loadFormState() {
     try {
-      const data = JSON.parse(saved);
-      
-      const radio = document.querySelector(`input[name="trailerType"][value="${data.trailerType}"]`) as HTMLInputElement | null;
-      if (radio) radio.checked = true;
-
-      const setNum = (id: string, val: number) => {
-        const el = document.getElementById(id) as HTMLInputElement | null;
-        if (el && val) el.value = val.toString();
-      };
-      setNum('weight', data.weight);
-      setNum('tempSetpoint', data.tempSetpoint);
-
-      const setStr = (id: string, val: string) => {
-        const el = document.getElementById(id) as HTMLInputElement | null;
-        if (el && val) el.value = val;
-      };
-      setStr('origin', data.origin);
-      setStr('destination', data.destination);
-      setStr('contactName', data.contactName);
-      setStr('contactEmail', data.contactEmail);
-      setStr('contactPhone', data.contactPhone);
-
-      if (data.currentStep) {
-        currentStep = data.currentStep;
-        showStep(currentStep);
+      const data = sessionStorage.getItem(STORAGE_KEY);
+      if (!data) return;
+      const parsed = JSON.parse(data);
+      if (parsed.trailerType) {
+        trailerRadios.forEach(r => { if (r.value === parsed.trailerType) r.checked = true; });
       }
-      updateBlueprint();
-    } catch (e) {
-      console.error('Failed to restore cached progress', e);
-    }
+      if (parsed.origin) (document.getElementById('input-origin') as HTMLInputElement).value = parsed.origin;
+      if (parsed.destination) (document.getElementById('input-destination') as HTMLInputElement).value = parsed.destination;
+      if (parsed.weight) {
+        sliderWeight.value = parsed.weight;
+        if (weightDisplay) weightDisplay.innerText = `${parseInt(parsed.weight).toLocaleString()} LBS`;
+      }
+      if (parsed.tempSetpoint && sliderTemp) {
+        sliderTemp.value = parsed.tempSetpoint;
+        if (tempDisplay) tempDisplay.innerText = `${parseFloat(parsed.tempSetpoint).toFixed(1)}°C`;
+      }
+      if (parsed.contactName) (document.getElementById('input-contactName') as HTMLInputElement).value = parsed.contactName;
+      if (parsed.contactEmail) (document.getElementById('input-contactEmail') as HTMLInputElement).value = parsed.contactEmail;
+      if (parsed.contactPhone) (document.getElementById('input-contactPhone') as HTMLInputElement).value = parsed.contactPhone;
+
+      updateCardStyles();
+    } catch(e) {}
   }
 
-  function updateBlueprint() {
-    const trailerType = getRadioVal('trailerType');
-    const weight = getNumberVal('weight') || 30000;
-    const tempSetpoint = getNumberVal('tempSetpoint') || -18;
-
-    const warning = document.getElementById('blueprint-warning');
-    const sliderVal = document.getElementById('weight-slider-val');
-    const tempInputVal = document.getElementById('temp-slider-val');
-    const tempInputWrapper = document.getElementById('temp-input-wrapper');
-
-    const blueprintFlex = document.getElementById('blueprint-flex-text');
-    const blueprintTon = document.getElementById('blueprint-ton-text');
-    const blueprintTempOverlay = document.getElementById('blueprint-temp-overlay');
-
-    // Toggle temp input visibility
-    if (trailerType === 'reefer') {
-      if (tempInputWrapper) tempInputWrapper.classList.remove('hidden');
-    } else {
-      if (tempInputWrapper) tempInputWrapper.classList.add('hidden');
-    }
-
-    // Toggle blueprint visible groups
-    if (svgDryVan && svgReefer && svgFlatbed) {
-      svgDryVan.classList.add('hidden');
-      svgReefer.classList.add('hidden');
-      svgFlatbed.classList.add('hidden');
-
-      if (trailerType === 'dry-van') {
-        svgDryVan.classList.remove('hidden');
-      } else if (trailerType === 'reefer') {
-        svgReefer.classList.remove('hidden');
-        if (blueprintTempOverlay) {
-          blueprintTempOverlay.textContent = `TEMP: ${tempSetpoint.toFixed(1)}°C`;
-        }
-      } else if (trailerType === 'flatbed') {
-        svgFlatbed.classList.remove('hidden');
-        // Flatbed deck bending flex logic based on weight
-        const maxFlex = 6;
-        const flexRatio = weight / 45000; // 0 to 1
-        const bend = flexRatio * maxFlex;
-        if (flatbedDeck && flatbedCargo && strap1 && strap2 && strap3) {
-          flatbedDeck.setAttribute('d', `M 20 92 Q 115 ${92 + bend} 210 92`);
-          // adjust cargo Y based on bend
-          flatbedCargo.setAttribute('y', (62 + bend/2).toString());
-          // adjust straps Y
-          strap1.setAttribute('y2', (92 + bend/2).toString());
-          strap2.setAttribute('y2', (92 + bend).toString());
-          strap3.setAttribute('y2', (92 + bend/2).toString());
-        }
-      }
-    }
-
-    // Update labels
-    if (sliderVal) sliderVal.innerText = `${weight.toLocaleString()} LBS`;
-    if (tempInputVal) tempInputVal.innerText = `${tempSetpoint.toFixed(1)}°C`;
-    if (blueprintTon) blueprintTon.innerText = `${(weight / 2000).toFixed(1)} TONS`;
-
-    if (blueprintFlex) {
-      if (weight > 40000) {
-        blueprintFlex.innerText = 'HIGH DECK STRESS';
-        blueprintFlex.className = 'text-[#ff6000] font-bold animate-pulse';
-        if (warning) warning.classList.remove('hidden');
-      } else {
-        blueprintFlex.innerText = 'NORMAL';
-        blueprintFlex.className = 'text-slate-350';
-        if (warning) warning.classList.add('hidden');
-      }
-    }
+  function saveFormState() {
+    const payload = {
+      trailerType: getTrailerType(),
+      origin: (document.getElementById('input-origin') as HTMLInputElement).value,
+      destination: (document.getElementById('input-destination') as HTMLInputElement).value,
+      weight: parseInt(sliderWeight.value),
+      tempSetpoint: getTrailerType() === 'reefer' ? parseFloat(sliderTemp.value) : undefined,
+      contactName: (document.getElementById('input-contactName') as HTMLInputElement).value,
+      contactEmail: (document.getElementById('input-contactEmail') as HTMLInputElement).value,
+      contactPhone: (document.getElementById('input-contactPhone') as HTMLInputElement).value,
+    };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }
 
-  // Initialize
-  loadFlowData();
+  form.addEventListener('input', saveFormState);
 
-  // Next Button Handler
-  nextBtn?.addEventListener('click', () => {
+  // Navigation handlers
+  btnPrev.addEventListener('click', () => {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  });
+
+  btnNext.addEventListener('click', () => {
     if (errorBox) errorBox.classList.add('hidden');
 
-    if (currentStep === totalSteps) {
-      const payload = {
-        trailerType: getRadioVal('trailerType'),
-        weight: getNumberVal('weight'),
-        tempSetpoint: getRadioVal('trailerType') === 'reefer' ? getNumberVal('tempSetpoint') : undefined,
-        origin: getStringVal('origin'),
-        destination: getStringVal('destination'),
-        contactName: getStringVal('contactName'),
-        contactEmail: getStringVal('contactEmail'),
-        contactPhone: getStringVal('contactPhone'),
-        turnstileToken: turnstileToken
-      };
-
-      const result = QuoteSchema.safeParse(payload);
-      if (!result.success) {
+    if (currentStep === 1) {
+      // Basic validation for Step 1
+      const origin = (document.getElementById('input-origin') as HTMLInputElement).value;
+      const dest = (document.getElementById('input-destination') as HTMLInputElement).value;
+      if (origin.length < 3 || dest.length < 3) {
         if (errorBox) {
-          errorBox.innerHTML = result.error.errors.map((e) => `• ${e.message}`).join('<br />');
-          errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
+          errorBox.innerText = "Origin and destination address must be at least 3 characters.";
           errorBox.classList.remove('hidden');
         }
         return;
       }
+      currentStep = 2;
+      showStep(currentStep);
+    } else if (currentStep === 2) {
+      currentStep = 3;
+      showStep(currentStep);
+    } else if (currentStep === 3) {
+      submitForm();
+    }
+  });
 
-      // Successful Validation
-      if (errorBox) {
-        errorBox.className = 'text-xs text-cyan-400 bg-cyan-950/20 border border-cyan-900/40 p-4 rounded-md';
-        errorBox.innerText = 'Manifest payload verified. Transmitting encrypted route metrics...';
-        errorBox.classList.remove('hidden');
-      }
+  function submitForm() {
+    if (!errorBox) return;
 
-      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://127.0.0.1:8787/api/quote'
-        : 'https://brotransport-edge-api.keshuin0.workers.dev/api/quote';
+    const payload = {
+      trailerType: getTrailerType(),
+      weight: parseInt(sliderWeight.value),
+      tempSetpoint: getTrailerType() === 'reefer' ? parseFloat(sliderTemp.value) : undefined,
+      origin: (document.getElementById('input-origin') as HTMLInputElement).value,
+      destination: (document.getElementById('input-destination') as HTMLInputElement).value,
+      contactName: (document.getElementById('input-contactName') as HTMLInputElement).value,
+      contactEmail: (document.getElementById('input-contactEmail') as HTMLInputElement).value,
+      contactPhone: (document.getElementById('input-contactPhone') as HTMLInputElement).value,
+      turnstileToken: turnstileToken
+    };
 
-      fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Uplink transmission rejected.');
-        }
-        return data;
-      })
-      .then((data) => {
-        broAudio.playBiometricSuccess();
-        alert(`Procurement request successfully logged! Edge server reply: ${data.message}`);
-        localStorage.removeItem(STORAGE_KEY);
-        form.reset();
-        currentStep = 1;
-        showStep(1);
-        if (errorBox) errorBox.classList.add('hidden');
-        if (turnstileWidgetId !== null && (window as any).turnstile) {
-          (window as any).turnstile.reset(turnstileWidgetId);
-          turnstileToken = '';
-        }
-      })
-      .catch((err) => {
-        broAudio.playWarningChime();
-        if (errorBox) {
-          errorBox.innerText = `Uplink failed: ${err.message}`;
-          errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
-          errorBox.classList.remove('hidden');
-        }
-      });
-
+    const validation = QuoteSchema.safeParse(payload);
+    if (!validation.success) {
+      errorBox.innerHTML = validation.error.errors.map(e => `• ${e.message}`).join('<br/>');
+      errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded';
+      errorBox.classList.remove('hidden');
       return;
     }
 
-    currentStep++;
+    // Processing Submit
+    errorBox.className = 'text-xs text-bro-cyan bg-bro-cyan/10 border border-bro-cyan/30 p-4 rounded animate-pulse';
+    errorBox.innerText = "TRANSMITTING ENCRYPTED RATE CALCULATIONS...";
+    errorBox.classList.remove('hidden');
+
+    const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://127.0.0.1:8787/api/quote'
+      : 'https://brotransport-edge-api.keshuin0.workers.dev/api/quote';
+
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Uplink transmission rejected.');
+      return data;
+    })
+    .then((data) => {
+      alert(`Quote calculation successful! Estimated shipping price: $${data.estimatedPrice || 'Contact Desk'} CAD. Reference ID: ${data.manifestId || 'BROP-REF'}`);
+      sessionStorage.removeItem(STORAGE_KEY);
+      form.reset();
+      currentStep = 1;
+      showStep(1);
+      errorBox.classList.add('hidden');
+      if (turnstileWidgetId !== null && (window as any).turnstile) {
+        (window as any).turnstile.reset(turnstileWidgetId);
+        turnstileToken = '';
+      }
+    })
+    .catch((err) => {
+      errorBox.innerText = `Quote uplink failed: ${err.message}`;
+      errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded';
+      errorBox.classList.remove('hidden');
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    loadFormState();
     showStep(currentStep);
-    saveFlowData();
-  });
-
-  // Prev Button Handler
-  prevBtn?.addEventListener('click', () => {
-    if (errorBox) errorBox.classList.add('hidden');
-    if (currentStep > 1) {
-      currentStep--;
-      showStep(currentStep);
-      saveFlowData();
-    }
-  });
-
-  form?.addEventListener('input', () => {
-    saveFlowData();
-    updateBlueprint();
   });
 </script>
-
-<style>
-  /* Highlight active cards */
-  #card-dry-van:has(input[type="radio"]:checked) {
-    border-color: #00f0ff;
-    background-color: rgba(0, 240, 255, 0.05);
-  }
-  #card-reefer:has(input[type="radio"]:checked) {
-    border-color: #00f0ff;
-    background-color: rgba(0, 240, 255, 0.05);
-  }
-  #card-flatbed:has(input[type="radio"]:checked) {
-    border-color: #ff6000;
-    background-color: rgba(255, 96, 0, 0.05);
-  }
-</style>

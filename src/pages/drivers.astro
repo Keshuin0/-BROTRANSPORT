@@ -4,594 +4,220 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="Driver Intake Portal | #BRO Transport Corp." description="Progressive recruitment portal for commercial dry van, reefer, and flatbed transport operations. Driver qualifications, safety certifications, and intake.">
-  <!-- Navigation -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-bro-obsidian/85 border-b border-slate-900" style="view-transition-name: main-header;">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <a href={base} class="flex items-center gap-2 group">
-        <div class="h-3 w-3 bg-bro-cyan rounded-full animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.4)] group-hover:bg-bro-cyan transition-colors shrink-0"></div>
-        <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90" />
-      </a>
-      
-      <nav class="flex items-center gap-8 text-sm font-medium text-slate-350">
-        <a href={base} class="hover:text-bro-cyan transition-colors">Return Home</a>
-        <a href={`${base}customs`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Customs</a>
-        <a href={`${base}Disruptive-Trucking-Website-Master-Roadmap.pdf`} target="_blank" class="hover:text-bro-crimson transition-colors font-bold text-bro-crimson font-mono">[RESEARCH_PDF]</a>
-      </nav>
-
-      <div class="flex items-center gap-4">
-        <a href="tel:902-916-6936" class="bg-bro-cyan/10 border border-bro-cyan/30 hover:bg-bro-cyan hover:text-black transition-all duration-300 text-bro-cyan text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
-          <span>Call Desk: 902-916-6936</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- Driver Registration Portal Hero -->
-  <section class="py-16 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.08),rgba(255,255,255,0))] border-b border-slate-900">
-    <div class="max-w-4xl mx-auto text-center space-y-6">
-      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-bro-gold font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-gold/20">
-        Transport Canada Secure Portal
+  <!-- Driver Portal Hero -->
+  <section class="py-20 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] border-b border-slate-900/60 relative z-10">
+    <div class="max-w-4xl mx-auto text-center space-y-4">
+      <span class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-bro-cyan font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-cyan/20">
+        // CAPACITY_DESK
       </span>
       <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-display uppercase">
-        Driver Intake Portal
+        Driver Gateway
       </h1>
-      <p class="text-bro-ice/85 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-         Engineered for Capacity Partners. Access premium, pre-vetted loads, clean routing pipelines, and secure payment terms through our identity verification gateway. Provide your driver credentials and qualifications to register for our dry van, reefer, and flatbed divisions.
+      <p class="text-bro-ice/70 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-sans">
+        Join our freight fleet. Access premium cross-border loads, clean routing pipelines, and secure payment terms. Submit your driver credentials below.
       </p>
     </div>
   </section>
 
-  <!-- Multi-Step Driver Intake Form -->
-  <section class="py-16 px-6">
-    <div class="max-w-3xl mx-auto">
-      <!-- Driver Compensation & Assigned Fleet Specs Matrix -->
-      <div class="bg-[#05070d]/50 border border-slate-900 p-8 rounded-lg mb-12 space-y-6 shadow-xl relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-3xl"></div>
-        <div class="flex items-center gap-2">
-          <span class="h-2 w-2 rounded-full bg-[#ff6000] animate-pulse"></span>
-          <h2 class="text-xs font-mono uppercase tracking-widest text-slate-450">SYS_COMPENSATION // ASSIGNED FLEET SPEC & PAYOUT MATRIX</h2>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 font-mono text-[10px] text-slate-400">
-          <div class="border border-slate-900 p-4 rounded bg-[#020408]/40 space-y-2 hover:border-[#00f0ff]/35 transition-all">
-            <span class="text-cyan-400 font-bold block">// BASE MILEAGE RATE</span>
-            <div class="text-base font-bold text-white tracking-tight">$0.62 - $0.70 / mile</div>
-            <p class="text-slate-550 leading-normal text-[9px]">Standard 53ft Enclosed Dry Van regional and long-haul runs.</p>
-          </div>
-          <div class="border border-slate-900 p-4 rounded bg-[#020408]/40 space-y-2 hover:border-[#00f0ff]/35 transition-all">
-            <span class="text-cyan-400 font-bold block">// TEMPERATURE PREMIUM</span>
-            <div class="text-base font-bold text-white tracking-tight">+$0.03 / mile</div>
-            <p class="text-slate-550 leading-normal text-[9px]">Additional allowance paid for temperature-sensitive cooling log runs.</p>
-          </div>
-          <div class="border border-slate-900 p-4 rounded bg-[#020408]/40 space-y-2 hover:border-blaze/35 transition-all">
-            <span class="text-[#ff6000] font-bold block">// TARP & SECUREMENT PREMIUM</span>
-            <div class="text-base font-bold text-white tracking-tight">+$0.05 / mile</div>
-            <p class="text-slate-550 leading-normal text-[9px]">Flatbed securement, chain binder strapping, and tarp drops.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-[#020408]/90 border border-slate-900 p-8 rounded-lg shadow-2xl relative overflow-hidden scanlines cyber-corners" id="driver-portal-container">
-        <!-- Progress Steps -->
-        <div class="flex items-center justify-between mb-8 border-b border-slate-900 pb-4">
-          <span class="text-xs font-mono uppercase tracking-widest text-slate-500">SYS_REGISTRATION: STEP <span id="current-step-num">1</span> OF 3</span>
-          <div class="flex gap-2">
-            <div class="h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot"></div>
-            <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
-            <div class="h-1.5 w-6 rounded-full bg-slate-900 step-dot"></div>
-          </div>
+  <!-- Driver Registration Form Section -->
+  <section class="py-16 px-6 relative z-10">
+    <div class="max-w-xl mx-auto bg-bro-steel/20 border border-slate-900 rounded-lg p-6 md:p-8 shadow-2xl backdrop-blur-md">
+      
+      <form id="driver-intake-form" class="space-y-6">
+        <div class="flex items-center gap-2 border-b border-slate-900/60 pb-3 mb-6">
+          <span class="h-2 w-2 rounded-full bg-bro-cyan animate-pulse"></span>
+          <h2 class="text-xs font-mono uppercase tracking-widest text-slate-450">CAPACITY_PARTNER_REGISTRATION</h2>
         </div>
 
-        <form id="driver-compliance-form" class="space-y-6">
-          <!-- STEP 1: Personal & Lane Profile -->
-          <div class="step-panel space-y-6" data-step="1">
-            <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-display uppercase">Driver Credentials</h3>
-              <p class="text-slate-400 text-xs">Verify contact coordinates and fleet equipment compatibility parameters.</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label for="driverName" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Driver / Carrier Name</label>
-                <input type="text" id="driverName" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="John Doe" />
-              </div>
-              <div>
-                <label for="driverPhone" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Cell Phone Number</label>
-                <input type="tel" id="driverPhone" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="902-555-0199" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label for="equipType" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Equipment Division</label>
-                <select id="equipType" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono">
-                  <option value="dry-van">53ft Enclosed Dry Van Division</option>
-                  <option value="reefer">53ft Climate-Controlled Reefer Division</option>
-                  <option value="flatbed">53ft Open Deck Flatbed Division</option>
-                </select>
-              </div>
-              <div>
-                <label for="preferredLanes" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 font-mono mb-2">Primary Lanes Focus</label>
-                <input type="text" id="preferredLanes" class="w-full bg-[#05070d] border border-slate-900 focus:border-[#00f0ff] focus:outline-none rounded px-4 py-3 text-white text-sm font-mono placeholder:text-slate-800" placeholder="e.g. PEI to Ontario Corridors" />
-              </div>
-            </div>
+        <div class="space-y-4">
+          <!-- Driver Name -->
+          <div class="space-y-1.5 font-mono text-[9px] text-slate-550">
+            <label class="block text-slate-500 uppercase tracking-wider">Driver Full Name:</label>
+            <input type="text" name="driverName" id="input-driverName" placeholder="e.g. Robert MacDonald" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
           </div>
 
-          <!-- STEP 2: Compliance Clearances -->
-          <div class="step-panel space-y-6 hidden" data-step="2">
-            <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-display uppercase">Safety Certifications & CDL Status</h3>
-              <p class="text-slate-400 text-xs">Verify safety qualification and licensing compliance criteria. Click options to scan.</p>
-            </div>
-
-            <div class="space-y-4 pt-2">
-              <!-- Checkbox 1 -->
-              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-slate-950/45 border border-slate-900 hover:border-slate-850 cursor-pointer transition-all select-none justify-between">
-                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-[#00f0ff] shadow-[0_0_8px_#00f0ff] pointer-events-none opacity-0"></div>
-                <div class="flex items-start gap-4">
-                  <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
-                  <div class="space-y-0.5 text-left">
-                    <span class="text-sm font-bold text-white font-display">Class 1 / AZ Commercial Driver's License</span>
-                    <p class="text-slate-500 text-xs leading-relaxed">
-                      Applicants must verify they hold a valid Class 1 or AZ Commercial Driver's License in good standing.
-                    </p>
-                  </div>
-                </div>
-                <span id="class1OrAz-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none">PENDING</span>
-              </label>
-
-              <!-- Checkbox 2 -->
-              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-slate-950/45 border border-slate-900 hover:border-slate-850 cursor-pointer transition-all select-none justify-between">
-                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-[#00f0ff] shadow-[0_0_8px_#00f0ff] pointer-events-none opacity-0"></div>
-                <div class="flex items-start gap-4">
-                  <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
-                  <div class="space-y-0.5 text-left">
-                    <span class="text-sm font-bold text-white font-display">COR / Safety Certified</span>
-                    <p class="text-slate-500 text-xs leading-relaxed">
-                      Check if you hold current Certificate of Recognition (COR) or equivalent industrial safety certifications.
-                    </p>
-                  </div>
-                </div>
-                <span id="safetyCertified-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-550 rounded shrink-0 select-none">OPTIONAL</span>
-              </label>
-
-              <!-- Checkbox 3 -->
-              <label class="relative overflow-hidden flex items-center gap-4 p-4 rounded-lg bg-slate-950/45 border border-slate-900 hover:border-slate-850 cursor-pointer transition-all select-none justify-between">
-                <div class="scanner-bar absolute left-0 right-0 h-0.5 bg-[#00f0ff] shadow-[0_0_8px_#00f0ff] pointer-events-none opacity-0"></div>
-                <div class="flex items-start gap-4">
-                  <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
-                  <div class="space-y-0.5 text-left">
-                    <span class="text-sm font-bold text-white font-display">Clean 3-Year Commercial Driver Abstract</span>
-                    <p class="text-slate-500 text-xs leading-relaxed">
-                      Verify that your commercial abstract contains zero heavy safety infractions or regulatory safety penalties.
-                    </p>
-                  </div>
-                </div>
-                <span id="hasCleanAbstract-status" class="text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none">PENDING</span>
-              </label>
-            </div>
+          <!-- Contact Number -->
+          <div class="space-y-1.5 font-mono text-[9px] text-slate-550">
+            <label class="block text-slate-500 uppercase tracking-wider">Contact Phone (10-Digit):</label>
+            <input type="tel" name="driverPhone" id="input-driverPhone" placeholder="e.g. 9029166936" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
           </div>
 
-          <!-- STEP 3: Secure Document Drag & Drop -->
-          <div class="step-panel space-y-6 hidden" data-step="3">
-            <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-display uppercase">Secure Document Intake</h3>
-              <p class="text-slate-400 text-xs">Upload required credentials. Files are scanned locally before edge worker dispatch.</p>
-            </div>
-
-            <!-- Upload Box Mock -->
-            <div class="border-2 border-dashed border-slate-900 hover:border-cyan-500/40 rounded-lg p-8 text-center cursor-pointer bg-slate-950/40 hover:bg-slate-950/60 transition-all space-y-4 group" id="upload-zone">
-              <div class="h-12 w-12 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto group-hover:bg-[#00f0ff] group-hover:text-black transition-colors duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-              </div>
-              <div class="space-y-1">
-                <p class="text-sm font-bold text-white" id="upload-status">Drag & Drop Driver Abstract, CV or Safety Certificates</p>
-                <p class="text-slate-500 text-xs">PDF, PNG, JPG, or DOCX formats accepted (Max 15MB size limit)</p>
-              </div>
-              <input type="file" id="file-uploader" class="hidden" />
-            </div>
-
-            <!-- Cloudflare Turnstile Challenge -->
-            <div class="flex justify-center pt-6" id="turnstile-drivers-wrapper">
-              <div id="turnstile-drivers-widget"></div>
-            </div>
+          <!-- Equipment Type -->
+          <div class="space-y-1.5 font-mono text-[9px] text-slate-550">
+            <label class="block text-slate-500 uppercase tracking-wider">Equipment division class:</label>
+            <select name="equipType" id="select-equipType" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors">
+              <option value="dry-van">53FT DRY VAN</option>
+              <option value="reefer">53FT REEFER / COLD CHAIN</option>
+              <option value="flatbed">OPEN DECK / FLATBED / HEAVY-HAUL</option>
+            </select>
           </div>
 
-          <!-- Error/Validation Message -->
-          <div id="validation-errors" class="hidden text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md"></div>
-
-          <!-- Navigation Buttons -->
-          <div class="flex justify-between items-center pt-4 border-t border-slate-900">
-            <button type="button" id="prev-btn" class="hidden bg-slate-950 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-white px-6 py-3 rounded font-semibold text-sm transition-all duration-300">
-              Previous Step
-            </button>
-            <div class="flex-1"></div>
-            <button type="button" id="next-btn" class="bg-cyan-500 hover:bg-[#00f0ff] text-black px-8 py-3.5 rounded font-bold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10">
-              Next Step
-            </button>
+          <!-- Preferred Lanes -->
+          <div class="space-y-1.5 font-mono text-[9px] text-slate-550">
+            <label class="block text-slate-500 uppercase tracking-wider">Primary lanes & transit routes:</label>
+            <input type="text" name="preferredLanes" id="input-preferredLanes" placeholder="e.g. PEI -> Boston, PEI -> Montreal" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-3 text-white text-xs outline-none focus:border-bro-cyan transition-colors" />
           </div>
-        </form>
-      </div>
+
+          <!-- Mandatory Declarations -->
+          <div class="space-y-3 pt-3 border-t border-slate-900/60 font-mono text-[9px] text-slate-450">
+            <label class="block text-slate-500 uppercase tracking-wider">Compliance Declarations:</label>
+            
+            <label class="flex items-center gap-2.5 p-3 bg-[#030307]/30 border border-slate-900 rounded cursor-pointer select-none">
+              <input type="checkbox" name="class1OrAz" id="chk-class1OrAz" class="accent-bro-cyan" />
+              <span>Valid Class 1 or AZ Commercial Driver License</span>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-3 bg-[#030307]/30 border border-slate-900 rounded cursor-pointer select-none">
+              <input type="checkbox" name="hasCleanAbstract" id="chk-hasCleanAbstract" class="accent-bro-cyan" />
+              <span>Clean 3-Year Commercial Driver Abstract</span>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-3 bg-[#030307]/30 border border-slate-900 rounded cursor-pointer select-none">
+              <input type="checkbox" name="safetyCertified" id="chk-safetyCertified" class="accent-bro-cyan" checked />
+              <span>Registered safety certified & DOT compliant</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Cloudflare Challenge -->
+        <div class="flex justify-center py-2.5">
+          <div id="turnstile-driver-container" class="min-h-[65px]"></div>
+        </div>
+
+        <!-- Notice Box -->
+        <div id="driver-error-box" class="hidden text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded"></div>
+
+        <button type="submit" class="w-full py-3 bg-bro-cyan text-black hover:bg-bro-cyan/90 font-bold rounded font-mono text-xs uppercase tracking-wider transition-colors duration-300 cursor-pointer">
+          Submit registration profile
+        </button>
+      </form>
+
     </div>
   </section>
-
-  <!-- Footer -->
-  <footer class="py-16 border-t border-slate-900 bg-[#020408] text-center space-y-4">
-    <span class="text-sm font-bold text-white font-display tracking-wide">#BRO TRANSPORT CORP.</span>
-    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-performance commercial freight networks and cross-border logistics.</p>
-  </footer>
 </Layout>
 
 <script>
   import { DriverApplicationSchema } from '../lib/schemas';
-  import { broAudio } from '../lib/audio';
 
-  // State Management
-  let currentStep = 1;
-  const totalSteps = 3;
-  const STORAGE_KEY = 'bro_driver_compliance_flow';
-
-  // Turnstile State
-  let turnstileWidgetId: any = null;
+  const STORAGE_KEY = 'bro_driver_intake_v1';
   let turnstileToken = '';
+  let turnstileWidgetId: string | null = null;
 
-  // DOM Elements
-  const form = document.getElementById('driver-compliance-form') as HTMLFormElement;
-  const panels = document.querySelectorAll('.step-panel');
-  const dots = document.querySelectorAll('.step-dot');
-  const currentStepNum = document.getElementById('current-step-num');
-  const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
-  const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
-  const errorBox = document.getElementById('validation-errors');
-  const uploadZone = document.getElementById('upload-zone');
-  const fileUploader = document.getElementById('file-uploader') as HTMLInputElement | null;
-  const uploadStatus = document.getElementById('upload-status');
+  const form = document.getElementById('driver-intake-form') as HTMLFormElement;
+  const errorBox = document.getElementById('driver-error-box');
 
-  // Input Getters
-  const getStringVal = (id: string) => {
-    const el = document.getElementById(id) as HTMLInputElement | null;
-    return el ? el.value.trim() : '';
-  };
-  const getSelectVal = (id: string) => {
-    const el = document.getElementById(id) as HTMLSelectElement | null;
-    return el ? el.value : '';
-  };
-  const getCheckVal = (id: string) => {
-    const el = document.getElementById(id) as HTMLInputElement | null;
-    return el ? el.checked : false;
-  };
-
-  function renderTurnstileWidget() {
-    const container = document.getElementById('turnstile-drivers-widget');
-    if (!container) return;
-
-    if (!(window as any).turnstile) {
-      setTimeout(renderTurnstileWidget, 500);
-      return;
-    }
-
-    const turnstile = (window as any).turnstile;
-    if (turnstileWidgetId !== null) {
-      turnstile.reset(turnstileWidgetId);
-      return;
-    }
-
+  // Load state on start
+  function loadFormState() {
     try {
-      turnstileWidgetId = turnstile.render('#turnstile-drivers-widget', {
-        sitekey: '1x00000000000000000000AA', // Testing sitekey
-        theme: 'dark',
-        callback: function(token: string) {
-          turnstileToken = token;
-          if (errorBox) errorBox.classList.add('hidden');
-        }
-      });
-    } catch (e) {
-      console.error('Failed to render Turnstile widget', e);
-    }
+      const data = sessionStorage.getItem(STORAGE_KEY);
+      if (!data) return;
+      const parsed = JSON.parse(data);
+      if (parsed.driverName) (document.getElementById('input-driverName') as HTMLInputElement).value = parsed.driverName;
+      if (parsed.driverPhone) (document.getElementById('input-driverPhone') as HTMLInputElement).value = parsed.driverPhone;
+      if (parsed.equipType) (document.getElementById('select-equipType') as HTMLSelectElement).value = parsed.equipType;
+      if (parsed.preferredLanes) (document.getElementById('input-preferredLanes') as HTMLInputElement).value = parsed.preferredLanes;
+      if (parsed.class1OrAz) (document.getElementById('chk-class1OrAz') as HTMLInputElement).checked = parsed.class1OrAz;
+      if (parsed.hasCleanAbstract) (document.getElementById('chk-hasCleanAbstract') as HTMLInputElement).checked = parsed.hasCleanAbstract;
+      if (parsed.safetyCertified) (document.getElementById('chk-safetyCertified') as HTMLInputElement).checked = parsed.safetyCertified;
+    } catch(e) {}
   }
 
-  // Step Switching
-  function showStep(step: number) {
-    panels.forEach((p) => {
-      const panelStep = parseInt(p.getAttribute('data-step') || '1');
-      if (panelStep === step) {
-        p.classList.remove('hidden');
-      } else {
-        p.classList.add('hidden');
-      }
-    });
-
-    dots.forEach((d, idx) => {
-      if (idx + 1 <= step) {
-        d.className = 'h-1.5 w-6 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff] step-dot';
-      } else {
-        d.className = 'h-1.5 w-6 rounded-full bg-slate-900 step-dot';
-      }
-    });
-
-    if (currentStepNum) currentStepNum.innerText = step.toString();
-
-    if (step === 1) {
-      prevBtn.classList.add('hidden');
-    } else {
-      prevBtn.classList.remove('hidden');
-    }
-
-    if (step === totalSteps) {
-      nextBtn.innerText = 'Submit Driver Profile';
-      nextBtn.className = 'bg-emerald-500 hover:bg-emerald-450 text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-600/10';
-    } else {
-      nextBtn.innerText = 'Next Step';
-      nextBtn.className = 'bg-cyan-500 hover:bg-[#00f0ff] text-black font-bold px-8 py-3.5 rounded font-semibold text-sm transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/10';
-    }
-
-    if (step === 3) {
-      renderTurnstileWidget();
-    }
-  }
-
-  // Local Storage Caching
-  function saveDriverProgress() {
-    const data = {
-      driverName: getStringVal('driverName'),
-      driverPhone: getStringVal('driverPhone'),
-      equipType: getSelectVal('equipType'),
-      preferredLanes: getStringVal('preferredLanes'),
-      class1OrAz: getCheckVal('class1OrAz'),
-      safetyCertified: getCheckVal('safetyCertified'),
-      hasCleanAbstract: getCheckVal('hasCleanAbstract'),
-      currentStep
+  // Save state on change
+  function saveFormState() {
+    const payload = {
+      driverName: (document.getElementById('input-driverName') as HTMLInputElement).value,
+      driverPhone: (document.getElementById('input-driverPhone') as HTMLInputElement).value,
+      equipType: (document.getElementById('select-equipType') as HTMLSelectElement).value,
+      preferredLanes: (document.getElementById('input-preferredLanes') as HTMLInputElement).value,
+      class1OrAz: (document.getElementById('chk-class1OrAz') as HTMLInputElement).checked,
+      hasCleanAbstract: (document.getElementById('chk-hasCleanAbstract') as HTMLInputElement).checked,
+      safetyCertified: (document.getElementById('chk-safetyCertified') as HTMLInputElement).checked,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }
 
-  function loadDriverProgress() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-
-    try {
-      const data = JSON.parse(saved);
-      const setStr = (id: string, val: string) => {
-        const el = document.getElementById(id) as HTMLInputElement | null;
-        if (el && val) el.value = val;
-      };
-      setStr('driverName', data.driverName);
-      setStr('driverPhone', data.driverPhone);
-      setStr('preferredLanes', data.preferredLanes);
-      
-      const select = document.getElementById('equipType') as HTMLSelectElement | null;
-      if (select && data.equipType) select.value = data.equipType;
-
-      const setCheck = (id: string, val: boolean) => {
-        const el = document.getElementById(id) as HTMLInputElement | null;
-        if (el) el.checked = val;
-      };
-      setCheck('class1OrAz', data.class1OrAz);
-      setCheck('safetyCertified', data.safetyCertified);
-      setCheck('hasCleanAbstract', data.hasCleanAbstract);
-
-      if (data.currentStep) {
-        currentStep = data.currentStep;
-        showStep(currentStep);
-      }
-    } catch (e) {
-      console.error('Failed to restore cached driver progress', e);
-    }
+  if (form) {
+    form.addEventListener('input', saveFormState);
+    form.addEventListener('submit', handleFormSubmit);
   }
 
-  function updateChecklistStatus() {
-    const class1 = getCheckVal('class1OrAz');
-    const safety = getCheckVal('safetyCertified');
-    const abstract = getCheckVal('hasCleanAbstract');
+  // Hydrate Turnstile
+  function initTurnstile() {
+    const container = document.getElementById('turnstile-driver-container');
+    if (!container || !(window as any).turnstile || turnstileWidgetId !== null) return;
 
-    const class1Status = document.getElementById('class1OrAz-status');
-    const safetyStatus = document.getElementById('safetyCertified-status');
-    const abstractStatus = document.getElementById('hasCleanAbstract-status');
-
-    if (class1Status) {
-      if (class1) {
-        class1Status.innerText = 'COMPLIANT';
-        class1Status.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 rounded shrink-0 select-none';
-      } else {
-        class1Status.innerText = 'PENDING';
-        class1Status.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none';
+    turnstileWidgetId = (window as any).turnstile.render(container, {
+      sitekey: '0x4AAAAAAA2I6F9JkSivv8tZ',
+      callback: function(token: string) {
+        turnstileToken = token;
+        if (errorBox) errorBox.classList.add('hidden');
       }
-    }
-
-    if (safetyStatus) {
-      if (safety) {
-        safetyStatus.innerText = 'CERTIFIED';
-        safetyStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 rounded shrink-0 select-none';
-      } else {
-        safetyStatus.innerText = 'OPTIONAL';
-        safetyStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-slate-700/50 bg-slate-950/50 text-slate-550 rounded shrink-0 select-none';
-      }
-    }
-
-    if (abstractStatus) {
-      if (abstract) {
-        abstractStatus.innerText = 'COMPLIANT';
-        abstractStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 rounded shrink-0 select-none';
-      } else {
-        abstractStatus.innerText = 'PENDING';
-        abstractStatus.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 border border-rose-500/30 bg-rose-950/20 text-rose-400 rounded shrink-0 select-none';
-      }
-    }
-  }
-
-  function initChecklistEffects() {
-    const checkboxes = ['class1OrAz', 'safetyCertified', 'hasCleanAbstract'];
-    checkboxes.forEach(id => {
-      const el = document.getElementById(id) as HTMLInputElement | null;
-      el?.addEventListener('change', () => {
-        if (el.checked) {
-          broAudio.playBiometricScan();
-          const label = el.closest('label');
-          const bar = label?.querySelector('.scanner-bar');
-          if (bar) {
-            bar.classList.remove('active-scan');
-            void (bar as HTMLElement).offsetWidth; // trigger reflow
-            bar.classList.add('active-scan');
-          }
-          setTimeout(() => {
-            broAudio.playBiometricSuccess();
-          }, 500);
-        } else {
-          broAudio.playTabClick();
-        }
-      });
     });
   }
 
-  // Initialize Data
-  loadDriverProgress();
-  updateChecklistStatus();
-  initChecklistEffects();
+  function handleFormSubmit(e: Event) {
+    e.preventDefault();
+    if (!errorBox) return;
 
-  uploadZone?.addEventListener('click', () => {
-    fileUploader?.click();
-  });
+    errorBox.classList.add('hidden');
 
-  fileUploader?.addEventListener('change', () => {
-    if (fileUploader?.files && fileUploader.files.length > 0 && uploadStatus) {
-      uploadStatus.innerText = `📎 Selected: ${fileUploader.files[0].name} (${Math.round(fileUploader.files[0].size / 1024)} KB)`;
-      uploadStatus.className = 'text-sm font-bold text-emerald-400';
-    }
-  });
+    const payload = {
+      driverName: (document.getElementById('input-driverName') as HTMLInputElement).value,
+      driverPhone: (document.getElementById('input-driverPhone') as HTMLInputElement).value,
+      equipType: (document.getElementById('select-equipType') as HTMLSelectElement).value,
+      preferredLanes: (document.getElementById('input-preferredLanes') as HTMLInputElement).value,
+      class1OrAz: (document.getElementById('chk-class1OrAz') as HTMLInputElement).checked,
+      hasCleanAbstract: (document.getElementById('chk-hasCleanAbstract') as HTMLInputElement).checked,
+      safetyCertified: (document.getElementById('chk-safetyCertified') as HTMLInputElement).checked,
+      turnstileToken: turnstileToken
+    };
 
-  // Next / Submit Button
-  nextBtn?.addEventListener('click', () => {
-    if (errorBox) errorBox.classList.add('hidden');
-
-    if (currentStep === 1) {
-      const name = getStringVal('driverName');
-      const phone = getStringVal('driverPhone');
-      const lanes = getStringVal('preferredLanes');
-      if (!name || !phone || !lanes) {
-        if (errorBox) {
-          errorBox.innerText = 'Please complete all driver contact coordinates before moving forward.';
-          errorBox.classList.remove('hidden');
-        }
-        return;
-      }
-    }
-
-    if (currentStep === 2) {
-      const class1 = getCheckVal('class1OrAz');
-      const clean = getCheckVal('hasCleanAbstract');
-      if (!class1 || !clean) {
-        if (errorBox) {
-          errorBox.innerText = "Valid Class 1 CDL license and a clean abstract are mandatory safety criteria.";
-          errorBox.classList.remove('hidden');
-        }
-        return;
-      }
-    }
-
-    if (currentStep === totalSteps) {
-      const payload = {
-        driverName: getStringVal('driverName'),
-        driverPhone: getStringVal('driverPhone'),
-        equipType: getSelectVal('equipType'),
-        preferredLanes: getStringVal('preferredLanes'),
-        class1OrAz: getCheckVal('class1OrAz'),
-        safetyCertified: getCheckVal('safetyCertified'),
-        hasCleanAbstract: getCheckVal('hasCleanAbstract'),
-        turnstileToken: turnstileToken
-      };
-
-      const result = DriverApplicationSchema.safeParse(payload);
-      if (!result.success) {
-        if (errorBox) {
-          errorBox.innerHTML = result.error.errors.map((e) => `• ${e.message}`).join('<br />');
-          errorBox.classList.remove('hidden');
-        }
-        return;
-      }
-
-      if (errorBox) {
-        errorBox.className = 'text-xs text-emerald-450 bg-emerald-950/20 border border-emerald-900/40 p-4 rounded-md';
-        errorBox.innerText = 'Qualifications verified. Transmitting encrypted profile to network...';
-        errorBox.classList.remove('hidden');
-      }
-
-      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://127.0.0.1:8787/api/drivers'
-        : 'https://brotransport-edge-api.keshuin0.workers.dev/api/drivers';
-
-      fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Server rejected application.');
-        }
-        return data;
-      })
-      .then((data) => {
-        broAudio.playBiometricSuccess();
-        alert(`Driver application successfully logged! Edge worker response: ${data.message}`);
-        localStorage.removeItem(STORAGE_KEY);
-        form.reset();
-        if (uploadStatus) {
-          uploadStatus.innerText = 'Drag & Drop Driver Abstract, CV or Safety Certificates';
-          uploadStatus.className = 'text-sm font-bold text-white';
-        }
-        currentStep = 1;
-        showStep(1);
-        if (errorBox) errorBox.classList.add('hidden');
-        if (turnstileWidgetId !== null && (window as any).turnstile) {
-          (window as any).turnstile.reset(turnstileWidgetId);
-          turnstileToken = '';
-        }
-      })
-      .catch((err) => {
-        if (errorBox) {
-          errorBox.innerText = `Submission failed: ${err.message}`;
-          errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded-md';
-          errorBox.classList.remove('hidden');
-        }
-      });
-
+    const validation = DriverApplicationSchema.safeParse(payload);
+    if (!validation.success) {
+      errorBox.innerHTML = validation.error.errors.map(e => `• ${e.message}`).join('<br/>');
+      errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded';
+      errorBox.classList.remove('hidden');
       return;
     }
 
-    currentStep++;
-    showStep(currentStep);
-    saveDriverProgress();
-  });
+    // Submission states
+    errorBox.className = 'text-xs text-bro-cyan bg-bro-cyan/10 border border-bro-cyan/30 p-4 rounded animate-pulse';
+    errorBox.innerText = "TRANSMITTING ENCRYPTED APPLICATION PROFILE...";
+    errorBox.classList.remove('hidden');
 
-  // Prev Button
-  prevBtn?.addEventListener('click', () => {
-    if (errorBox) errorBox.classList.add('hidden');
-    if (currentStep > 1) {
-      currentStep--;
-      showStep(currentStep);
-      saveDriverProgress();
-    }
-  });
+    const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://127.0.0.1:8787/api/drivers'
+      : 'https://brotransport-edge-api.keshuin0.workers.dev/api/drivers';
 
-  form?.addEventListener('input', () => {
-    saveDriverProgress();
-    updateChecklistStatus();
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Server rejected application.');
+      return data;
+    })
+    .then((data) => {
+      alert(`Application submitted successfully! Intake ID: ${data.intakeId || 'BROP-DRV'}`);
+      sessionStorage.removeItem(STORAGE_KEY);
+      form.reset();
+      errorBox.classList.add('hidden');
+      if (turnstileWidgetId !== null && (window as any).turnstile) {
+        (window as any).turnstile.reset(turnstileWidgetId);
+        turnstileToken = '';
+      }
+    })
+    .catch((err) => {
+      errorBox.innerText = `Uplink failed: ${err.message}`;
+      errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded';
+      errorBox.classList.remove('hidden');
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    loadFormState();
+    initTurnstile();
   });
 </script>
-
-<style>
-  @keyframes scanSweep {
-    0% { top: 0%; opacity: 1; }
-    50% { opacity: 1; }
-    100% { top: 100%; opacity: 0; }
-  }
-  .scanner-bar.active-scan {
-    opacity: 1 !important;
-    animation: scanSweep 0.5s ease-in-out forwards;
-  }
-</style>

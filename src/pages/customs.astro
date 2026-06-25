@@ -1,8 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
 const base = import.meta.env.BASE_URL;
 
-const sampleManifestJson = `{
+const manifestJson = `{
   "manifestType": "ACE_EManifest",
   "scac": "BROP",
   "tripNumber": "BROP20261024A",
@@ -43,161 +44,110 @@ const sampleManifestJson = `{
 ---
 
 <Layout title="Cross-Border Customs Compliance | #BRO Transport Corp." description="Frictionless transborder transit. Automated customs manifest processing for CBSA and CBP including PAPS, PARS, ACE, and ACI schemas.">
-  <!-- Navigation Header -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-bro-obsidian/85 border-b border-slate-900" style="view-transition-name: main-header;">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <a href={base} class="flex items-center gap-2 group">
-        <div class="h-3 w-3 bg-bro-cyan rounded-full animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.4)] group-hover:bg-bro-cyan transition-colors shrink-0"></div>
-        <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90" />
-      </a>
-      
-      <nav class="flex items-center gap-8 text-sm font-medium text-slate-355">
-        <a href={base} class="hover:text-bro-cyan transition-colors">Return Home</a>
-        <a href={`${base}quote`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Quote Engine</a>
-        <a href={`${base}drivers`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Driver Portal</a>
-        <a href={`${base}Disruptive-Trucking-Website-Master-Roadmap.pdf`} target="_blank" class="hover:text-bro-crimson transition-colors font-bold text-bro-crimson font-mono">[RESEARCH_PDF]</a>
-      </nav>
-
-      <div class="flex items-center gap-4">
-        <a href="tel:902-916-6936" class="bg-bro-cyan/10 border border-bro-cyan/30 hover:bg-bro-cyan hover:text-black transition-all duration-300 text-bro-cyan text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
-          <span>Call Desk: 902-916-6936</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
   <!-- Customs Portal Hero -->
-  <section class="py-20 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.08),rgba(255,255,255,0))] border-b border-slate-900">
-    <div class="max-w-4xl mx-auto text-center space-y-6">
-      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-bro-gold font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-gold/20">
-        Customs & Border Protection Gateways
+  <section class="py-20 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] border-b border-slate-900/60 relative z-10">
+    <div class="max-w-4xl mx-auto text-center space-y-4">
+      <span class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-bro-cyan font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-cyan/20">
+        // PORT_CLEARANCE_INTELLIGENCE
       </span>
       <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-display uppercase">
-        Frictionless Transborder Transit
+        Customs Compliance
       </h1>
-      <p class="text-bro-ice/85 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-        Our automated compliance engine integrates directly with CBSA and CBP, verifying ACE and ACI manifests before your shipments reach the border. We eliminate delays with sub-minute electronic clearance processing.
+      <p class="text-bro-ice/70 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-sans">
+        Frictionless transborder transit. Automated manifest pre-processing and data transmission pipelines for CBSA and CBP gateways.
       </p>
     </div>
   </section>
 
-  <!-- Compliance Pipelines Info -->
-  <section class="py-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-    <!-- Left Column: Detailed Pipelines -->
-    <div class="space-y-12">
-      <!-- PAPS Section -->
-      <div class="bg-bro-steel/20 border border-slate-900 rounded-lg p-8 relative overflow-hidden cyber-corners scanlines shadow-2xl">
-        <div class="space-y-4">
-          <span class="text-[10px] font-mono text-bro-cyan uppercase font-bold">// US-BOUND PIPELINE [PAPS / ACE]</span>
-          <h2 class="text-xl font-bold font-display uppercase text-white">Pre-Arrival Processing System</h2>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            For commercial shipments entering the United States from Prince Edward Island, our engine coordinates standard Carrier Alpha Codes (<span class="text-bro-cyan font-mono">BROP</span>) and sequential Shipment Control Numbers (<span class="text-bro-cyan font-mono">SCN</span>) to compile automated manifest payloads.
-          </p>
-          <ul class="list-disc pl-4 text-xs text-slate-400 space-y-2 font-mono">
-            <li>Electronic manifest transmission &gt; 1 hour prior to arrival</li>
-            <li>Direct integration with Automated Commercial Environment (ACE)</li>
-            <li>Pre-registered FAST Card commercial driver compliance</li>
-          </ul>
+  <!-- Customs Documentation Grid -->
+  <section class="py-16 px-6 relative z-10 max-w-6xl mx-auto space-y-12">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      
+      <!-- CBP PAPS Pipeline Info -->
+      <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded-lg space-y-6 hover:border-bro-cyan/30 transition-all duration-300">
+        <div class="flex items-center gap-2 font-mono text-[10px] text-slate-500">
+          <span class="h-2 w-2 rounded-full bg-bro-cyan animate-pulse"></span>
+          <span>COMPLIANCE_PIPELINE // U.S. IMPORTATION</span>
         </div>
-      </div>
-
-      <!-- PARS Section -->
-      <div class="bg-bro-steel/20 border border-slate-900 rounded-lg p-8 relative overflow-hidden cyber-corners scanlines shadow-2xl">
-        <div class="space-y-4">
-          <span class="text-[10px] font-mono text-bro-gold uppercase font-bold">// CANADA-BOUND PIPELINE [PARS / ACI]</span>
-          <h2 class="text-xl font-bold font-display uppercase text-white">Pre-Arrival Review System</h2>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            Northbound transits entering Canada are automatically processed via Advance Commercial Information (ACI) portals. We match commercial invoices to unique Cargo Control Numbers (CCN) prefixed with our carrier identification code.
-          </p>
-          <ul class="list-disc pl-4 text-xs text-slate-400 space-y-2 font-mono">
-            <li>Direct link to Canada Border Services Agency (CBSA) systems</li>
-            <li>Real-time webhook notifications via Release Notification System (RNS)</li>
-            <li>Automated broker entry auditing to prevent administrative penalties</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column: Live Schema and Table -->
-    <div class="space-y-8">
-      <!-- Live Schema Console -->
-      <div class="bg-black border border-slate-800 rounded-lg p-6 font-mono text-xs space-y-4 relative shadow-2xl">
-        <div class="flex items-center justify-between border-b border-slate-900 pb-3">
-          <span class="text-bro-cyan font-bold flex items-center gap-1.5">
-            <span class="h-2 w-2 rounded-full bg-bro-cyan animate-pulse shadow-[0_0_6px_var(--color-bro-cyan)]"></span>
-            ACE_MANIFEST_PAYLOAD.JSON
-          </span>
-          <span class="text-slate-500 text-[10px]">API SCHEMA v1.0.4</span>
-        </div>
-        <pre class="text-slate-400 overflow-x-auto max-h-[320px] scrollbar p-2 bg-[#020408] border border-slate-950 rounded select-all font-mono leading-relaxed">{sampleManifestJson}</pre>
-        <div class="text-[9px] text-slate-500 text-right uppercase font-mono">
-          Payload matches research blueprint page 9 specs
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Comparative Matrix Table Section -->
-  <section class="py-16 px-6 max-w-7xl mx-auto">
-    <div class="bg-bro-steel/20 border border-slate-900 rounded-lg p-6 sm:p-8 relative overflow-hidden shadow-2xl">
-      <div class="space-y-6">
-        <h3 class="text-lg font-bold font-display text-white uppercase tracking-wider border-b border-slate-900 pb-4">Customs Pipeline Comparison</h3>
         
-        <div class="overflow-x-auto">
-          <table class="w-full text-left font-mono text-xs text-slate-400 border-collapse">
-            <thead>
-              <tr class="border-b border-slate-900 text-slate-500 text-[10px]">
-                <th class="py-3 px-4 uppercase">Pipeline Element</th>
-                <th class="py-3 px-4 uppercase text-bro-cyan">PAPS / ACE (U.S. Importation)</th>
-                <th class="py-3 px-4 uppercase text-bro-gold">PARS / ACI (Canadian Importation)</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-900/60">
-              <tr class="hover:bg-bro-steel/10 transition-colors">
-                <td class="py-4 px-4 font-bold text-white">Regulatory Agency</td>
-                <td class="py-4 px-4 text-slate-300">U.S. Customs and Border Protection (CBP)</td>
-                <td class="py-4 px-4 text-slate-300">Canada Border Services Agency (CBSA)</td>
-              </tr>
-              <tr class="hover:bg-bro-steel/10 transition-colors">
-                <td class="py-4 px-4 font-bold text-white">Primary Identifier</td>
-                <td class="py-4 px-4 text-slate-300">SCAC + SCN (Shipment Control Number)</td>
-                <td class="py-4 px-4 text-slate-300">Highway Carrier Code + CCN</td>
-              </tr>
-              <tr class="hover:bg-bro-steel/10 transition-colors">
-                <td class="py-4 px-4 font-bold text-white">Submission Threshold</td>
-                <td class="py-4 px-4 text-slate-300">Minimum 1 hour prior to port arrival</td>
-                <td class="py-4 px-4 text-slate-300">Minimum 1 hour prior to port arrival</td>
-              </tr>
-              <tr class="hover:bg-bro-steel/10 transition-colors">
-                <td class="py-4 px-4 font-bold text-white">Broker Interface</td>
-                <td class="py-4 px-4 text-slate-300">Automated Broker Interface (ABI) to ACE</td>
-                <td class="py-4 px-4 text-slate-300">Accelerated Commercial Release Operations</td>
-              </tr>
-              <tr class="hover:bg-bro-steel/10 transition-colors">
-                <td class="py-4 px-4 font-bold text-white">Clearance Verification</td>
-                <td class="py-4 px-4 text-slate-300">ACE Electronic Cover Page validation</td>
-                <td class="py-4 px-4 text-slate-300">Release Notification System (RNS) webhook</td>
-              </tr>
-            </tbody>
-          </table>
+        <h3 class="text-xl font-bold font-display uppercase text-white tracking-wide">PAPS / ACE eManifest</h3>
+        <p class="text-slate-400 text-xs leading-relaxed font-sans">
+          For shipments moving from Canada into the United States, the system coordinates the **Pre-Arrival Processing System (PAPS)**. Each trailer load is assigned a unique PAPS number using our Standard Carrier Alpha Code (**SCAC: `BROP`**).
+        </p>
+
+        <div class="bg-[#030307]/50 border border-slate-900 rounded p-4 font-mono text-[9.5px] text-slate-450 space-y-3">
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Regulatory Agency:</span>
+            <span>U.S. Customs & Border Protection (CBP)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Identifier Scheme:</span>
+            <span>SCAC + SCN (Shipment Control Number)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Submission Threshold:</span>
+            <span class="text-bro-cyan">Minimum 1 hour prior to port arrival</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Electronic Interface:</span>
+            <span>Automated Broker Interface (ABI) to ACE</span>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Footer -->
-  <footer class="py-16 border-t border-slate-900 bg-bro-obsidian text-center space-y-6">
-    <div class="flex flex-col items-center justify-center space-y-2">
-      <span class="text-sm font-bold text-white font-display tracking-wider">#BRO TRANSPORT CORP.</span>
-      <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">Prince Edward Island, Canada. Operating premium commercial truckload cargo capacity across North American freight lanes.</p>
+      <!-- CBSA PARS Pipeline Info -->
+      <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded-lg space-y-6 hover:border-bro-cyan/30 transition-all duration-300">
+        <div class="flex items-center gap-2 font-mono text-[10px] text-slate-500">
+          <span class="h-2 w-2 rounded-full bg-bro-cyan animate-pulse"></span>
+          <span>COMPLIANCE_PIPELINE // CANADIAN IMPORTATION</span>
+        </div>
+        
+        <h3 class="text-xl font-bold font-display uppercase text-white tracking-wide">PARS / ACI eManifest</h3>
+        <p class="text-slate-400 text-xs leading-relaxed font-sans">
+          For northbound transits entering Canada, our operations coordinate the **Pre-Arrival Review System (PARS)** and Advance Commercial Information (**ACI**) eManifest. Manifests are transmitted at least 1 hour before arrival.
+        </p>
+
+        <div class="bg-[#030307]/50 border border-slate-900 rounded p-4 font-mono text-[9.5px] text-slate-450 space-y-3">
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Regulatory Agency:</span>
+            <span>Canada Border Services Agency (CBSA)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Identifier Scheme:</span>
+            <span>Carrier Code + Cargo Control Number (CCN)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Submission Threshold:</span>
+            <span class="text-bro-cyan">Minimum 1 hour prior to port arrival</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-white font-bold">Release Verification:</span>
+            <span>Release Notification System (RNS) sync</span>
+          </div>
+        </div>
+      </div>
+
     </div>
-    
-    <div class="flex flex-wrap items-center justify-center gap-6 text-[10px] font-mono text-slate-650">
-      <span>COR SAFETY ID: 025684</span>
-      <span>DOT REGISTRATION ID: A401-PEI</span>
-      <span>PWA ONLINE MODE: CACHED</span>
+
+    <!-- JSON eManifest Schema Block -->
+    <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded-lg space-y-6">
+      <div class="flex justify-between items-center border-b border-slate-900/60 pb-3">
+        <div class="flex items-center gap-2 font-mono text-[10px] text-slate-500">
+          <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan"></span>
+          <span>ACE_eMANIFEST_JSON_SCHEMA</span>
+        </div>
+        <span class="text-[9px] font-mono text-slate-650">BROP_STANDARDS_V2</span>
+      </div>
+
+      <p class="text-slate-400 text-xs leading-relaxed font-sans">
+        API validation schema for cargo declarations. This JSON payload is transmitted electronically to CBP/CBSA border check-points before the transport unit reaches the port of entry:
+      </p>
+
+      <div class="bg-[#030307]/70 border border-slate-950 rounded p-4 relative">
+        <pre class="text-[10px] font-mono text-cyan-400 overflow-x-auto leading-relaxed select-text p-2" style="white-space: pre-wrap; word-wrap: break-word;">{manifestJson}</pre>
+      </div>
     </div>
-    
-    <p class="text-[10px] text-slate-700 pt-4">© 2026 #BRO Transport Corp. All rights reserved. Built with zero-bloat static architecture.</p>
-  </footer>
+
+  </section>
 </Layout>

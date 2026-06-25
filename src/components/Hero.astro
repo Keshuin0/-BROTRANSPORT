@@ -1,183 +1,60 @@
 ---
 const base = import.meta.env.BASE_URL;
 ---
-<div class="relative min-h-[90vh] flex flex-col justify-between overflow-hidden text-white border-b border-slate-900 select-none">
+<div class="relative min-h-[85vh] flex flex-col justify-center items-center overflow-hidden text-white select-none py-20 px-6">
   <!-- Background Image with High Priority -->
   <div class="absolute inset-0 z-0">
     <img 
       src={`${base}images/hero-truck.png`} 
       alt="Commercial semi truck crossing a highway bridge at sunset" 
-      class="w-full h-full object-cover object-center scale-105 animate-[pulse-slow_8s_infinite] pointer-events-none"
+      class="w-full h-full object-cover object-center scale-100 opacity-30 pointer-events-none"
       fetchpriority="high"
     />
     <!-- Premium Gradient Masks -->
-    <div class="absolute inset-0 bg-gradient-to-t from-[#020408] via-[#020408]/75 to-transparent z-10"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-[#020408]/85 via-[#020408]/30 to-transparent z-10"></div>
-    <div class="absolute inset-0 bg-radial-at-c from-transparent via-[#020408]/40 to-[#020408]/90 z-10"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-[#030307] via-[#030307]/90 to-[#030307]/75 z-10"></div>
+    <div class="absolute inset-0 bg-radial-at-c from-transparent via-[#030307]/50 to-[#030307] z-10"></div>
     <!-- Subtle Grid Overlay -->
-    <div class="absolute inset-0 futuristic-grid opacity-20 z-10 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-cyber-grid opacity-10 z-10 pointer-events-none"></div>
   </div>
 
-  <!-- Tactical Corner Accents (Industrial look) -->
-  <div class="absolute top-8 left-8 z-20 pointer-events-none hidden lg:block">
-    <div class="text-[10px] font-mono tracking-widest text-bro-cyan font-bold flex items-center gap-2">
-      <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan animate-ping"></span>
-      SYS_GRID: COMMERCIAL_ACTIVE
+  <!-- Hero Content -->
+  <div class="relative z-20 max-w-4xl mx-auto w-full flex flex-col items-center text-center space-y-10">
+    <!-- Prominent Logo Pic -->
+    <div class="p-2 bg-bro-steel/40 border border-slate-900 rounded-lg shadow-2xl backdrop-blur-md animate-[pulse_4s_infinite]">
+      <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-20 sm:h-24 w-auto object-contain" />
     </div>
-    <div class="text-[9px] font-mono text-slate-500 mt-1">LAT: 46.2500° N | LON: -63.1250° W (PEI TERMINAL)</div>
-  </div>
 
-  <div class="absolute top-8 right-8 z-20 pointer-events-none hidden lg:block text-right">
-    <div class="text-[10px] font-mono tracking-widest text-bro-gold font-bold">// OPERATIONS CENTRAL</div>
-    <div class="text-[9px] font-mono text-slate-500 mt-1">CROSS-BORDER MANIFEST SYSTEM: ACTIVE</div>
-  </div>
-
-  <!-- Hero Content Centered Layout -->
-  <div class="relative z-20 flex-1 flex flex-col justify-center px-6 max-w-7xl mx-auto w-full pt-28 pb-12">
-    <div class="space-y-8 max-w-3xl">
-      <div class="inline-flex items-center gap-2 border border-bro-cyan/30 bg-bro-steel/40 px-3 py-1.5 rounded-full text-xs font-bold text-bro-cyan uppercase tracking-widest animate-pulse select-none">
-        <span class="h-2 w-2 rounded-full bg-bro-cyan shadow-[0_0_6px_rgba(0,240,255,0.4)]"></span>
-        Elite Commercial Dry Van, Reefer, and Flatbed Logistics
-      </div>
-
-      <div class="space-y-4">
-        <h1 class="text-4xl sm:text-6xl md:text-7xl font-black font-display uppercase tracking-wider leading-none text-white drop-shadow-md" style="letter-spacing: 0.05em;">
-          BOLD. RELIABLE. <br />
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-bro-cyan via-bro-crimson to-bro-cyan glow-text-cyan animate-[pulse_6s_infinite]">
-            ORCHESTRATED.
-          </span>
-        </h1>
-        <div class="text-xs font-mono text-bro-gold uppercase tracking-widest font-bold select-none">// A BRO IN NEED IS A BRO INDEED</div>
-        <p class="text-base sm:text-lg md:text-xl text-bro-ice max-w-2xl font-normal leading-relaxed">
-          North America's Elite Cross-Border Logistics Corridor. Executing high-performance commercial freight networks and cross-border logistics. Specially configured Dry Van, Reefer, and Flatbed lane coverage across Canada and the United States.
-        </p>
-      </div>
-
-      <!-- Quick Action Panels (Morphing Glassmorphism cards) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl pt-2">
-        <a href={`${base}quote`} data-astro-prefetch class="flex items-center gap-4 p-5 rounded-lg border border-bro-cyan/20 bg-bro-steel/30 hover:bg-bro-steel/60 hover:border-bro-cyan/40 transition-all duration-300 group shadow-lg shadow-bro-cyan/10 hover:-translate-y-0.5">
-          <div class="h-10 w-10 bg-bro-cyan/10 border border-bro-cyan/20 group-hover:bg-bro-cyan group-hover:text-black transition-colors duration-300 text-bro-cyan rounded flex items-center justify-center font-black font-mono">01</div>
-          <div class="text-left">
-            <h4 class="text-sm font-bold text-white font-display tracking-wide uppercase group-hover:text-bro-cyan transition-colors">Procurement Engine</h4>
-            <p class="text-bro-ice/70 text-xs mt-0.5">Request Dry Van, Reefer, or Flatbed rates.</p>
-          </div>
-        </a>
-
-        <a href={`${base}drivers`} data-astro-prefetch class="flex items-center gap-4 p-5 rounded-lg border border-bro-crimson/20 bg-bro-steel/30 hover:bg-bro-steel/60 hover:border-bro-crimson/40 transition-all duration-300 group shadow-lg shadow-bro-crimson/10 hover:-translate-y-0.5">
-          <div class="h-10 w-10 bg-bro-crimson/10 border border-bro-crimson/20 group-hover:bg-bro-crimson group-hover:text-black transition-colors duration-300 text-bro-crimson rounded flex items-center justify-center font-black font-mono">02</div>
-          <div class="text-left">
-            <h4 class="text-sm font-bold text-white font-display tracking-wide uppercase group-hover:text-bro-crimson transition-colors">Driver Gateway</h4>
-            <p class="text-bro-ice/70 text-xs mt-0.5">Engineered for Capacity Partners. Join our freight fleet.</p>
-          </div>
-        </a>
-      </div>
-
-      <!-- Live Operations Console Index (HUD Telemetry Stats) -->
-      <div class="p-4 rounded-lg bg-bro-obsidian/75 border border-slate-900 glass-panel font-mono text-[10px] text-bro-ice/60 flex flex-wrap gap-x-8 gap-y-2 max-w-2xl z-20">
-        <div class="flex items-center gap-2">
-          <span class="h-2 w-2 rounded-full bg-bro-cyan shadow-[0_0_6px_rgba(0,240,255,0.4)] animate-pulse"></span>
-          <span>DISPATCH_LINK: <span class="text-bro-cyan font-bold">ONLINE</span></span>
-        </div>
-        <div>
-          <span>ACTIVE_HAULS: <span class="text-bro-cyan font-bold" id="active-hauls-num">124</span></span>
-        </div>
-        <div>
-          <span>BOM_CLEARANCE: <span class="text-bro-gold font-bold">100.0%</span></span>
-        </div>
-        <div>
-          <span>SYS_LATENCY: <span class="text-bro-gold font-bold" id="telemetry-latency">14ms</span></span>
-        </div>
-      </div>
+    <!-- Slogan Headline -->
+    <div class="space-y-4">
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black font-display uppercase tracking-tight leading-none text-white drop-shadow-lg">
+        A BRO IN NEED <br />
+        <span class="text-bro-cyan glow-text-cyan block mt-2">
+          IS A BRO INDEED
+        </span>
+      </h1>
+      <p class="text-sm sm:text-base md:text-lg text-bro-ice/80 max-w-2xl mx-auto font-normal leading-relaxed font-sans pt-2">
+        North America's Premier Cross-Border Logistics and Freight Operations Network. Providing high-capacity Dry Van, Refrigerated Reefer, and Heavy Flatbed shipping routes across Canada and the United States.
+      </p>
     </div>
-  </div>
 
-  <!-- Scroll-Velocity Kinetic Typography -->
-  <div class="w-full overflow-hidden border-t border-slate-900/60 bg-[#020408]/90 backdrop-blur-sm py-4 relative z-20 pointer-events-none select-none">
-    <div class="flex flex-col gap-2">
-      <!-- Row 1: Left to Right -->
-      <div class="flex whitespace-nowrap text-[3vw] font-black uppercase tracking-widest text-slate-800/15 font-display skew-x-12 animate-row-left">
-        <span class="inline-block px-4">Commercial Dry Van Logistics</span>
-        <span class="inline-block px-4 text-bro-gold/15">—</span>
-        <span class="inline-block px-4">53ft Refrigerated Reefer Cargo</span>
-        <span class="inline-block px-4 text-bro-cyan/15">—</span>
-        <span class="inline-block px-4">Heavy Flatbed Steel Hauling</span>
-        <span class="inline-block px-4 text-bro-gold/15">—</span>
-        <span class="inline-block px-4">Commercial Dry Van Logistics</span>
-      </div>
-      
-      <!-- Row 2: Right to Left -->
-      <div class="flex whitespace-nowrap text-[3vw] font-black uppercase tracking-widest text-slate-800/15 font-display -skew-x-12 animate-row-right">
-        <span class="inline-block px-4 text-bro-cyan/15">Cross-Border Lane Capacity</span>
-        <span class="inline-block px-4">—</span>
-        <span class="inline-block px-4">Prince Edward Island Operations</span>
-        <span class="inline-block px-4">—</span>
-        <span class="inline-block px-4">100% DOT Safety Certified</span>
-        <span class="inline-block px-4">—</span>
-        <span class="inline-block px-4 text-bro-gold/15">Cross-Border Lane Capacity</span>
-      </div>
+    <!-- Clean Quick Actions -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl pt-4">
+      <a href={`${base}quote`} data-astro-prefetch class="flex items-center justify-between p-6 rounded border border-bro-cyan/20 bg-bro-steel/30 hover:bg-bro-steel/60 hover:border-bro-cyan/60 hover:shadow-neon-glow transition-all duration-300 group shadow-lg">
+        <div class="text-left">
+          <h4 class="text-sm font-bold text-white font-mono tracking-wide uppercase group-hover:text-bro-cyan transition-colors">01 // RATE QUOTE</h4>
+          <p class="text-bro-ice/60 text-xs mt-1">Request dry van, reefer, or flatbed pricing.</p>
+        </div>
+        <span class="text-bro-cyan font-bold font-mono transition-transform group-hover:translate-x-1">→</span>
+      </a>
+
+      <a href={`${base}drivers`} data-astro-prefetch class="flex items-center justify-between p-6 rounded border border-bro-gold/20 bg-bro-steel/30 hover:bg-bro-steel/60 hover:border-bro-gold/60 hover:shadow-[0_0_15px_rgba(255,170,0,0.15)] transition-all duration-300 group shadow-lg">
+        <div class="text-left">
+          <h4 class="text-sm font-bold text-white font-mono tracking-wide uppercase group-hover:text-bro-gold transition-colors">02 // DRIVER GATEWAY</h4>
+          <p class="text-bro-ice/60 text-xs mt-1">Join the elite freight operations fleet.</p>
+        </div>
+        <span class="text-bro-gold font-bold font-mono transition-transform group-hover:translate-x-1">→</span>
+      </a>
     </div>
   </div>
 </div>
 
-<style>
-  /* CSS Scroll-Driven Animations */
-  @keyframes marqueeLeft {
-    from {
-      transform: translate3d(0, 0, 0) skewX(-15deg);
-    }
-    to {
-      transform: translate3d(-20%, 0, 0) skewX(15deg);
-    }
-  }
-
-  @keyframes marqueeRight {
-    from {
-      transform: translate3d(-20%, 0, 0) skewX(15deg);
-    }
-    to {
-      transform: translate3d(0, 0, 0) skewX(-15deg);
-    }
-  }
-
-  .animate-row-left {
-    animation: marqueeLeft linear;
-    animation-timeline: scroll();
-  }
-
-  .animate-row-right {
-    animation: marqueeRight linear;
-    animation-timeline: scroll();
-  }
-
-  /* Pulse animation for background image */
-  @keyframes pulse-slow {
-    0%, 100% {
-      transform: scale(1.03);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  }
-</style>
-
-<script>
-  function runTelemetryTicker() {
-    const hauls = document.getElementById('active-hauls-num');
-    const latency = document.getElementById('telemetry-latency');
-    if (!hauls || !latency) return;
-
-    setInterval(() => {
-      // Simulate active hauls fluctuating slightly
-      const currentHauls = parseInt(hauls.innerText) || 124;
-      const change = Math.random() > 0.5 ? 1 : -1;
-      const nextHauls = Math.max(115, Math.min(145, currentHauls + (Math.random() > 0.7 ? change : 0)));
-      hauls.innerText = nextHauls.toString();
-
-      // Simulate ping latency jitter
-      const nextLatency = Math.floor(10 + Math.random() * 8);
-      latency.innerText = `${nextLatency}ms`;
-    }, 3000);
-  }
-
-  document.addEventListener('astro:page-load', runTelemetryTicker);
-</script>

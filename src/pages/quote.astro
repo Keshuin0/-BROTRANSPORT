@@ -5,52 +5,25 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="Procurement & Quote Engine | #BRO Transport Corp." description="Request an operations quote. Evaluate load weights and trailer configurations. Real-time Dry Van, Reefer, and Flatbed rate calculations.">
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-bro-obsidian/85 border-b border-slate-900" style="view-transition-name: main-header;">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <a href={base} class="flex items-center gap-2 group">
-        <div class="h-3 w-3 bg-bro-cyan rounded-full animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.4)] group-hover:bg-bro-cyan transition-colors shrink-0"></div>
-        <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90" />
-      </a>
-      
-      <nav class="flex items-center gap-8 text-sm font-medium text-slate-350">
-        <a href={base} class="hover:text-bro-cyan transition-colors">Return Home</a>
-        <a href={`${base}customs`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Customs</a>
-        <a href={`${base}Disruptive-Trucking-Website-Master-Roadmap.pdf`} target="_blank" class="hover:text-bro-crimson transition-colors font-bold text-bro-crimson font-mono">[RESEARCH_PDF]</a>
-      </nav>
-
-      <div class="flex items-center gap-4">
-        <a href="tel:902-916-6936" class="bg-bro-cyan/10 border border-bro-cyan/30 hover:bg-bro-cyan hover:text-black transition-all duration-300 text-bro-cyan text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
-          <span>Call Desk: 902-916-6936</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
   <!-- Quote Portal Hero -->
-  <section class="py-16 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.08),rgba(255,255,255,0))] border-b border-slate-900">
-    <div class="max-w-4xl mx-auto text-center space-y-6">
-      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-bro-cyan font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-cyan/20">
-        Procurement Division
+  <section class="py-20 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] border-b border-slate-900/60 relative z-10">
+    <div class="max-w-4xl mx-auto text-center space-y-4">
+      <span class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-bro-cyan font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-cyan/20">
+        // PROCUREMENT_DIVISION
       </span>
       <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-display uppercase">
-        Operational Quote Engine
+        Operational Rate Calculator
       </h1>
-      <p class="text-bro-ice/85 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-        Verify load weights and axle ratios. The system evaluates cargo specifications to allocate standard Enclosed, Climate-Controlled, or Open-Deck equipment configurations in real-time.
+      <p class="text-bro-ice/70 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-sans">
+        Specify your cargo parameters to calculate instant estimated B2B shipping rates for commercial Dry Van, Refrigerated Reefer, or open Flatbed freight networks.
       </p>
     </div>
   </section>
 
   <!-- Quote Engine Container -->
-  <section class="py-16 px-6">
+  <section class="py-16 px-6 relative z-10">
     <div class="max-w-5xl mx-auto">
       <QuoteEngine />
     </div>
   </section>
-
-  <!-- Footer -->
-  <footer class="py-16 border-t border-slate-900 bg-bro-obsidian text-center space-y-4">
-    <span class="text-sm font-bold text-white font-display tracking-wide">#BRO TRANSPORT CORP.</span>
-    <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-performance commercial freight networks and cross-border logistics.</p>
-  </footer>
 </Layout>
