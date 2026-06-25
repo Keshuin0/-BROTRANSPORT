@@ -18,13 +18,11 @@ app.use('*', cors({
   maxAge: 86400,
 }));
 
-// Zod validation schemas
+// Zod validation schemas matching src/lib/schemas.ts
 const QuoteSchema = z.object({
-  logisticsType: z.enum(['commercial', 'military']),
-  length: z.number().min(1),
-  width: z.number().min(1),
-  height: z.number().min(1),
-  weight: z.number().min(1),
+  trailerType: z.enum(['dry-van', 'reefer', 'flatbed']),
+  weight: z.number().min(1).max(45000),
+  tempSetpoint: z.number().optional(),
   origin: z.string().min(3),
   destination: z.string().min(3),
   contactName: z.string().min(2),
@@ -36,10 +34,10 @@ const QuoteSchema = z.object({
 const DriverApplicationSchema = z.object({
   driverName: z.string().min(2),
   driverPhone: z.string().min(10),
-  equipType: z.enum(['multi-axle', 'rgn', 'stepdeck', 'military-spec']),
+  equipType: z.enum(['dry-van', 'reefer', 'flatbed']),
   preferredLanes: z.string().min(3),
-  citizenOrPR: z.literal(true),
-  cgpAuthorized: z.boolean(),
+  class1OrAz: z.literal(true),
+  safetyCertified: z.boolean(),
   hasCleanAbstract: z.literal(true),
   turnstileToken: z.string().min(1),
 });
@@ -90,8 +88,13 @@ app.post('/api/quote', async (c) => {
     }
     
     // Evaluate if Oversized
-    const isOversized = data.width > 8.5 || data.height > 13.5 || data.length > 53 || data.weight > 45000;
-    const recommendedTrailer = data.weight > 75000 ? '13-Axle Transport Combo' : isOversized ? 'RGN Lowboy Float' : 'Standard Stepdeck / Flatbed';
+    const isOversized = data.weight > 40000;
+    let recommendedTrailer = 'Standard 53ft Enclosed Carrier';
+    if (data.trailerType === 'reefer') {
+      recommendedTrailer = '53ft Climate-Controlled Reefer';
+    } else if (data.trailerType === 'flatbed') {
+      recommendedTrailer = '53ft Open Deck Flatbed';
+    }
 
     // Dispatch transactional email via Resend if API key is present
     if (c.env.RESEND_API_KEY) {
@@ -109,8 +112,9 @@ app.post('/api/quote', async (c) => {
             <h3>Quote Evaluation Request #${Math.floor(Math.random() * 100000)}</h3>
             <p><strong>Contact:</strong> ${data.contactName} (${data.contactPhone})</p>
             <p><strong>Transit:</strong> ${data.origin} to ${data.destination}</p>
-            <p><strong>Dimensions:</strong> ${data.length}ft x ${data.width}ft x ${data.height}ft // Weight: ${data.weight} lbs</p>
-            <p><strong>Permit Class:</strong> ${isOversized ? 'Oversized Superload (Permits Required)' : 'Standard Load'}</p>
+            <p><strong>Trailer Type:</strong> ${data.trailerType.toUpperCase()} ${data.tempSetpoint !== undefined ? `(Temp Setpoint: ${data.tempSetpoint}°C)` : ''}</p>
+            <p><strong>Weight:</strong> ${data.weight} lbs</p>
+            <p><strong>Permit Class:</strong> ${isOversized ? 'High Deck Stress (Permits Required)' : 'Standard Load'}</p>
             <p><strong>Suggested Trailer Profile:</strong> ${recommendedTrailer}</p>
           `,
         }),
