@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
       <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan animate-ping"></span>
       LIVE CARGO VECTOR ENGINE
     </div>
-    <div>ACTIVE_ROUTES: <span class="text-slate-350">5 // 3D_ARCS</span></div>
+    <div>ACTIVE_ROUTES: <span class="text-slate-350">10 // 3D_ARCS</span></div>
     <div>SATELLITE_UPLINK: <span class="text-bro-gold font-bold">ACTIVE</span></div>
   </div>
 
@@ -41,15 +41,25 @@ const base = import.meta.env.BASE_URL;
     BOSTON: { lat: 42.3601, lon: -71.0589, name: "BOSTON HUB" },
     CHICAGO: { lat: 41.8781, lon: -87.6298, name: "CHICAGO TERM" },
     TORONTO: { lat: 43.6532, lon: -79.3832, name: "TORONTO CORR" },
-    NEW_YORK: { lat: 40.7128, lon: -74.0060, name: "NY DIVISION" }
+    LOS_ANGELES: { lat: 34.0522, lon: -118.2437, name: "LA TERM" },
+    HOUSTON: { lat: 29.7604, lon: -95.3698, name: "HOUSTON HUB" },
+    MIAMI: { lat: 25.7617, lon: -80.1918, name: "MIAMI DIVISION" },
+    SEATTLE: { lat: 47.6062, lon: -122.3321, name: "SEATTLE TERM" },
+    MEXICO_CITY: { lat: 19.4326, lon: -99.1332, name: "MEXICO CITY" },
+    VANCOUVER: { lat: 49.2827, lon: -123.1207, name: "VANCOUVER GATE" }
   };
 
   const routes = [
     { from: locations.PEI, to: locations.BOSTON, color: 0x00f0ff },
-    { from: locations.PEI, to: locations.NEW_YORK, color: 0x00f0ff },
-    { from: locations.PEI, to: locations.CHICAGO, color: 0xffaa00 },
     { from: locations.PEI, to: locations.TORONTO, color: 0x00f0ff },
-    { from: locations.TORONTO, to: locations.CHICAGO, color: 0xffaa00 }
+    { from: locations.TORONTO, to: locations.CHICAGO, color: 0xffaa00 },
+    { from: locations.CHICAGO, to: locations.HOUSTON, color: 0x00f0ff },
+    { from: locations.HOUSTON, to: locations.MEXICO_CITY, color: 0xffaa00 },
+    { from: locations.CHICAGO, to: locations.LOS_ANGELES, color: 0xffaa00 },
+    { from: locations.VANCOUVER, to: locations.SEATTLE, color: 0x00f0ff },
+    { from: locations.SEATTLE, to: locations.LOS_ANGELES, color: 0x00f0ff },
+    { from: locations.LOS_ANGELES, to: locations.HOUSTON, color: 0xffaa00 },
+    { from: locations.BOSTON, to: locations.MIAMI, color: 0x00f0ff }
   ];
 
   interface FleetUnit {
