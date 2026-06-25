@@ -98,20 +98,20 @@ const base = import.meta.env.BASE_URL;
 
 <script>
   import { DriverApplicationSchema } from '../lib/schemas';
+  import { saveDraft, getDraft, clearDraft, addToQueue, getQueue, removeFromQueue } from '../lib/offlineDb';
 
-  const STORAGE_KEY = 'bro_driver_intake_v1';
+  const STORAGE_KEY = 'bro_driver_intake_v2';
   let turnstileToken = '';
   let turnstileWidgetId: string | null = null;
 
   const form = document.getElementById('driver-intake-form') as HTMLFormElement;
   const errorBox = document.getElementById('driver-error-box');
 
-  // Load state on start
-  function loadFormState() {
+  // Load state on start (uses IndexedDB)
+  async function loadFormState() {
     try {
-      const data = sessionStorage.getItem(STORAGE_KEY);
-      if (!data) return;
-      const parsed = JSON.parse(data);
+      const parsed = await getDraft(STORAGE_KEY);
+      if (!parsed) return;
       if (parsed.driverName) (document.getElementById('input-driverName') as HTMLInputElement).value = parsed.driverName;
       if (parsed.driverPhone) (document.getElementById('input-driverPhone') as HTMLInputElement).value = parsed.driverPhone;
       if (parsed.equipType) (document.getElementById('select-equipType') as HTMLSelectElement).value = parsed.equipType;
@@ -119,11 +119,13 @@ const base = import.meta.env.BASE_URL;
       if (parsed.class1OrAz) (document.getElementById('chk-class1OrAz') as HTMLInputElement).checked = parsed.class1OrAz;
       if (parsed.hasCleanAbstract) (document.getElementById('chk-hasCleanAbstract') as HTMLInputElement).checked = parsed.hasCleanAbstract;
       if (parsed.safetyCertified) (document.getElementById('chk-safetyCertified') as HTMLInputElement).checked = parsed.safetyCertified;
-    } catch(e) {}
+    } catch(e) {
+      console.warn('Failed to load draft from IndexedDB:', e);
+    }
   }
 
-  // Save state on change
-  function saveFormState() {
+  // Save state on change (uses IndexedDB)
+  async function saveFormState() {
     const payload = {
       driverName: (document.getElementById('input-driverName') as HTMLInputElement).value,
       driverPhone: (document.getElementById('input-driverPhone') as HTMLInputElement).value,
@@ -133,7 +135,7 @@ const base = import.meta.env.BASE_URL;
       hasCleanAbstract: (document.getElementById('chk-hasCleanAbstract') as HTMLInputElement).checked,
       safetyCertified: (document.getElementById('chk-safetyCertified') as HTMLInputElement).checked,
     };
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    await saveDraft(STORAGE_KEY, payload);
   }
 
   if (form) {
@@ -155,7 +157,33 @@ const base = import.meta.env.BASE_URL;
     });
   }
 
-  function handleFormSubmit(e: Event) {
+  async function syncOfflineQueue() {
+    if (!navigator.onLine) return;
+    try {
+      const queue = await getQueue();
+      if (queue.length === 0) return;
+
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://127.0.0.1:8787/api/drivers'
+        : 'https://brotransport-edge-api.keshuin0.workers.dev/api/drivers';
+
+      for (const item of queue) {
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item.data)
+        });
+        if (res.ok) {
+          await removeFromQueue(item.id!);
+          console.log(`[SYNC] Offline application ID ${item.id} successfully uploaded.`);
+        }
+      }
+    } catch(e) {
+      console.warn('[SYNC] Offline sync attempt failed:', e);
+    }
+  }
+
+  async function handleFormSubmit(e: Event) {
     e.preventDefault();
     if (!errorBox) return;
 
@@ -180,6 +208,28 @@ const base = import.meta.env.BASE_URL;
       return;
     }
 
+    // Checking online state
+    if (!navigator.onLine) {
+      // Offline queue save
+      try {
+        await addToQueue(payload);
+        await clearDraft(STORAGE_KEY);
+        form.reset();
+        errorBox.className = 'text-xs text-bro-gold bg-bro-gold/10 border border-bro-gold/30 p-4 rounded text-center';
+        errorBox.innerHTML = "⚠️ [OFFLINE] Connection dropped in border region.<br/>Your intake profile is securely cached in local IndexedDB storage and will auto-upload when network is restored.";
+        errorBox.classList.remove('hidden');
+        if (turnstileWidgetId !== null && (window as any).turnstile) {
+          (window as any).turnstile.reset(turnstileWidgetId);
+          turnstileToken = '';
+        }
+      } catch (err: any) {
+        errorBox.innerText = `Failed to queue offline: ${err.message}`;
+        errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded text-center';
+        errorBox.classList.remove('hidden');
+      }
+      return;
+    }
+
     // Submission states
     errorBox.className = 'text-xs text-bro-gold bg-bro-gold/10 border border-bro-gold/30 p-4 rounded animate-pulse text-center';
     errorBox.innerText = "TRANSMITTING ENCRYPTED APPLICATION PROFILE...";
@@ -189,35 +239,50 @@ const base = import.meta.env.BASE_URL;
       ? 'http://127.0.0.1:8787/api/drivers'
       : 'https://brotransport-edge-api.keshuin0.workers.dev/api/drivers';
 
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    .then(async (res) => {
+    try {
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
       const data = await res.json();
+      
       if (!res.ok) throw new Error(data.error || 'Server rejected application.');
-      return data;
-    })
-    .then((data) => {
+
       alert(`Application submitted successfully! Intake ID: ${data.intakeId || 'BROP-DRV'}`);
-      sessionStorage.removeItem(STORAGE_KEY);
+      await clearDraft(STORAGE_KEY);
       form.reset();
       errorBox.classList.add('hidden');
       if (turnstileWidgetId !== null && (window as any).turnstile) {
         (window as any).turnstile.reset(turnstileWidgetId);
         turnstileToken = '';
       }
-    })
-    .catch((err) => {
-      errorBox.innerText = `Uplink failed: ${err.message}`;
-      errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded text-center';
-      errorBox.classList.remove('hidden');
-    });
+    } catch (err: any) {
+      try {
+        await addToQueue(payload);
+        await clearDraft(STORAGE_KEY);
+        form.reset();
+        errorBox.className = 'text-xs text-bro-gold bg-bro-gold/10 border border-bro-gold/30 p-4 rounded text-center';
+        errorBox.innerHTML = `⚠️ [DISRUPTED] Uplink timeout.<br/>Your intake profile is securely queued in local IndexedDB storage and will auto-upload when network stabilizes.`;
+        errorBox.classList.remove('hidden');
+        if (turnstileWidgetId !== null && (window as any).turnstile) {
+          (window as any).turnstile.reset(turnstileWidgetId);
+          turnstileToken = '';
+        }
+      } catch (dbErr) {
+        errorBox.innerText = `Uplink failed: ${err.message}`;
+        errorBox.className = 'text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 p-4 rounded text-center';
+        errorBox.classList.remove('hidden');
+      }
+    }
   }
+
+  // Register network listeners
+  window.addEventListener('online', syncOfflineQueue);
 
   document.addEventListener('astro:page-load', () => {
     loadFormState();
     initTurnstile();
+    syncOfflineQueue();
   });
 </script>
