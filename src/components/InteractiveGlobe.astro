@@ -1,22 +1,22 @@
 ---
 const base = import.meta.env.BASE_URL;
 ---
-<div class="relative w-full h-[400px] md:h-[500px] rounded border border-slate-900/60 bg-bro-steel/20 overflow-hidden shadow-2xl flex items-center justify-center select-none">
+<div class="relative w-full h-[400px] md:h-[500px] rounded border border-slate-900 bg-bro-steel/20 overflow-hidden shadow-2xl flex items-center justify-center select-none">
   <!-- Interactive WebGL Canvas Container -->
   <div id="globe-canvas-container" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></div>
   
   <!-- Diagnostic Telemetry HUD overlay -->
-  <div class="absolute bottom-4 left-4 z-10 font-mono text-[9px] text-slate-500 uppercase tracking-widest bg-bro-obsidian/70 backdrop-blur-md px-3 py-2 border border-slate-900/50 rounded flex flex-col gap-1 pointer-events-none select-none">
+  <div class="absolute bottom-4 left-4 z-10 font-mono text-[9px] text-slate-500 uppercase tracking-widest bg-bro-obsidian/75 backdrop-blur-md px-3 py-2 border border-slate-900/50 rounded flex flex-col gap-1 pointer-events-none select-none">
     <div class="flex items-center gap-1.5 text-bro-cyan font-bold">
       <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan animate-ping"></span>
-      LIVE GLOBAL TRANSIT FEED
+      LIVE CARGO VECTOR ENGINE
     </div>
-    <div>ACTIVE_LANES: <span class="text-slate-350">100 // INS_GPU</span></div>
-    <div>SATELLITE_LINK: <span class="text-bro-gold font-bold">ESTABLISHED</span></div>
+    <div>ACTIVE_ROUTES: <span class="text-slate-350">5 // 3D_ARCS</span></div>
+    <div>SATELLITE_UPLINK: <span class="text-bro-gold font-bold">ACTIVE</span></div>
   </div>
 
   <div id="globe-loader" class="absolute z-10 font-mono text-[9px] text-slate-500 uppercase tracking-widest pointer-events-none select-none">
-    [ INITIALIZING WebGL 3D COMMAND GLOBE... ]
+    [ INITIALIZING WebGL 3D VECTORS... ]
   </div>
 </div>
 
@@ -30,10 +30,46 @@ const base = import.meta.env.BASE_URL;
       controls: OrbitControls;
   let globeMesh: THREE.Mesh, 
       innerGlobe: THREE.Mesh,
-      routeInstancedMesh: THREE.InstancedMesh;
+      linesGroup: THREE.Group,
+      fleetsGroup: THREE.Group;
   
-  const MAX_ROUTES = 100;
   let isDragging = false;
+
+  const locations = {
+    PEI: { lat: 46.2507, lon: -63.1375, name: "PEI HQ" },
+    BOSTON: { lat: 42.3601, lon: -71.0589, name: "BOSTON HUB" },
+    CHICAGO: { lat: 41.8781, lon: -87.6298, name: "CHICAGO TERM" },
+    TORONTO: { lat: 43.6532, lon: -79.3832, name: "TORONTO CORR" },
+    NEW_YORK: { lat: 40.7128, lon: -74.0060, name: "NY DIVISION" }
+  };
+
+  const routes = [
+    { from: locations.PEI, to: locations.BOSTON, color: 0x00f0ff },
+    { from: locations.PEI, to: locations.NEW_YORK, color: 0x00f0ff },
+    { from: locations.PEI, to: locations.CHICAGO, color: 0xffaa00 },
+    { from: locations.PEI, to: locations.TORONTO, color: 0x00f0ff },
+    { from: locations.TORONTO, to: locations.CHICAGO, color: 0xffaa00 }
+  ];
+
+  interface FleetUnit {
+    mesh: THREE.Mesh;
+    curve: THREE.QuadraticBezierCurve3;
+    progress: number;
+    speed: number;
+  }
+
+  const fleetUnits: FleetUnit[] = [];
+
+  function latLonToVector3(lat: number, lon: number, radius: number) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+
+    const x = -(radius * Math.sin(phi) * Math.sin(theta));
+    const y = radius * Math.cos(phi);
+    const z = radius * Math.sin(phi) * Math.cos(theta);
+
+    return new THREE.Vector3(x, y, z);
+  }
 
   function initGlobe() {
     const container = document.getElementById('globe-canvas-container');
@@ -51,7 +87,7 @@ const base = import.meta.env.BASE_URL;
 
     // 2. Camera Setup
     camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 0, 160);
+    camera.position.set(0, 40, 150);
 
     // 3. Renderer Setup
     renderer = new THREE.WebGLRenderer({ 
@@ -62,7 +98,6 @@ const base = import.meta.env.BASE_URL;
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     
-    // Clear old canvases
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
@@ -70,84 +105,74 @@ const base = import.meta.env.BASE_URL;
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 90;
+    controls.minDistance = 80;
     controls.maxDistance = 250;
     controls.enablePan = false;
 
-    // Track user drag interactions to pause auto-rotation
     controls.addEventListener('start', () => { isDragging = true; });
     controls.addEventListener('end', () => { isDragging = false; });
 
-    // 5. Build Globe Mesh Layers (Holographic Wireframe Grid)
-    const globeGeometry = new THREE.SphereGeometry(50, 48, 48);
+    // 5. Globe Layers (Obsidian Core + Holographic Wireframe)
+    const globeGeometry = new THREE.SphereGeometry(50, 40, 40);
     const globeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x00f0ff,
+      color: 0x0e111f,
       wireframe: true,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.25,
       roughness: 0.9,
       metalness: 0.1
     });
     globeMesh = new THREE.Mesh(globeGeometry, globeMaterial);
     scene.add(globeMesh);
 
-    // Deep solid inner core to hide backside routes
-    const innerGeometry = new THREE.SphereGeometry(49.5, 48, 48);
+    const innerGeometry = new THREE.SphereGeometry(49.6, 40, 40);
     const innerMaterial = new THREE.MeshBasicMaterial({
-      color: 0x05070d,
+      color: 0x030307,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.92
     });
     innerGlobe = new THREE.Mesh(innerGeometry, innerMaterial);
     scene.add(innerGlobe);
 
     // 6. Setup Lighting Environment
-    const ambientLight = new THREE.AmbientLight(0x0e111f, 1.8);
+    const ambientLight = new THREE.AmbientLight(0x0e111f, 2.0);
     scene.add(ambientLight);
 
     const directionalLight1 = new THREE.DirectionalLight(0x00f0ff, 2.5);
-    directionalLight1.position.set(120, 80, 50);
+    directionalLight1.position.set(150, 100, 50);
     scene.add(directionalLight1);
 
-    const directionalLight2 = new THREE.DirectionalLight(0xffaa00, 1.2);
-    directionalLight2.position.set(-120, -80, -50);
+    const directionalLight2 = new THREE.DirectionalLight(0xffaa00, 1.5);
+    directionalLight2.position.set(-150, -100, -50);
     scene.add(directionalLight2);
 
-    // 7. Setup Instanced Shipping Routes (GPU batched)
-    setupInstancedLanes();
+    // Groups for layout curves
+    linesGroup = new THREE.Group();
+    fleetsGroup = new THREE.Group();
+    scene.add(linesGroup);
+    scene.add(fleetsGroup);
+
+    // 7. Draw Curves & Initialize Traveling Particles
+    setupRoutes();
 
     // 8. Animation & Render Loop
     function animateLoop() {
       requestAnimationFrame(animateLoop);
 
-      // Auto-rotation sequence that pauses during user drag interaction
+      // Slow idle rotation when not dragging
       if (!isDragging) {
-        globeMesh.rotation.y += 0.0006;
-        innerGlobe.rotation.y += 0.0006;
-        routeInstancedMesh.rotation.y += 0.0006;
+        globeMesh.rotation.y += 0.0008;
+        innerGlobe.rotation.y += 0.0008;
+        linesGroup.rotation.y += 0.0008;
+        fleetsGroup.rotation.y += 0.0008;
       }
 
-      // Animate points slightly for organic signal effect
-      const time = Date.now() * 0.001;
-      const count = routeInstancedMesh.count;
-      const dummyMatrix = new THREE.Object3D();
-      
-      for (let i = 0; i < count; i++) {
-        const matrix = new THREE.Matrix4();
-        routeInstancedMesh.getMatrixAt(i, matrix);
-        
-        const position = new THREE.Vector3();
-        position.setFromMatrixPosition(matrix);
-        
-        // Add a subtle wave scale factor based on time and index
-        const scaleVal = 1.0 + Math.sin(time + i) * 0.15;
-        
-        dummyMatrix.position.copy(position);
-        dummyMatrix.scale.set(scaleVal, scaleVal, scaleVal);
-        dummyMatrix.updateMatrix();
-        routeInstancedMesh.setMatrixAt(i, dummyMatrix.matrix);
-      }
-      routeInstancedMesh.instanceMatrix.needsUpdate = true;
+      // Animate cargo particle vectors along Bezier paths
+      fleetUnits.forEach(unit => {
+        unit.progress = (unit.progress + unit.speed) % 1.0;
+        const position = unit.curve.getPointAt(unit.progress);
+        unit.mesh.position.copy(position);
+      });
 
       controls.update();
       renderer.render(scene, camera);
@@ -155,7 +180,7 @@ const base = import.meta.env.BASE_URL;
 
     animateLoop();
 
-    // Handle Window Resize events
+    // Handle Window Resize
     function handleResize() {
       if (!container || !camera || !renderer) return;
       const w = container.clientWidth;
@@ -168,36 +193,71 @@ const base = import.meta.env.BASE_URL;
     window.addEventListener('resize', handleResize);
   }
 
-  function setupInstancedLanes() {
-    // Generate route geometries on the GPU
-    const curvePoints = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-    const instancedMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0x00f0ff, 
-      transparent: true, 
-      opacity: 0.85 
-    });
-    
-    routeInstancedMesh = new THREE.InstancedMesh(curvePoints, instancedMaterial, MAX_ROUTES);
-    const dummyMatrix = new THREE.Object3D();
+  function setupRoutes() {
+    const markerGeometry = new THREE.SphereGeometry(0.8, 12, 12);
 
-    for (let i = 0; i < MAX_ROUTES; i++) {
-      // Map coordinate vectors: cluster routes primarily in North America sector (lat 30-55, lon -125 to -60)
-      const theta = (Math.random() * 65 - 125) * (Math.PI / 180); // Longitude range
-      const phi = (90 - (Math.random() * 25 + 30)) * (Math.PI / 180); // Latitude range
+    routes.forEach(route => {
+      const pStart = latLonToVector3(route.from.lat, route.from.lon, 50);
+      const pEnd = latLonToVector3(route.to.lat, route.to.lon, 50);
+
+      // Create arched control point based on distance between terminals
+      const midPoint = new THREE.Vector3().addVectors(pStart, pEnd).multiplyScalar(0.5);
+      const distance = pStart.distanceTo(pEnd);
+      // Elevate midpoint above sphere surface
+      midPoint.normalize().multiplyScalar(50 + distance * 0.22);
+
+      // Construct Quadratic Bezier Curve
+      const curve = new THREE.QuadraticBezierCurve3(pStart, midPoint, pEnd);
       
-      const radius = 50.2;
-      const x = radius * Math.sin(phi) * Math.sin(theta);
-      const y = radius * Math.cos(phi);
-      const z = radius * Math.sin(phi) * Math.cos(theta);
+      // Draw static path line
+      const pathPoints = curve.getPoints(40);
+      const pathGeometry = new THREE.BufferGeometry().setFromPoints(pathPoints);
+      const pathMaterial = new THREE.LineBasicMaterial({
+        color: route.color,
+        transparent: true,
+        opacity: 0.45
+      });
+      const pathLine = new THREE.Line(pathGeometry, pathMaterial);
+      linesGroup.add(pathLine);
 
-      dummyMatrix.position.set(x, y, z);
-      dummyMatrix.scale.set(1, 1, 1);
-      dummyMatrix.updateMatrix();
-      routeInstancedMesh.setMatrixAt(i, dummyMatrix.matrix);
-    }
-    
-    routeInstancedMesh.instanceMatrix.needsUpdate = true;
-    scene.add(routeInstancedMesh);
+      // Draw Terminal Markers
+      const startMarkerMat = new THREE.MeshBasicMaterial({ color: route.color });
+      const startMarker = new THREE.Mesh(markerGeometry, startMarkerMat);
+      startMarker.position.copy(pStart);
+      linesGroup.add(startMarker);
+
+      const endMarkerMat = new THREE.MeshBasicMaterial({ color: route.color });
+      const endMarker = new THREE.Mesh(markerGeometry, endMarkerMat);
+      endMarker.position.copy(pEnd);
+      linesGroup.add(endMarker);
+
+      // Initialize Cargo Vector Particles (mesh objects)
+      const particleGeo = new THREE.SphereGeometry(0.7, 8, 8);
+      const particleMat = new THREE.MeshBasicMaterial({
+        color: route.color === 0xffaa00 ? 0xffaa00 : 0x00f0ff,
+        transparent: true,
+        opacity: 0.95
+      });
+
+      // Spawn 1-2 particles per route at staggered intervals
+      const particleMesh1 = new THREE.Mesh(particleGeo, particleMat);
+      fleetsGroup.add(particleMesh1);
+      fleetUnits.push({
+        mesh: particleMesh1,
+        curve: curve,
+        progress: Math.random(),
+        speed: 0.003 + Math.random() * 0.002
+      });
+
+      const particleMesh2 = new THREE.Mesh(particleGeo, particleMat);
+      fleetsGroup.add(particleMesh2);
+      fleetUnits.push({
+        mesh: particleMesh2,
+        curve: curve,
+        progress: (Math.random() + 0.5) % 1.0,
+        speed: 0.003 + Math.random() * 0.002
+      });
+    });
   }
 
   // Load globe on hydration

@@ -1,60 +1,85 @@
 ---
+import InteractiveGlobe from './InteractiveGlobe.astro';
 const base = import.meta.env.BASE_URL;
 ---
-<div class="relative min-h-[85vh] flex flex-col justify-center items-center overflow-hidden text-white select-none py-20 px-6">
-  <!-- Background Image with High Priority -->
-  <div class="absolute inset-0 z-0">
-    <img 
-      src={`${base}images/hero-truck.png`} 
-      alt="Commercial semi truck crossing a highway bridge at sunset" 
-      class="w-full h-full object-cover object-center scale-100 opacity-30 pointer-events-none"
-      fetchpriority="high"
-    />
-    <!-- Premium Gradient Masks -->
-    <div class="absolute inset-0 bg-gradient-to-t from-[#030307] via-[#030307]/90 to-[#030307]/75 z-10"></div>
-    <div class="absolute inset-0 bg-radial-at-c from-transparent via-[#030307]/50 to-[#030307] z-10"></div>
-    <!-- Subtle Grid Overlay -->
-    <div class="absolute inset-0 bg-cyber-grid opacity-10 z-10 pointer-events-none"></div>
-  </div>
+<div class="relative min-h-[90vh] flex flex-col justify-center items-center overflow-hidden py-16 px-6 select-none bg-carbon-fiber">
+  
+  {/* Cyber Grid Subtle Overlay */}
+  <div class="absolute inset-0 bg-cyber-grid opacity-10 pointer-events-none z-0"></div>
+  
+  {/* Gold subtle light pools */}
+  <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-bro-gold/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+  <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-bro-cyan/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
-  <!-- Hero Content -->
-  <div class="relative z-20 max-w-4xl mx-auto w-full flex flex-col items-center text-center space-y-10">
-    <!-- Prominent Logo Pic -->
-    <div class="p-2 bg-bro-steel/40 border border-slate-900 rounded-lg shadow-2xl backdrop-blur-md animate-[pulse_4s_infinite]">
-      <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-20 sm:h-24 w-auto object-contain" />
-    </div>
+  <div class="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+    
+    {/* Left Column: Brand & Copywriting */}
+    <div class="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
+      
+      {/* Slogan Pic inside high-fidelity framed neon bezel */}
+      <div class="p-2.5 bg-bro-steel/80 border border-bro-gold rounded shadow-[0_0_20px_rgba(255,170,0,0.25)] backdrop-blur-md relative group select-none cyber-corners-gold animate-[pulse_5s_infinite] shrink-0">
+        <div class="absolute inset-0 bg-cyber-grid bg-[size:6px_6px] opacity-10"></div>
+        <img 
+          src={`${base}images/logo.jpg?v=3`} 
+          alt="#BRO TRANSPORT Slogan Pic" 
+          class="h-16 sm:h-20 w-auto object-contain relative z-10 rounded border border-slate-900" 
+        />
+      </div>
 
-    <!-- Slogan Headline -->
-    <div class="space-y-4">
-      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black font-display uppercase tracking-tight leading-none text-white drop-shadow-lg">
-        A BRO IN NEED <br />
-        <span class="text-bro-cyan glow-text-cyan block mt-2">
-          IS A BRO INDEED
+      {/* Slogan Headline & Bhai Copywriting */}
+      <div class="space-y-4">
+        <span class="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-bro-cyan font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-cyan/20">
+          // THE_CYBER_DON_COMMAND_CENTER
         </span>
-      </h1>
-      <p class="text-sm sm:text-base md:text-lg text-bro-ice/80 max-w-2xl mx-auto font-normal leading-relaxed font-sans pt-2">
-        North America's Premier Cross-Border Logistics and Freight Operations Network. Providing high-capacity Dry Van, Refrigerated Reefer, and Heavy Flatbed shipping routes across Canada and the United States.
-      </p>
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-black font-display uppercase tracking-tight leading-none text-white drop-shadow-lg">
+          A BRO IN NEED <br />
+          <span class="text-bro-cyan glow-text-cyan block mt-1.5">
+            IS A BRO INDEED
+          </span>
+        </h1>
+        <p class="text-xs sm:text-sm text-bro-ice/80 max-w-xl leading-relaxed font-sans pt-1">
+          Bold. Reliable. Orchestrated. North America's Elite Cross-Border Logistics Corridor. Engineered for Capacity Partners, managed with Unmatched Operational Loyalty.
+        </p>
+      </div>
+
+      {/* Quick Action Bento-style Panels */}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-xl">
+        <a 
+          href={`${base}quote`} 
+          data-astro-prefetch 
+          class="flex items-center justify-between p-5 rounded border border-bro-cyan/20 bg-bro-steel/40 hover:bg-bro-steel/70 hover:border-bro-cyan/60 hover:shadow-neon-glow transition-all duration-300 group shadow-lg"
+        >
+          <div class="text-left font-mono">
+            <h4 class="text-xs font-bold text-white tracking-wide uppercase group-hover:text-bro-cyan transition-colors">01 // RATES CALCULATOR</h4>
+            <p class="text-bro-ice/50 text-[9px] mt-1 font-sans">Request dry van, reefer, or flatbed pricing.</p>
+          </div>
+          <span class="text-bro-cyan font-bold font-mono transition-transform group-hover:translate-x-1 pl-2">→</span>
+        </a>
+
+        <a 
+          href={`${base}drivers`} 
+          data-astro-prefetch 
+          class="flex items-center justify-between p-5 rounded border border-bro-gold/20 bg-bro-steel/40 hover:bg-bro-steel/70 hover:border-bro-gold/60 hover:shadow-[0_0_15px_rgba(255,170,0,0.2)] transition-all duration-300 group shadow-lg"
+        >
+          <div class="text-left font-mono">
+            <h4 class="text-xs font-bold text-white tracking-wide uppercase group-hover:text-bro-gold transition-colors">02 // DRIVER GATEWAY</h4>
+            <p class="text-bro-ice/50 text-[9px] mt-1 font-sans">Join the elite freight logistics fleet.</p>
+          </div>
+          <span class="text-bro-gold font-bold font-mono transition-transform group-hover:translate-x-1 pl-2">→</span>
+        </a>
+      </div>
+
     </div>
 
-    <!-- Clean Quick Actions -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl pt-4">
-      <a href={`${base}quote`} data-astro-prefetch class="flex items-center justify-between p-6 rounded border border-bro-cyan/20 bg-bro-steel/30 hover:bg-bro-steel/60 hover:border-bro-cyan/60 hover:shadow-neon-glow transition-all duration-300 group shadow-lg">
-        <div class="text-left">
-          <h4 class="text-sm font-bold text-white font-mono tracking-wide uppercase group-hover:text-bro-cyan transition-colors">01 // RATE QUOTE</h4>
-          <p class="text-bro-ice/60 text-xs mt-1">Request dry van, reefer, or flatbed pricing.</p>
+    {/* Right Column: Three.js Interactive Globe */}
+    <div class="lg:col-span-6 w-full flex flex-col justify-center items-center">
+      <div class="w-full max-w-lg p-1.5 bg-gradient-to-r from-bro-gold via-bro-cyan to-bro-gold rounded shadow-[0_0_35px_rgba(0,240,255,0.15)] relative cyber-corners">
+        <div class="absolute -top-3 left-6 font-mono text-[8px] bg-bro-obsidian px-2.5 py-0.5 border border-bro-gold/40 text-bro-gold rounded uppercase tracking-wider z-20">
+          SECURE_TELEMATIC_GLOBE
         </div>
-        <span class="text-bro-cyan font-bold font-mono transition-transform group-hover:translate-x-1">→</span>
-      </a>
-
-      <a href={`${base}drivers`} data-astro-prefetch class="flex items-center justify-between p-6 rounded border border-bro-gold/20 bg-bro-steel/30 hover:bg-bro-steel/60 hover:border-bro-gold/60 hover:shadow-[0_0_15px_rgba(255,170,0,0.15)] transition-all duration-300 group shadow-lg">
-        <div class="text-left">
-          <h4 class="text-sm font-bold text-white font-mono tracking-wide uppercase group-hover:text-bro-gold transition-colors">02 // DRIVER GATEWAY</h4>
-          <p class="text-bro-ice/60 text-xs mt-1">Join the elite freight operations fleet.</p>
-        </div>
-        <span class="text-bro-gold font-bold font-mono transition-transform group-hover:translate-x-1">→</span>
-      </a>
+        <InteractiveGlobe />
+      </div>
     </div>
+
   </div>
 </div>
-

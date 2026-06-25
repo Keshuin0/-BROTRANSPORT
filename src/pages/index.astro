@@ -1,80 +1,56 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.astro';
-import InteractiveGlobe from '../components/InteractiveGlobe.astro';
+import IoTTelematicsDeck from '../components/IoTTelematicsDeck';
+import SecureLedgerFlow from '../components/SecureLedgerFlow';
 
 const base = import.meta.env.BASE_URL;
 ---
 
 <Layout>
-  <!-- Hero Section (Focuses solely on slogan and logo) -->
+  <!-- Hero Section (Combines slogan, framed logo pic, and interactive Three.js globe) -->
   <Hero />
 
   <!-- Premium B2B Bento Grid Dashboard -->
-  <section class="max-w-7xl mx-auto px-6 py-12 space-y-8 relative z-20">
-    <div class="space-y-2 text-center md:text-left">
-      <span class="text-xs font-mono uppercase tracking-widest text-bro-cyan font-bold select-none">// OPERATION_SYSTEM_INTELLIGENCE</span>
-      <h2 class="text-2xl sm:text-3xl font-black font-display uppercase tracking-tight text-white">Logistics Control Tower</h2>
+  <section class="max-w-7xl mx-auto px-6 py-16 space-y-10 relative z-20">
+    
+    <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 border-b border-slate-900 pb-4">
+      <div class="space-y-1">
+        <span class="text-[10px] font-mono uppercase tracking-widest text-bro-cyan font-bold select-none">// OPERATION_SYSTEM_INTELLIGENCE</span>
+        <h2 class="text-2xl sm:text-3xl font-black font-display uppercase tracking-tight text-white">Logistics Command Center</h2>
+      </div>
+      <div class="font-mono text-[9px] text-slate-500 uppercase tracking-widest">
+        SYSTEM_STATUS: <span class="text-bro-cyan font-bold">ALL_PIPELINES_OPERATIONAL</span>
+      </div>
     </div>
 
     <!-- Bento Grid Container -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
-      <!-- 1. Live Tracking Engine (Double Width Cell) -->
-      <div class="lg:col-span-2 rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 transform hover:-translate-y-1">
-        <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
-          <span>MODULE_01 // WEBGL_ACTIVE_LANE_MAP</span>
-          <span class="text-bro-cyan font-bold flex items-center gap-1">
-            <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan animate-pulse"></span>
-            60 FPS STREAMING
-          </span>
-        </div>
-        
-        <!-- Three.js Globe Component -->
-        <InteractiveGlobe />
-
-        <!-- Live GPS Telemetry Dashboard Panel -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-[#030307]/50 border border-slate-900 rounded font-mono text-[9px] text-slate-500 shadow-inner">
-          <div class="space-y-1">
-            <span class="text-slate-500 block uppercase">Convey Unit:</span>
-            <span class="text-white font-bold block flex items-center gap-1.5">
-              <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan animate-ping"></span>
-              UNIT_BROP_9948
-            </span>
-          </div>
-          <div class="space-y-1">
-            <span class="text-slate-500 block uppercase">Co-ordinates:</span>
-            <span id="telemetry-gps" class="text-bro-cyan font-bold block">46.2507° N, 63.1375° W</span>
-          </div>
-          <div class="space-y-1">
-            <span class="text-slate-500 block uppercase">Fleet Velocity:</span>
-            <span id="telemetry-velocity" class="text-bro-gold font-bold block">88 km/h</span>
-          </div>
-          <div class="space-y-1">
-            <span class="text-slate-500 block uppercase">Active Lane:</span>
-            <span class="text-slate-300 font-bold block">PEI -> BOSTON LINK</span>
-          </div>
-        </div>
+      {/* 1. IoT Telematics Ingest Deck (Double Width Bento Cell) */}
+      <div class="lg:col-span-2 rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
+        <IoTTelematicsDeck client:load />
       </div>
 
-      <!-- 2. Compliance Pipeline status (Single Cell) -->
-      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 transform hover:-translate-y-1">
+      {/* 2. Compliance Pipeline Gateways (Single Bento Cell) */}
+      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
         <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
           <span>MODULE_02 // BORDER_CLEARANCE</span>
-          <span class="text-bro-gold font-bold flex items-center gap-1">
+          <span class="text-bro-gold font-bold flex items-center gap-1.5">
             <span class="h-1.5 w-1.5 rounded-full bg-bro-gold animate-pulse"></span>
             ACTIVE SYNC
           </span>
         </div>
 
         <div class="space-y-6 py-2">
-          <!-- U.S. Bound (PAPS / ACE) -->
+          {/* U.S. Bound (PAPS / ACE) */}
           <div class="space-y-2.5">
-            <div class="flex justify-between items-center font-mono text-[10px]">
+            <div class="flex justify-between items-center font-mono text-[9.5px]">
               <span class="text-white font-bold">U.S.-BOUND (CBP PAPS / ACE)</span>
               <span class="text-bro-cyan font-bold">// SECURE_RELEASE</span>
             </div>
-            <div class="p-3.5 bg-[#030307]/50 border border-slate-900 rounded font-mono text-[9px] text-slate-450 space-y-2">
+            <div class="p-3.5 bg-[#030307]/50 border border-slate-900 rounded font-mono text-[9px] text-slate-400 space-y-2 relative">
+              <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-bro-cyan/20 to-transparent"></div>
               <div class="flex justify-between items-center">
                 <span>SCAC Code:</span>
                 <span class="text-white font-bold">BROP</span>
@@ -85,18 +61,19 @@ const base = import.meta.env.BASE_URL;
               </div>
               <div class="flex justify-between items-center">
                 <span>PAPS Number:</span>
-                <span class="text-slate-400">BROP8843921</span>
+                <span class="text-slate-350">BROP8843921</span>
               </div>
             </div>
           </div>
 
-          <!-- Canada Bound (PARS / ACI) -->
+          {/* Canada Bound (PARS / ACI) */}
           <div class="space-y-2.5">
-            <div class="flex justify-between items-center font-mono text-[10px]">
+            <div class="flex justify-between items-center font-mono text-[9.5px]">
               <span class="text-white font-bold">CANADA-BOUND (CBSA PARS / ACI)</span>
               <span class="text-bro-cyan font-bold">// CBSA_APPROVED</span>
             </div>
-            <div class="p-3.5 bg-[#030307]/50 border border-slate-900 rounded font-mono text-[9px] text-slate-450 space-y-2">
+            <div class="p-3.5 bg-[#030307]/50 border border-slate-900 rounded font-mono text-[9px] text-slate-400 space-y-2 relative">
+              <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-bro-cyan/20 to-transparent"></div>
               <div class="flex justify-between items-center">
                 <span>Cargo Control Number:</span>
                 <span class="text-white font-bold">BROP-2026-9948</span>
@@ -107,85 +84,35 @@ const base = import.meta.env.BASE_URL;
               </div>
               <div class="flex justify-between items-center">
                 <span>Submission:</span>
-                <span class="text-slate-400">ACI eManifest verified</span>
+                <span class="text-slate-350">ACI eManifest verified</span>
               </div>
             </div>
           </div>
         </div>
 
-        <a href={`${base}customs`} class="block w-full text-center py-2.5 border border-slate-800 hover:border-bro-cyan/50 rounded font-mono text-[9px] uppercase tracking-wider text-slate-400 hover:text-white transition-colors duration-300">
+        <a 
+          href={`${base}customs`} 
+          class="block w-full text-center py-2.5 border border-slate-800 hover:border-bro-cyan/50 rounded font-mono text-[9px] uppercase tracking-wider text-slate-400 hover:text-white transition-colors duration-300"
+        >
           View Customs Documentation
         </a>
       </div>
 
-      <!-- 3. IoT Fleet Telematics Ingestion (Single Cell) -->
-      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 transform hover:-translate-y-1">
-        <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
-          <span>MODULE_03 // IoT_TELEMATICS</span>
-          <span class="text-bro-cyan font-bold flex items-center gap-1">
-            <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan animate-pulse"></span>
-            STREAMING
-          </span>
-        </div>
-
-        <div class="space-y-4 py-2 font-mono text-[9px] text-slate-450">
-          <!-- Dry Van -->
-          <div class="p-3 bg-[#030307]/50 border border-slate-900 rounded space-y-1">
-            <div class="flex justify-between items-center font-bold text-white">
-              <span>DIV_01 // DRY VAN</span>
-              <span class="text-bro-cyan">SECURE</span>
-            </div>
-            <p class="text-slate-500 text-[8px]">GPS geofences active. Cargo door lock: SECURED.</p>
-          </div>
-
-          <!-- Reefer -->
-          <div class="p-3 bg-[#030307]/50 border border-slate-900 rounded space-y-1.5">
-            <div class="flex justify-between items-center font-bold text-white">
-              <span>DIV_02 // REEFER COLD CHAIN</span>
-              <span class="text-bro-cyan">ACTIVE</span>
-            </div>
-            <div class="flex justify-between items-center text-[8px] text-slate-500">
-              <span>TEMP SETPOINT:</span>
-              <span class="text-bro-cyan font-bold">-18.0°C</span>
-            </div>
-            <div class="flex justify-between items-center text-[8px] text-slate-500">
-              <span>AMBIENT AIR:</span>
-              <span class="text-slate-350">14.5°C</span>
-            </div>
-          </div>
-
-          <!-- Flatbed -->
-          <div class="p-3 bg-[#030307]/50 border border-slate-900 rounded space-y-1.5">
-            <div class="flex justify-between items-center font-bold text-white">
-              <span>DIV_03 // FLATBED DIVISION</span>
-              <span class="text-bro-gold">MONITORING</span>
-            </div>
-            <div class="flex justify-between items-center text-[8px] text-slate-500">
-              <span>AXLE WEIGHT TPMS:</span>
-              <span class="text-bro-cyan font-bold">NORMAL (28,500 KG)</span>
-            </div>
-            <div class="flex justify-between items-center text-[8px] text-slate-500">
-              <span>DECK STRESS LEVEL:</span>
-              <span class="text-slate-350">0.05% FLEX</span>
-            </div>
-          </div>
-        </div>
-
-        <a href={`${base}drivers`} class="block w-full text-center py-2.5 border border-slate-800 hover:border-bro-cyan/50 rounded font-mono text-[9px] uppercase tracking-wider text-slate-400 hover:text-white transition-colors duration-300">
-          Driver Gateway Access
-        </a>
+      {/* 3. Secure Ledger eBOL Flow (Double Width Bento Cell) */}
+      <div class="lg:col-span-2 rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
+        <SecureLedgerFlow client:load />
       </div>
 
-      <!-- 4. Value Proposition (Single Cell) -->
-      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 transform hover:-translate-y-1">
+      {/* 4. Value Proposition (Single Bento Cell) */}
+      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
         <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
           <span>MODULE_04 // BRAND_MISSION</span>
           <span class="text-bro-cyan font-bold">// ALLY_COMMITMENT</span>
         </div>
 
-        <div class="space-y-4 py-4">
+        <div class="space-y-4 py-2">
           <h3 class="text-lg font-black font-display uppercase tracking-wider text-white">An Always-On Operational Ally</h3>
-          <p class="text-slate-400 text-xs leading-relaxed font-sans">
+          <p class="text-slate-450 text-xs leading-relaxed font-sans">
             When shipping lanes degrade, regulatory shifts occur, or capacity tightens, our automated tracking, verified carriers, and dedicated support safeguard your margin. 
           </p>
           <div class="text-bro-cyan font-bold font-mono text-[10px] uppercase tracking-wider">
@@ -195,18 +122,18 @@ const base = import.meta.env.BASE_URL;
 
         <div class="text-[9px] font-mono text-slate-500 border-t border-slate-900/60 pt-4 flex justify-between items-center">
           <span>DOT REGISTRY: COMPLIANT</span>
-          <span class="text-bro-gold">100.0% COR</span>
+          <span class="text-bro-gold font-bold">100.0% COR</span>
         </div>
       </div>
 
-      <!-- 5. Fast Quote Console (Single Cell) -->
-      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 transform hover:-translate-y-1">
+      {/* 5. Fast Quote Console (Single Bento Cell) */}
+      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
         <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
           <span>MODULE_05 // FAST_QUOTE</span>
           <span class="text-bro-cyan font-bold">// RATES_ENGINE</span>
         </div>
 
-        <div class="space-y-4 py-2 font-mono text-[9px] text-slate-450">
+        <div class="space-y-4 py-2 font-mono text-[9px] text-slate-400">
           <div class="space-y-1">
             <span class="text-slate-500 block uppercase">Equipment Select:</span>
             <select class="w-full bg-[#030307]/50 border border-slate-900 rounded p-2 text-white outline-none focus:border-bro-cyan transition-colors">
@@ -229,8 +156,11 @@ const base = import.meta.env.BASE_URL;
           </div>
         </div>
 
-        <a href={`${base}quote`} class="block w-full text-center py-2.5 bg-bro-cyan text-black hover:bg-bro-cyan/90 rounded font-mono text-[9px] uppercase tracking-wider font-bold transition-colors duration-300">
-          Execute Quote calculation
+        <a 
+          href={`${base}quote`} 
+          class="block w-full text-center py-2.5 bg-bro-cyan text-black hover:bg-bro-cyan/90 rounded font-mono text-[9px] uppercase tracking-wider font-bold transition-colors duration-300"
+        >
+          Execute Quote Calculation
         </a>
       </div>
 
@@ -244,10 +174,10 @@ const base = import.meta.env.BASE_URL;
       <h2 class="text-2xl sm:text-3xl font-black font-display uppercase tracking-tight text-white">Endorsed Operations</h2>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto font-mono text-[10px] text-slate-450">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto font-mono text-[10px] text-slate-400">
       <!-- Testimonial 1 -->
       <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded relative overflow-hidden space-y-4 hover:border-bro-cyan/30 transition-all duration-300">
-        <p class="italic leading-relaxed text-slate-350">
+        <p class="italic leading-relaxed text-slate-350 font-sans text-xs">
           "#BRO Transport handles our weekly regional food distribution runs. Their reefer temperature monitoring systems give us full log records for every shipment. With zero transit deviations and clean arrivals, they are the pinnacle of cold-chain logistics."
         </p>
         <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
@@ -259,9 +189,9 @@ const base = import.meta.env.BASE_URL;
         </div>
       </div>
 
-      <!-- Testimonial 2 -->
+      {/* Testimonial 2 */}
       <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded relative overflow-hidden space-y-4 hover:border-bro-cyan/30 transition-all duration-300">
-        <p class="italic leading-relaxed text-slate-350">
+        <p class="italic leading-relaxed text-slate-350 font-sans text-xs">
           "Moving heavy steel beams and structural plates requires rigid flatbed loading. #BRO's strap tension securement and heavy tarping are flawless. Excellent cross-border manifest handling and zero port-of-entry delays."
         </p>
         <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
@@ -275,27 +205,3 @@ const base = import.meta.env.BASE_URL;
     </div>
   </section>
 </Layout>
-
-<script>
-  function runLiveTelemetry() {
-    const gpsEl = document.getElementById('telemetry-gps');
-    const velocityEl = document.getElementById('telemetry-velocity');
-    if (!gpsEl || !velocityEl) return;
-
-    // Jitter active coordinates slightly
-    setInterval(() => {
-      const latBase = 46.2507;
-      const lonBase = -63.1375;
-      const jitterLat = (Math.random() - 0.5) * 0.005;
-      const jitterLon = (Math.random() - 0.5) * 0.005;
-      
-      gpsEl.innerText = `${(latBase + jitterLat).toFixed(4)}° N, ${(lonBase + jitterLon).toFixed(4)}° W`;
-
-      const speedBase = 88;
-      const speedJitter = Math.floor(Math.random() * 6 - 3);
-      velocityEl.innerText = `${speedBase + speedJitter} km/h`;
-    }, 4000);
-  }
-
-  document.addEventListener('astro:page-load', runLiveTelemetry);
-</script>

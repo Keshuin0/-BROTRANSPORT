@@ -1,46 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import TransborderPipeline from '../components/TransborderPipeline';
 
 const base = import.meta.env.BASE_URL;
-
-const manifestJson = `{
-  "manifestType": "ACE_EManifest",
-  "scac": "BROP",
-  "tripNumber": "BROP20261024A",
-  "portOfEntry": "0115",
-  "estimatedArrival": "2026-10-24T14:30:00Z",
-  "conveyance": {
-    "vin": "1FVACWDB2GHXXXXXX",
-    "plate": "PE9948",
-    "state": "PE"
-  },
-  "crew": [
-    {
-      "fastCardNumber": "980012345",
-      "firstName": "Robert",
-      "lastName": "MacDonald",
-      "dateOfBirth": "1982-04-12"
-    }
-  ],
-  "shipments": [
-    {
-      "papsNumber": "BROP8843921",
-      "shipper": {
-        "name": "PEI Potato Co-Op",
-        "address": "100 Spud Road, Summerside, PE"
-      },
-      "consignee": {
-        "name": "Boston Distribution Hub",
-        "address": "45 Market Blvd, Boston, MA"
-      },
-      "commodity": "Potatoes",
-      "weight": 22679.6,
-      "weightUnit": "KG",
-      "quantity": 24,
-      "packageType": "Pallet"
-    }
-  ]
-}`;
 ---
 
 <Layout title="Cross-Border Customs Compliance | #BRO Transport Corp." description="Frictionless transborder transit. Automated customs manifest processing for CBSA and CBP including PAPS, PARS, ACE, and ACI schemas.">
@@ -54,7 +16,7 @@ const manifestJson = `{
         Customs Compliance
       </h1>
       <p class="text-bro-ice/70 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-sans">
-        Frictionless transborder transit. Automated manifest pre-processing and data transmission pipelines for CBSA and CBP gateways.
+        Frictionless transborder transit. Our automated compliance engine integrates directly with CBSA and CBP, verifying ACE and ACI manifests before your shipments reach the border.
       </p>
     </div>
   </section>
@@ -130,23 +92,16 @@ const manifestJson = `{
 
     </div>
 
-    <!-- JSON eManifest Schema Block -->
-    <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded-lg space-y-6">
-      <div class="flex justify-between items-center border-b border-slate-900/60 pb-3">
-        <div class="flex items-center gap-2 font-mono text-[10px] text-slate-500">
-          <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan"></span>
-          <span>ACE_eMANIFEST_JSON_SCHEMA</span>
-        </div>
-        <span class="text-[9px] font-mono text-slate-650">BROP_STANDARDS_V2</span>
+    <!-- Interactive JSON eManifest Schema Block with Laser-Scan Validator -->
+    <div class="space-y-6">
+      <div class="space-y-2">
+        <h3 class="text-lg font-black font-display uppercase tracking-wide text-white">Live Developer Integration Deck</h3>
+        <p class="text-slate-400 text-xs leading-relaxed font-sans">
+          Modify parameter values in the JSON structure below and execute the validator. This simulates real-time schema validation compiled before reaching customs checkpoints:
+        </p>
       </div>
 
-      <p class="text-slate-400 text-xs leading-relaxed font-sans">
-        API validation schema for cargo declarations. This JSON payload is transmitted electronically to CBP/CBSA border check-points before the transport unit reaches the port of entry:
-      </p>
-
-      <div class="bg-[#030307]/70 border border-slate-950 rounded p-4 relative">
-        <pre class="text-[10px] font-mono text-cyan-400 overflow-x-auto leading-relaxed select-text p-2" style="white-space: pre-wrap; word-wrap: break-word;">{manifestJson}</pre>
-      </div>
+      <TransborderPipeline client:load />
     </div>
 
   </section>

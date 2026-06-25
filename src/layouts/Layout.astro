@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
+import AllySupportTrigger from '../components/AllySupportTrigger';
 
 interface Props {
   title?: string;
@@ -64,14 +65,7 @@ const base = import.meta.env.BASE_URL;
 
           <div class="flex items-center gap-4">
             <!-- Ally Support Trigger Button -->
-            <button id="ally-support-btn" class="relative flex items-center gap-3 px-4 py-2 border border-bro-cyan/30 text-bro-cyan hover:border-bro-cyan hover:shadow-neon-glow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden font-mono text-[10px] tracking-wider uppercase group cursor-pointer select-none">
-              <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-cyber-grid bg-[size:8px_8px] pointer-events-none"></div>
-              <span class="relative flex h-2 w-2">
-                <span id="ally-beacon-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-bro-cyan"></span>
-                <span id="ally-beacon-dot" class="relative inline-flex rounded-full h-2 w-2 bg-bro-cyan"></span>
-              </span>
-              <span id="ally-label" class="relative z-10 font-bold">REQUEST A BRO</span>
-            </button>
+            <AllySupportTrigger client:load />
           </div>
         </div>
       </header>
@@ -94,42 +88,5 @@ const base = import.meta.env.BASE_URL;
       </div>
     </footer>
 
-    <script>
-      function initAllyButton() {
-        const btn = document.getElementById('ally-support-btn');
-        const ping = document.getElementById('ally-beacon-ping');
-        const dot = document.getElementById('ally-beacon-dot');
-        const label = document.getElementById('ally-label');
-
-        if (!btn || !ping || !dot || !label) return;
-
-        // Load persisted state
-        let isActive = sessionStorage.getItem('bro_hotline_active') === 'true';
-
-        function updateState() {
-          if (isActive) {
-            btn.className = 'relative flex items-center gap-3 px-4 py-2 border border-bro-crimson bg-bro-crimson/10 text-bro-crimson shadow-neon-alert transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden font-mono text-[10px] tracking-wider uppercase group cursor-pointer select-none';
-            ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-bro-crimson';
-            dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-bro-crimson';
-            label.innerText = 'BRO HOTLINE ACTIVE';
-          } else {
-            btn.className = 'relative flex items-center gap-3 px-4 py-2 border border-bro-cyan/30 text-bro-cyan hover:border-bro-cyan hover:shadow-neon-glow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden font-mono text-[10px] tracking-wider uppercase group cursor-pointer select-none';
-            ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-bro-cyan';
-            dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-bro-cyan';
-            label.innerText = 'REQUEST A BRO';
-          }
-        }
-
-        updateState();
-
-        btn.addEventListener('click', () => {
-          isActive = !isActive;
-          sessionStorage.setItem('bro_hotline_active', String(isActive));
-          updateState();
-        });
-      }
-
-      document.addEventListener('astro:page-load', initAllyButton);
-    </script>
   </body>
 </html>
