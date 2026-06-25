@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-obsidian: #020408;
-  --color-blaze: #ff6000;
-  --color-cyan: #00f0ff;
-}
+  --color-bro-obsidian: #030307;
+  --color-bro-steel: #0e111f;
+  --color-bro-cyan: #00f0ff;
+  --color-bro-gold: #ffaa00;
+  --color-bro-crimson: #ff0055;
+  --color-bro-ice: #e2f1f8;
 
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('/fonts/outfit-latin.woff2') format('woff2');
+  --font-display: 'Roboto Flex', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --shadow-neon-glow: 0 0 15px rgba(0, 240, 255, 0.35);
+  --shadow-neon-alert: 0 0 15px rgba(255, 0, 85, 0.35);
 }
 
 @font-face {
@@ -25,69 +27,79 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --color-obsidian: #020408;
-    --color-blaze: #ff6000;
-    --color-cyan: #00f0ff;
+    --color-bro-obsidian: #030307;
+    --color-bro-steel: #0e111f;
+    --color-bro-cyan: #00f0ff;
+    --color-bro-gold: #ffaa00;
+    --color-bro-crimson: #ff0055;
+    --color-bro-ice: #e2f1f8;
   }
   
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: #020408;
-    color: #F8FAFC;
+    background-color: #030307;
+    color: #e2f1f8;
     overflow-x: hidden;
   }
 }
 
-/* Custom premium design system layers */
-@layer utilities {
-  .glow-text-cyan {
-    text-shadow: 0 0 10px rgba(0, 240, 255, 0.4), 0 0 20px rgba(0, 240, 255, 0.2);
-  }
-  
-  .glow-text-blaze {
-    text-shadow: 0 0 10px rgba(255, 96, 0, 0.4), 0 0 20px rgba(255, 96, 0, 0.2);
-  }
+/* Custom premium design system utilities */
+@utility bg-cyber-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+}
 
-  .glow-text-emerald {
-    text-shadow: 0 0 10px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.2);
-  }
-  
-  .glow-border-cyan {
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
-    border-color: rgba(0, 240, 255, 0.4) !important;
-  }
+@utility gradient-steel {
+  background-image: linear-gradient(135deg, #0e111f 0%, #030307 100%);
+}
 
-  .glow-border-blaze {
-    box-shadow: 0 0 15px rgba(255, 96, 0, 0.15);
-    border-color: rgba(255, 96, 0, 0.4) !important;
-  }
+@utility glow-text-cyan {
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.4), 0 0 20px rgba(0, 240, 255, 0.2);
+}
 
-  .glass-panel {
-    background: rgba(2, 4, 8, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
+@utility glow-text-gold {
+  text-shadow: 0 0 10px rgba(255, 170, 0, 0.4), 0 0 20px rgba(255, 170, 0, 0.2);
+}
 
-  .futuristic-grid {
-    background-size: 40px 40px;
-    background-image: 
-      linear-gradient(to right, rgba(0, 240, 255, 0.015) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 240, 255, 0.015) 1px, transparent 1px);
-  }
+@utility glow-text-crimson {
+  text-shadow: 0 0 10px rgba(255, 0, 85, 0.4), 0 0 20px rgba(255, 0, 85, 0.2);
+}
 
-  .dent-panel {
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    background: linear-gradient(145deg, #05070d, #010204);
-    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.8), 1px 1px 3px rgba(255, 255, 255, 0.02);
-  }
+@utility glow-border-cyan {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+  border-color: rgba(0, 240, 255, 0.4) !important;
+}
 
-  /* Scanlines Cathode Ray Tube Effect */
-  .scanlines {
-    position: relative;
-    overflow: hidden;
-  }
-  .scanlines::before {
+@utility glow-border-gold {
+  box-shadow: 0 0 15px rgba(255, 170, 0, 0.15);
+  border-color: rgba(255, 170, 0, 0.4) !important;
+}
+
+@utility glow-border-crimson {
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.15);
+  border-color: rgba(255, 0, 85, 0.4) !important;
+}
+
+@utility glass-panel {
+  background: rgba(3, 3, 7, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 241, 248, 0.05);
+}
+
+@utility dent-panel {
+  border: 1px solid rgba(226, 241, 248, 0.03);
+  background: linear-gradient(145deg, #0e111f, #030307);
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.8), 1px 1px 3px rgba(226, 241, 248, 0.02);
+}
+
+/* Scanlines Cathode Ray Tube Effect */
+@utility scanlines {
+  position: relative;
+  overflow: hidden;
+  &::before {
     content: " ";
     display: block;
     position: absolute;
@@ -97,40 +109,40 @@
     background-size: 100% 4px, 6px 100%;
     pointer-events: none;
   }
+}
 
-  /* Cybernetic corner decals - Blaze Orange / Cyber Cyan */
-  .cyber-corners {
-    position: relative;
-  }
-  .cyber-corners::after {
+/* Cybernetic corner decals - Crimson / Cyan */
+@utility cyber-corners {
+  position: relative;
+  &::after {
     content: '';
     position: absolute;
     top: -1px; left: -1px; width: 8px; height: 8px;
     border-top: 2px solid #00f0ff; border-left: 2px solid #00f0ff;
     pointer-events: none;
   }
-  .cyber-corners::before {
+  &::before {
     content: '';
     position: absolute;
     bottom: -1px; right: -1px; width: 8px; height: 8px;
-    border-bottom: 2px solid #ff6000; border-right: 2px solid #ff6000;
+    border-bottom: 2px solid #ff0055; border-right: 2px solid #ff0055;
     pointer-events: none;
   }
+}
 
-  /* Glowing Custom Scrollbars */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #020408;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(0, 240, 255, 0.25);
-    border-radius: 3px;
-    border: 1px solid rgba(0, 240, 255, 0.1);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 96, 0, 0.5);
-  }
+/* Glowing Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #030307;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.25);
+  border-radius: 3px;
+  border: 1px solid rgba(0, 240, 255, 0.1);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 0, 85, 0.5);
 }

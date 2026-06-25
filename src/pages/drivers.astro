@@ -5,20 +5,21 @@ const base = import.meta.env.BASE_URL;
 
 <Layout title="Driver Intake Portal | #BRO Transport Corp." description="Progressive recruitment portal for commercial dry van, reefer, and flatbed transport operations. Driver qualifications, safety certifications, and intake.">
   <!-- Navigation -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#020408]/80 border-b border-slate-900" style="view-transition-name: main-header;">
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-bro-obsidian/85 border-b border-slate-900" style="view-transition-name: main-header;">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
       <a href={base} class="flex items-center gap-2 group">
-        <div class="h-3 w-3 bg-[#00f0ff] rounded-full animate-pulse shadow-[0_0_8px_#00f0ff] group-hover:bg-[#00f0ff] transition-colors shrink-0"></div>
+        <div class="h-3 w-3 bg-bro-cyan rounded-full animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.4)] group-hover:bg-bro-cyan transition-colors shrink-0"></div>
         <img src={`${base}images/logo.jpg?v=3`} alt="#BRO TRANSPORT" class="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90" />
       </a>
       
       <nav class="flex items-center gap-8 text-sm font-medium text-slate-350">
-        <a href={base} class="hover:text-[#00f0ff] transition-colors">Return Home</a>
-        <a href={`${base}Disruptive-Trucking-Website-Master-Roadmap.pdf`} target="_blank" class="hover:text-[#ff6000] transition-colors font-bold text-[#ff6000] font-mono">[RESEARCH_PDF]</a>
+        <a href={base} class="hover:text-bro-cyan transition-colors">Return Home</a>
+        <a href={`${base}customs`} data-astro-prefetch class="hover:text-bro-cyan transition-colors">Customs</a>
+        <a href={`${base}Disruptive-Trucking-Website-Master-Roadmap.pdf`} target="_blank" class="hover:text-bro-crimson transition-colors font-bold text-bro-crimson font-mono">[RESEARCH_PDF]</a>
       </nav>
 
       <div class="flex items-center gap-4">
-        <a href="tel:902-916-6936" class="bg-cyan-500/10 border border-cyan-500/30 hover:bg-[#00f0ff] hover:text-black transition-all duration-300 text-[#00f0ff] text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
+        <a href="tel:902-916-6936" class="bg-bro-cyan/10 border border-bro-cyan/30 hover:bg-bro-cyan hover:text-black transition-all duration-300 text-bro-cyan text-xs font-semibold px-4 py-2 rounded-md items-center gap-2">
           <span>Call Desk: 902-916-6936</span>
         </a>
       </div>
@@ -26,16 +27,16 @@ const base = import.meta.env.BASE_URL;
   </header>
 
   <!-- Driver Registration Portal Hero -->
-  <section class="py-16 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] border-b border-slate-900">
+  <section class="py-16 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.08),rgba(255,255,255,0))] border-b border-slate-900">
     <div class="max-w-4xl mx-auto text-center space-y-6">
-      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#ff6000] font-bold px-3 py-1 bg-orange-950/10 rounded-full border border-orange-500/20">
+      <span class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-bro-gold font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-gold/20">
         Transport Canada Secure Portal
       </span>
-      <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-outfit uppercase">
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-display uppercase">
         Driver Intake Portal
       </h1>
-      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-         Commercial freight operations require strict compliance and safety. Provide your driver credentials and qualifications to register for our dry van, reefer, and flatbed divisions.
+      <p class="text-bro-ice/85 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+         Engineered for Capacity Partners. Access premium, pre-vetted loads, clean routing pipelines, and secure payment terms through our identity verification gateway. Provide your driver credentials and qualifications to register for our dry van, reefer, and flatbed divisions.
       </p>
     </div>
   </section>
@@ -85,7 +86,7 @@ const base = import.meta.env.BASE_URL;
           <!-- STEP 1: Personal & Lane Profile -->
           <div class="step-panel space-y-6" data-step="1">
             <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-outfit uppercase">Driver Credentials</h3>
+              <h3 class="text-lg font-bold text-white font-display uppercase">Driver Credentials</h3>
               <p class="text-slate-400 text-xs">Verify contact coordinates and fleet equipment compatibility parameters.</p>
             </div>
 
@@ -119,7 +120,7 @@ const base = import.meta.env.BASE_URL;
           <!-- STEP 2: Compliance Clearances -->
           <div class="step-panel space-y-6 hidden" data-step="2">
             <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-outfit uppercase">Safety Certifications & CDL Status</h3>
+              <h3 class="text-lg font-bold text-white font-display uppercase">Safety Certifications & CDL Status</h3>
               <p class="text-slate-400 text-xs">Verify safety qualification and licensing compliance criteria. Click options to scan.</p>
             </div>
 
@@ -130,7 +131,7 @@ const base = import.meta.env.BASE_URL;
                 <div class="flex items-start gap-4">
                   <input type="checkbox" id="class1OrAz" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
                   <div class="space-y-0.5 text-left">
-                    <span class="text-sm font-bold text-white font-outfit">Class 1 / AZ Commercial Driver's License</span>
+                    <span class="text-sm font-bold text-white font-display">Class 1 / AZ Commercial Driver's License</span>
                     <p class="text-slate-500 text-xs leading-relaxed">
                       Applicants must verify they hold a valid Class 1 or AZ Commercial Driver's License in good standing.
                     </p>
@@ -145,7 +146,7 @@ const base = import.meta.env.BASE_URL;
                 <div class="flex items-start gap-4">
                   <input type="checkbox" id="safetyCertified" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
                   <div class="space-y-0.5 text-left">
-                    <span class="text-sm font-bold text-white font-outfit">COR / Safety Certified</span>
+                    <span class="text-sm font-bold text-white font-display">COR / Safety Certified</span>
                     <p class="text-slate-500 text-xs leading-relaxed">
                       Check if you hold current Certificate of Recognition (COR) or equivalent industrial safety certifications.
                     </p>
@@ -160,7 +161,7 @@ const base = import.meta.env.BASE_URL;
                 <div class="flex items-start gap-4">
                   <input type="checkbox" id="hasCleanAbstract" class="mt-1 h-4 w-4 text-cyan-400 rounded focus:ring-0 border-slate-900 bg-[#020408]" />
                   <div class="space-y-0.5 text-left">
-                    <span class="text-sm font-bold text-white font-outfit">Clean 3-Year Commercial Driver Abstract</span>
+                    <span class="text-sm font-bold text-white font-display">Clean 3-Year Commercial Driver Abstract</span>
                     <p class="text-slate-500 text-xs leading-relaxed">
                       Verify that your commercial abstract contains zero heavy safety infractions or regulatory safety penalties.
                     </p>
@@ -174,7 +175,7 @@ const base = import.meta.env.BASE_URL;
           <!-- STEP 3: Secure Document Drag & Drop -->
           <div class="step-panel space-y-6 hidden" data-step="3">
             <div class="space-y-1">
-              <h3 class="text-lg font-bold text-white font-outfit uppercase">Secure Document Intake</h3>
+              <h3 class="text-lg font-bold text-white font-display uppercase">Secure Document Intake</h3>
               <p class="text-slate-400 text-xs">Upload required credentials. Files are scanned locally before edge worker dispatch.</p>
             </div>
 
@@ -218,7 +219,7 @@ const base = import.meta.env.BASE_URL;
 
   <!-- Footer -->
   <footer class="py-16 border-t border-slate-900 bg-[#020408] text-center space-y-4">
-    <span class="text-sm font-bold text-white font-outfit tracking-wide">#BRO TRANSPORT CORP.</span>
+    <span class="text-sm font-bold text-white font-display tracking-wide">#BRO TRANSPORT CORP.</span>
     <p class="text-xs text-slate-500 max-w-md mx-auto">Prince Edward Island, Canada. Operating high-performance commercial freight networks and cross-border logistics.</p>
   </footer>
 </Layout>
