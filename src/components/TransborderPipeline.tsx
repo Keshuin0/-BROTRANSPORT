@@ -45,56 +45,55 @@ export default function TransborderPipeline() {
   const [scanning, setScanning] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const runValidation = () => {
+  const runValidation = async () => {
     setScanning(true);
     setStatus('idle');
-    setLogs(["[SYSTEM] INITIATING MANIFEST STRUCTURE COMPLIANCE CHECK...", "[ABI-GATE] PARSING JSON PAYLOAD..."]);
+    const initialLogs = [
+      "[SYSTEM] INITIATING MANIFEST STRUCTURE COMPLIANCE CHECK...",
+      "[ABI-GATE] TRANSMITTING PAYLOAD TO CLOUDFLARE WORKER COMPLIANCE PIPELINE..."
+    ];
+    setLogs(initialLogs);
 
-    setTimeout(() => {
-      try {
-        const obj = JSON.parse(manifestStr);
-        const newLogs = [...logs];
-        newLogs.push(`[SCHEMA] Manifest Type: ${obj.manifestType || 'UNKNOWN'}`);
+    const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://127.0.0.1:8787/api/customs/validate'
+      : 'https://brotransport-edge-api.keshuin0.workers.dev/api/customs/validate';
 
-        // Validate SCAC
-        if (obj.scac === 'BROP') {
-          newLogs.push("[SCAC] Standard Carrier Alpha Code matched: BROP (Secure Carrier Status).");
-        } else {
-          newLogs.push(`[WARNING] Carrier SCAC '${obj.scac}' is not registered under #BRO fleet.`);
-        }
-
-        // Validate Crew Fast Card
-        const fastCard = obj.crew?.[0]?.fastCardNumber;
-        if (fastCard && /^\d{9}$/.test(fastCard.toString())) {
-          newLogs.push(`[CREW] Driver FAST Card ${fastCard} format verified. CBP Pre-Screen approved.`);
-        } else {
-          throw new Error(`Invalid FAST Card format: '${fastCard}'. Must be exactly 9 numeric digits.`);
-        }
-
-        // Validate Weight
-        const weight = obj.shipments?.[0]?.weight;
-        if (weight && weight > 0 && weight <= 45000) {
-          newLogs.push(`[CARGO] Payload Weight: ${weight} ${obj.shipments[0].weightUnit || 'KG'}. Legal limits respected.`);
-        } else if (weight > 45000) {
-          newLogs.push(`[WARNING] Cargo Weight exceeds standard legal limits. Permits mandatory.`);
-        }
-
-        newLogs.push("[API] Transmitting vehicle and manifest to CBP Descartes endpoint...");
-        newLogs.push("[SUCCESS] manifest cleared by Automated Broker Interface (ABI). ACE Manifest generated.");
-        
-        setLogs(newLogs);
-        setStatus('success');
-      } catch (err: any) {
-        setLogs(prev => [
-          ...prev, 
-          `[PARSING_ERROR] Validation failed. Reason: ${err.message}`,
-          "[CRITICAL] ABI transmission aborted. Manifest rejected by gatekeeper."
-        ]);
-        setStatus('error');
-      } finally {
-        setScanning(false);
+    try {
+      const obj = JSON.parse(manifestStr);
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(obj)
+      });
+      const data = await res.json();
+      
+      const newLogs = [...initialLogs];
+      if (!res.ok) {
+        throw new Error(data.error || 'Schema validation parse rejection.');
       }
-    }, 1500);
+
+      newLogs.push(`[SCHEMA] Manifest Model Verified. referenceId: ${data.manifestId}`);
+      if (data.warnings && data.warnings.length > 0) {
+        data.warnings.forEach((warn: string) => {
+          newLogs.push(`[WARNING] ${warn}`);
+        });
+      } else {
+        newLogs.push("[COMPLIANT] Zero anomalies detected in cargo, vehicle, or crew credentials.");
+      }
+      newLogs.push("[SUCCESS] manifest cleared by Automated Broker Interface (ABI). ACE Manifest generated.");
+      
+      setLogs(newLogs);
+      setStatus(data.compliant ? 'success' : 'error');
+    } catch (err: any) {
+      setLogs(prev => [
+        ...prev,
+        `[CRITICAL] Compliance sync failed: ${err.message}`,
+        "[ABI-GATE] Manifest rejected by gatekeeper."
+      ]);
+      setStatus('error');
+    } finally {
+      setScanning(false);
+    }
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

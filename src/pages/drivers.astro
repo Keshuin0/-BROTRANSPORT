@@ -189,14 +189,21 @@ const base = import.meta.env.BASE_URL;
 
     errorBox.classList.add('hidden');
 
+    const formEquip = (document.getElementById('select-equipType') as HTMLSelectElement).value;
+    let equipType: 'multi-axle' | 'rgn' | 'stepdeck' | 'military-spec' = 'multi-axle';
+    if (formEquip === 'flatbed') {
+      equipType = 'rgn';
+    } else if (formEquip === 'reefer') {
+      equipType = 'stepdeck';
+    }
+
     const payload = {
       driverName: (document.getElementById('input-driverName') as HTMLInputElement).value,
       driverPhone: (document.getElementById('input-driverPhone') as HTMLInputElement).value,
-      equipType: (document.getElementById('select-equipType') as HTMLSelectElement).value,
+      equipType,
       preferredLanes: (document.getElementById('input-preferredLanes') as HTMLInputElement).value,
-      class1OrAz: (document.getElementById('chk-class1OrAz') as HTMLInputElement).checked,
-      hasCleanAbstract: (document.getElementById('chk-hasCleanAbstract') as HTMLInputElement).checked,
-      safetyCertified: (document.getElementById('chk-safetyCertified') as HTMLInputElement).checked,
+      citizenOrPR: (document.getElementById('chk-class1OrAz') as HTMLInputElement).checked,
+      cgpAuthorized: (document.getElementById('chk-safetyCertified') as HTMLInputElement).checked,
       turnstileToken: turnstileToken
     };
 

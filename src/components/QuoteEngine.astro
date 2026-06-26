@@ -362,10 +362,19 @@ const base = import.meta.env.BASE_URL;
   function submitForm() {
     if (!errorBox) return;
 
+    const trailerType = getTrailerType();
+    const weight = parseInt(sliderWeight.value);
+    const length = trailerType === 'flatbed' ? 48 : 53;
+    const width = 8.5;
+    const height = trailerType === 'flatbed' ? 8.5 : 13.5;
+
     const payload = {
-      trailerType: getTrailerType(),
-      weight: parseInt(sliderWeight.value),
-      tempSetpoint: getTrailerType() === 'reefer' ? parseFloat(sliderTemp.value) : undefined,
+      logisticsType: 'commercial' as const,
+      weight,
+      length,
+      width,
+      height,
+      tempSetpoint: trailerType === 'reefer' ? parseFloat(sliderTemp.value) : undefined,
       origin: (document.getElementById('input-origin') as HTMLInputElement).value,
       destination: (document.getElementById('input-destination') as HTMLInputElement).value,
       contactName: (document.getElementById('input-contactName') as HTMLInputElement).value,

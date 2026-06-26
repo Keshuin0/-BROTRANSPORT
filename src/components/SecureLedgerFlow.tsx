@@ -27,32 +27,59 @@ export default function SecureLedgerFlow() {
     setSigning(true);
     let payload = '';
     let updatedSigs = { ...signatures };
+    let stage = '';
 
     if (keyType === 'keyA') {
       payload = `SHIPPER_BOOKING_9948_TIME_${Date.now()}`;
       const hash = await generateHash(payload);
       updatedSigs.keyA = hash;
-      setStep(2);
+      stage = 'SHIPPER_INITIALIZATION';
     } else if (keyType === 'keyB') {
       payload = `DRIVER_PICKUP_9948_PARENT_${signatures.keyA}_TIME_${Date.now()}`;
       const hash = await generateHash(payload);
       updatedSigs.keyB = hash;
-      setStep(3);
+      stage = 'CARRIER_CUSTODY';
     } else if (keyType === 'keyC') {
       payload = `CONSIGNEE_DELIVERY_9948_PARENT_${signatures.keyB}_TIME_${Date.now()}`;
       const hash = await generateHash(payload);
       updatedSigs.keyC = hash;
+      stage = 'CONSIGNEE_DELIVERY';
       
       // Calculate terminal immutable state
       const finalPayload = hash + signatures.keyA + signatures.keyB;
       const finalHashResult = await generateHash(finalPayload);
       updatedSigs.finalHash = finalHashResult;
-      setStep(4);
+    }
+
+    const ledgerUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://127.0.0.1:8787/api/ledger/ebol/sign'
+      : 'https://brotransport-edge-api.keshuin0.workers.dev/api/ledger/ebol/sign';
+
+    try {
+      const res = await fetch(ledgerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockId: 'BROP-EBOL-9948',
+          stage,
+          signatureKey: keyType === 'keyA' ? updatedSigs.keyA : keyType === 'keyB' ? updatedSigs.keyB : updatedSigs.keyC,
+          timestamp: Date.now(),
+          coordinates: { lat: 46.2507 + (Math.random() - 0.5) * 0.1, lon: -63.1375 + (Math.random() - 0.5) * 0.1 }
+        })
+      });
+      if (res.ok) {
+        console.log(`[LEDGER] Signature successfully anchored on private ledger chain.`);
+      }
+    } catch (e) {
+      console.warn("Ledger transaction failed to anchor:", e);
     }
 
     // Simulate cryptographic processing time
     setTimeout(() => {
       setSignatures(updatedSigs);
+      if (keyType === 'keyA') setStep(2);
+      else if (keyType === 'keyB') setStep(3);
+      else if (keyType === 'keyC') setStep(4);
       setSigning(false);
     }, 800);
   };

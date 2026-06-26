@@ -1,10 +1,13 @@
 import { z } from 'zod';
 
 export const QuoteSchema = z.object({
-  trailerType: z.enum(['dry-van', 'reefer', 'flatbed'], {
-    errorMap: () => ({ message: "Select a valid trailer type configuration." })
+  logisticsType: z.enum(['commercial', 'military'], {
+    errorMap: () => ({ message: "Select a valid logistics class (commercial/military)." })
   }),
   weight: z.number().min(1, "Weight must be at least 1 lb.").max(45000, "Maximum weight cannot exceed 45,000 lbs standard legal limit."),
+  length: z.number().min(10, "Length must be at least 10 feet.").max(100, "Length cannot exceed 100 feet."),
+  width: z.number().min(5, "Width must be at least 5 feet.").max(20, "Width cannot exceed 20 feet."),
+  height: z.number().min(5, "Height must be at least 5 feet.").max(20, "Height cannot exceed 20 feet."),
   tempSetpoint: z.number().optional(),
   origin: z.string().min(3, "Origin city/address must be at least 3 characters."),
   destination: z.string().min(3, "Destination city/address must be at least 3 characters."),
@@ -17,21 +20,19 @@ export const QuoteSchema = z.object({
 export const DriverApplicationSchema = z.object({
   driverName: z.string().min(2, "Driver name is required."),
   driverPhone: z.string().min(10, "Valid contact number is required."),
-  equipType: z.enum(['dry-van', 'reefer', 'flatbed'], {
+  equipType: z.enum(['multi-axle', 'rgn', 'stepdeck', 'military-spec'], {
     errorMap: () => ({ message: "Select a valid equipment class." })
   }),
   preferredLanes: z.string().min(3, "Primary lanes must be detailed."),
-  class1OrAz: z.literal(true, {
-    errorMap: () => ({ message: "A valid Class 1 or AZ Commercial Driver's License is required." })
+  citizenOrPR: z.boolean({
+    required_error: "Must declare Canadian/U.S. citizenship or PR status."
   }),
-  safetyCertified: z.boolean({
-    required_error: "Declare your safety certification status."
-  }),
-  hasCleanAbstract: z.literal(true, {
-    errorMap: () => ({ message: "A clean 3-year commercial driver abstract is mandatory." })
+  cgpAuthorized: z.boolean({
+    required_error: "Declare your Controlled Goods Program authorization status."
   }),
   turnstileToken: z.string().min(1, "Security verification failed. Please complete the Turnstile challenge.")
 });
 
 export type QuoteInput = z.infer<typeof QuoteSchema>;
 export type DriverApplicationInput = z.infer<typeof DriverApplicationSchema>;
+
