@@ -6,6 +6,25 @@ const base = import.meta.env.BASE_URL;
   
   {/* Cyber Grid Subtle Overlay */}
   <div class="absolute inset-0 bg-cyber-grid opacity-10 pointer-events-none z-0"></div>
+
+  {/* Video Background Layer with Scroll Parallax */}
+  <div class="absolute inset-0 overflow-hidden z-0 pointer-events-none opacity-[0.08] select-none scroll-parallax-container">
+    <video 
+      autoplay 
+      muted 
+      loop 
+      playsinline 
+      class="w-full h-full object-cover scale-110 origin-center"
+    >
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-cargo-truck-driving-on-a-highway-41122-large.mp4" type="video/mp4" />
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-truck-on-the-highway-at-sunset-1736-large.mp4" type="video/mp4" />
+    </video>
+  </div>
+
+  {/* Giant slogan pic watermark backdrop */}
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] z-0 mix-blend-screen scale-150 select-none">
+    <img src={`${base}images/logo.png`} alt="" class="w-full max-w-5xl object-contain filter grayscale blur-sm" />
+  </div>
   
   {/* Gold subtle light pools */}
   <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-bro-gold/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
@@ -17,12 +36,12 @@ const base = import.meta.env.BASE_URL;
     <div class="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
       
       {/* Slogan Pic inside high-fidelity framed neon bezel */}
-      <div class="p-2.5 bg-bro-steel/80 border border-bro-gold rounded shadow-[0_0_25px_rgba(255,170,0,0.3)] backdrop-blur-md relative group select-none cyber-corners-gold animate-[pulse_5s_infinite] shrink-0">
+      <div class="p-2.5 bg-bro-steel/80 border border-bro-gold rounded shadow-[0_0_35px_rgba(255,170,0,0.45)] backdrop-blur-md relative group select-none cyber-corners-gold animate-[pulse_5s_infinite] shrink-0">
         <div class="absolute inset-0 bg-cyber-grid bg-[size:6px_6px] opacity-10"></div>
         <img 
           src={`${base}images/logo.png`} 
           alt="#BRO TRANSPORT Slogan Pic" 
-          class="h-28 sm:h-36 w-auto object-contain relative z-10 rounded border border-slate-900" 
+          class="h-40 sm:h-52 w-auto object-contain relative z-10 rounded border border-slate-900" 
         />
       </div>
 
@@ -83,3 +102,14 @@ const base = import.meta.env.BASE_URL;
 
   </div>
 </div>
+
+<script>
+  const updateParallax = () => {
+    const container = document.querySelector('.scroll-parallax-container');
+    if (container) {
+      const offset = window.scrollY * 0.45;
+      (container as HTMLElement).style.transform = `translateY(${offset}px)`;
+    }
+  };
+  window.addEventListener('scroll', updateParallax, { passive: true });
+</script>
