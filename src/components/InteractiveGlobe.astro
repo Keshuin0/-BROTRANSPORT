@@ -493,6 +493,26 @@ const base = import.meta.env.BASE_URL;
         unit.mesh.position.copy(position);
       });
 
+      // Dynamic dot scaling — keep markers/particles a consistent screen size
+      // regardless of zoom level by scaling inversely with camera distance.
+      if (camera) {
+        const camDist = camera.position.length(); // distance from globe center
+        const refDist = 150; // default camera distance
+        const dotScale = camDist / refDist;
+
+        // Scale terminal markers (Mesh children inside linesGroup)
+        linesGroup?.children.forEach(child => {
+          if ((child as THREE.Mesh).isMesh) {
+            child.scale.setScalar(dotScale);
+          }
+        });
+
+        // Scale cargo particles
+        fleetUnits.forEach(unit => {
+          unit.mesh.scale.setScalar(dotScale);
+        });
+      }
+
       if (controls && renderer && scene && camera) {
         controls.update();
         renderer.render(scene, camera);
@@ -515,8 +535,8 @@ const base = import.meta.env.BASE_URL;
   }
 
   function setupRoutes() {
-    // Sharp high-tech terminal markers (radius 0.5)
-    const markerGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+    // Sharp high-tech terminal markers (small base radius, scaled dynamically)
+    const markerGeometry = new THREE.SphereGeometry(0.35, 16, 16);
 
     routes.forEach(route => {
       const pStart = latLonToVector3(route.from.lat, route.from.lon, 50);
@@ -552,8 +572,8 @@ const base = import.meta.env.BASE_URL;
       endMarker.position.copy(pEnd);
       linesGroup!.add(endMarker);
 
-      // Sleek cargo vectors (radius 0.32)
-      const particleGeo = new THREE.SphereGeometry(0.32, 12, 12);
+      // Sleek cargo vectors (small base radius, scaled dynamically)
+      const particleGeo = new THREE.SphereGeometry(0.22, 12, 12);
       const particleMat = new THREE.MeshBasicMaterial({
         color: route.color === 0xffaa00 ? 0xffaa00 : 0x00f0ff,
         transparent: true,
