@@ -110,6 +110,17 @@ const base = import.meta.env.BASE_URL;
 
   const fleetUnits: FleetUnit[] = [];
 
+  interface GlowRing {
+    mesh: THREE.Mesh;
+    baseScale: number;
+    speed: number;
+    phase: number;
+    maxScale: number;
+    baseOpacity: number;
+  }
+
+  const glowRings: GlowRing[] = [];
+
   function latLonToVector3(lat: number, lon: number, radius: number) {
     const phi = (90 - lat) * (Math.PI / 180);
     const theta = (lon + 180) * (Math.PI / 180);
@@ -434,10 +445,27 @@ const base = import.meta.env.BASE_URL;
         const refDist = 150; // default camera distance
         const dotScale = camDist / refDist;
 
-        // Scale terminal markers (Mesh children inside linesGroup)
+        // Scale terminal markers and pulsing glow rings (Mesh children inside linesGroup)
         linesGroup?.children.forEach(child => {
           if ((child as THREE.Mesh).isMesh) {
-            child.scale.setScalar(dotScale);
+            const ringInfo = glowRings.find(r => r.mesh === child);
+            if (ringInfo) {
+              // Advance pulse phase
+              ringInfo.phase += ringInfo.speed;
+              if (ringInfo.phase > 1) {
+                ringInfo.phase = 0;
+              }
+              // Calculate pulse scale and combine with camera distance scaling
+              const pulseFactor = 0.5 + (ringInfo.maxScale - 0.5) * ringInfo.phase;
+              child.scale.setScalar(dotScale * pulseFactor);
+              
+              // Fade opacity as it expands
+              // @ts-ignore
+              child.material.opacity = ringInfo.baseOpacity * (1 - ringInfo.phase);
+            } else {
+              // Regular marker sphere
+              child.scale.setScalar(dotScale);
+            }
           }
         });
 
@@ -472,7 +500,30 @@ const base = import.meta.env.BASE_URL;
     // Sharp high-tech terminal markers (small base radius, scaled dynamically)
     const markerGeometry = new THREE.SphereGeometry(0.35, 16, 16);
 
+    // Track unique terminals to avoid duplicate meshes & coordinate concentric pulse rings
+    const terminalMap = new Map<string, {
+      lat: number;
+      lon: number;
+      color: number;
+      isHQ: boolean;
+    }>();
+
     routes.forEach(route => {
+      // Collect unique terminal locations
+      [route.from, route.to].forEach(loc => {
+        const isHQ = loc.name === "PEI HQ";
+        const color = isHQ ? 0xffaa00 : route.color;
+        if (!terminalMap.has(loc.name)) {
+          terminalMap.set(loc.name, { lat: loc.lat, lon: loc.lon, color, isHQ });
+        } else {
+          // If already added, gold takes precedence over cyan
+          const existing = terminalMap.get(loc.name)!;
+          if (color === 0xffaa00) {
+            existing.color = 0xffaa00;
+          }
+        }
+      });
+
       const pStart = latLonToVector3(route.from.lat, route.from.lon, 50);
       const pEnd = latLonToVector3(route.to.lat, route.to.lon, 50);
 
@@ -494,17 +545,6 @@ const base = import.meta.env.BASE_URL;
       });
       const pathLine = new THREE.Line(pathGeometry, pathMaterial);
       linesGroup!.add(pathLine);
-
-      // Draw Terminal Markers
-      const startMarkerMat = new THREE.MeshBasicMaterial({ color: route.color });
-      const startMarker = new THREE.Mesh(markerGeometry, startMarkerMat);
-      startMarker.position.copy(pStart);
-      linesGroup!.add(startMarker);
-
-      const endMarkerMat = new THREE.MeshBasicMaterial({ color: route.color });
-      const endMarker = new THREE.Mesh(markerGeometry, endMarkerMat);
-      endMarker.position.copy(pEnd);
-      linesGroup!.add(endMarker);
 
       // Sleek cargo vectors (small base radius, scaled dynamically)
       const particleGeo = new THREE.SphereGeometry(0.22, 12, 12);
@@ -531,6 +571,66 @@ const base = import.meta.env.BASE_URL;
         curve: curve,
         progress: (Math.random() + 0.5) % 1.0,
         speed: 0.0008 + Math.random() * 0.0006
+      });
+    });
+
+    // Draw unique terminals and their pulsing telematic glow rings
+    terminalMap.forEach((term) => {
+      const p = latLonToVector3(term.lat, term.lon, 50);
+
+      // 1. Draw central terminal marker sphere
+      const markerMat = new THREE.MeshBasicMaterial({ color: term.color });
+      const markerMesh = new THREE.Mesh(markerGeometry, markerMat);
+      markerMesh.position.copy(p);
+      linesGroup!.add(markerMesh);
+
+      // 2. Create telematic radar glow rings
+      // Ring 1: Inner pulsing ring
+      const ringGeo1 = new THREE.RingGeometry(0.35, 0.7, 32);
+      const ringMat1 = new THREE.MeshBasicMaterial({
+        color: term.color,
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
+      const pRing1 = latLonToVector3(term.lat, term.lon, 50.15);
+      ringMesh1.position.copy(pRing1);
+      ringMesh1.lookAt(0, 0, 0); // Orient flat on sphere surface
+      linesGroup!.add(ringMesh1);
+
+      glowRings.push({
+        mesh: ringMesh1,
+        baseScale: 1.0,
+        speed: 0.012 + Math.random() * 0.004,
+        phase: Math.random(),
+        maxScale: 2.2,
+        baseOpacity: 0.65
+      });
+
+      // Ring 2: Outer pulsing ring (larger and slower)
+      const ringGeo2 = new THREE.RingGeometry(0.4, 0.9, 32);
+      const ringMat2 = new THREE.MeshBasicMaterial({
+        color: term.color,
+        transparent: true,
+        opacity: 0.35,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const ringMesh2 = new THREE.Mesh(ringGeo2, ringMat2);
+      const pRing2 = latLonToVector3(term.lat, term.lon, 50.2);
+      ringMesh2.position.copy(pRing2);
+      ringMesh2.lookAt(0, 0, 0);
+      linesGroup!.add(ringMesh2);
+
+      glowRings.push({
+        mesh: ringMesh2,
+        baseScale: 1.0,
+        speed: 0.006 + Math.random() * 0.003,
+        phase: Math.random(),
+        maxScale: 4.0,
+        baseOpacity: 0.4
       });
     });
   }
