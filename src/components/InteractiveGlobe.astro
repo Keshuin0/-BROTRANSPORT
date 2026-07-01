@@ -1,8 +1,7 @@
 ---
 const base = import.meta.env.BASE_URL;
 ---
-<div class="relative w-full h-[400px] md:h-[500px] rounded border border-slate-900/60 overflow-hidden shadow-2xl flex items-center justify-center select-none" style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.35) 0%, rgba(255, 170, 0, 0.35) 100%);">
-
+<div class="relative w-full h-[400px] md:h-[500px] rounded border border-slate-900 bg-bro-steel/20 overflow-hidden shadow-2xl flex items-center justify-center select-none">
   <!-- Interactive WebGL Canvas Container -->
   <div id="globe-canvas-container" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></div>
   
@@ -163,9 +162,8 @@ const base = import.meta.env.BASE_URL;
     if (!ctx) return null;
 
     // ── 1. DEEP OCEAN BASE ──────────────────────────────────────────────
-    // Keep base transparent so parent container's gradient shows through the sphere
-    ctx.clearRect(0, 0, W, H);
-
+    ctx.fillStyle = '#020205';
+    ctx.fillRect(0, 0, W, H);
 
     // ── 2. COORDINATE GRID ──────────────────────────────────────────────
     // Longitude lines every 15°
