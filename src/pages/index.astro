@@ -1,207 +1,94 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import PublicLayout from '../layouts/PublicLayout.astro';
 import Hero from '../components/Hero.astro';
-import IoTTelematicsDeck from '../components/IoTTelematicsDeck';
-import SecureLedgerFlow from '../components/SecureLedgerFlow';
-
-const base = import.meta.env.BASE_URL;
+import BorderWaitStrip from '../components/public/BorderWaitStrip';
+import FastQuoteWidget from '../components/public/FastQuoteWidget';
+import FleetBlueprintDeck from '../components/public/FleetBlueprintDeck.astro';
 ---
 
-<Layout>
-  <!-- Hero Section (Combines slogan, framed logo pic, and interactive Three.js globe) -->
+<PublicLayout>
   <Hero />
 
-  <!-- Premium B2B Bento Grid Dashboard -->
-  <section class="max-w-7xl mx-auto px-6 py-16 space-y-10 relative z-20">
-    
-    <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 border-b border-slate-900 pb-4">
-      <div class="space-y-1">
-        <span class="text-[10px] font-mono uppercase tracking-widest text-bro-cyan font-bold select-none">// OPERATION_SYSTEM_INTELLIGENCE</span>
-        <h2 class="text-2xl sm:text-3xl font-black font-display uppercase tracking-tight text-white">Logistics Command Center</h2>
-      </div>
-      <div class="font-mono text-[9px] text-slate-500 uppercase tracking-widest">
-        SYSTEM_STATUS: <span class="text-bro-cyan font-bold">ALL_PIPELINES_OPERATIONAL</span>
-      </div>
-    </div>
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 py-14 space-y-10">
+    <!-- 01: Live Government Border Intelligence -->
+    <BorderWaitStrip client:load />
 
-    <!-- Bento Grid Container -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      {/* 1. IoT Telematics Ingest Deck (Double Width Bento Cell) */}
-      <div class="lg:col-span-2 rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
-        <IoTTelematicsDeck client:load />
+    <!-- Balanced 12-Col Bento Command Row (No Orphan Columns!) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <div class="lg:col-span-4 flex flex-col">
+        <FastQuoteWidget client:load />
       </div>
 
-      {/* 2. Compliance Pipeline Gateways (Single Bento Cell) */}
-      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
-        <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
-          <span>MODULE_02 // BORDER_CLEARANCE</span>
-          <span class="text-bro-gold font-bold flex items-center gap-1.5">
-            <span class="h-1.5 w-1.5 rounded-full bg-bro-gold animate-pulse"></span>
-            ACTIVE SYNC
-          </span>
-        </div>
-
-        <div class="space-y-6 py-2">
-          {/* U.S. Bound (PAPS / ACE) */}
-          <div class="space-y-2.5">
-            <div class="flex justify-between items-center font-mono text-[9.5px]">
-              <span class="text-white font-bold">U.S.-BOUND (CBP PAPS / ACE)</span>
-              <span class="text-bro-cyan font-bold">// SECURE_RELEASE</span>
-            </div>
-            <div class="p-3.5 bg-[#030307]/50 border border-slate-900 rounded font-mono text-[9px] text-slate-400 space-y-2 relative">
-              <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-bro-cyan/20 to-transparent"></div>
-              <div class="flex justify-between items-center">
-                <span>SCAC Code:</span>
-                <span class="text-white font-bold">BROP</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span>eManifest Sync:</span>
-                <span class="text-bro-cyan font-bold">COMPLIANT (1h Prior)</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span>PAPS Number:</span>
-                <span class="text-slate-350">BROP8843921</span>
-              </div>
-            </div>
+      <!-- 03: Dual-Portal Architecture Card -->
+      <div class="lg:col-span-4 rounded-lg border border-white/10 bg-bro-steel/40 p-6 flex flex-col justify-between space-y-5 hover:border-bro-cyan/50 transition-colors">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between font-mono text-[10px] uppercase">
+            <span class="text-slate-400">03 // DUAL-PORTAL OS</span>
+            <span class="text-bro-cyan font-bold">ZERO-TRUST RBAC</span>
           </div>
-
-          {/* Canada Bound (PARS / ACI) */}
-          <div class="space-y-2.5">
-            <div class="flex justify-between items-center font-mono text-[9.5px]">
-              <span class="text-white font-bold">CANADA-BOUND (CBSA PARS / ACI)</span>
-              <span class="text-bro-cyan font-bold">// CBSA_APPROVED</span>
-            </div>
-            <div class="p-3.5 bg-[#030307]/50 border border-slate-900 rounded font-mono text-[9px] text-slate-400 space-y-2 relative">
-              <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-bro-cyan/20 to-transparent"></div>
-              <div class="flex justify-between items-center">
-                <span>Cargo Control Number:</span>
-                <span class="text-white font-bold">BROP-2026-9948</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span>Release Status:</span>
-                <span class="text-bro-cyan font-bold">RNS cleared</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span>Submission:</span>
-                <span class="text-slate-350">ACI eManifest verified</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <a 
-          href={`${base}customs`} 
-          class="block w-full text-center py-2.5 border border-slate-800 hover:border-bro-cyan/50 rounded font-mono text-[9px] uppercase tracking-wider text-slate-400 hover:text-white transition-colors duration-300"
-        >
-          View Customs Documentation
-        </a>
-      </div>
-
-      {/* 3. Secure Ledger eBOL Flow (Double Width Bento Cell) */}
-      <div class="lg:col-span-2 rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
-        <SecureLedgerFlow client:load />
-      </div>
-
-      {/* 4. Value Proposition (Single Bento Cell) */}
-      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
-        <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
-          <span>MODULE_04 // BRAND_MISSION</span>
-          <span class="text-bro-cyan font-bold">// ALLY_COMMITMENT</span>
-        </div>
-
-        <div class="space-y-4 py-2">
-          <h3 class="text-lg font-black font-display uppercase tracking-wider text-white">An Always-On Operational Ally</h3>
-          <p class="text-slate-450 text-xs leading-relaxed font-sans">
-            When shipping lanes degrade, regulatory shifts occur, or capacity tightens, our automated tracking, verified carriers, and dedicated support safeguard your margin. 
+          <h2 class="text-lg font-display font-bold text-white">One Platform. Every Stakeholder.</h2>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Built on single-origin Cloudflare Workers with real-time Durable Object WebSockets, D1 relational persistence, R2 immutable document storage, and Cloudflare Workflows with Human-in-the-Loop governance.
           </p>
-          <div class="text-bro-cyan font-bold font-mono text-[10px] uppercase tracking-wider">
-            // A BRO IN NEED IS A BRO INDEED
-          </div>
+          <ul class="space-y-1.5 font-mono text-[11px] text-slate-300 pt-1">
+            <li>• <strong class="text-bro-cyan">Portal 1 (External):</strong> Shippers track FSMA temp logs & pay invoices; Drivers scan BOL/POD/lumpers offline in border dead zones.</li>
+            <li>• <strong class="text-bro-gold">Portal 2 (Internal Ops):</strong> Dispatch, AI OCR Review Queue, ACE/ACI CARM Customs, Factoring Packets, Driver Settlements & IFTA.</li>
+          </ul>
         </div>
-
-        <div class="text-[9px] font-mono text-slate-500 border-t border-slate-900/60 pt-4 flex justify-between items-center">
-          <span>DOT REGISTRY: COMPLIANT</span>
-          <span class="text-bro-gold font-bold">100.0% COR</span>
+        <div class="grid grid-cols-2 gap-2.5 pt-2">
+          <a href="/portal/shipper" class="text-center py-2 rounded border border-bro-cyan/40 text-bro-cyan hover:bg-bro-cyan/10 font-mono text-[11px] font-bold uppercase">
+            Portal 1 →
+          </a>
+          <a href="/ops" class="text-center py-2 rounded border border-bro-gold/40 text-bro-gold hover:bg-bro-gold/10 font-mono text-[11px] font-bold uppercase">
+            Portal 2 →
+          </a>
         </div>
       </div>
 
-      {/* 5. Fast Quote Console (Single Bento Cell) */}
-      <div class="rounded border border-slate-900 bg-bro-steel/20 p-6 flex flex-col justify-between space-y-6 hover:-translate-y-1 hover:scale-[1.01] hover:border-bro-cyan/40 hover:shadow-neon-glow transition-all duration-300 ease-out">
-        <div class="flex justify-between items-center font-mono text-[10px] text-slate-500">
-          <span>MODULE_05 // FAST_QUOTE</span>
-          <span class="text-bro-cyan font-bold">// RATES_ENGINE</span>
-        </div>
-
-        <div class="space-y-4 py-2 font-mono text-[9px] text-slate-400">
-          <div class="space-y-1">
-            <span class="text-slate-500 block uppercase">Equipment Select:</span>
-            <select class="w-full bg-[#030307]/50 border border-slate-900 rounded p-2 text-white outline-none focus:border-bro-cyan transition-colors">
-              <option>53FT ENCLOSED DRY VAN</option>
-              <option>53FT TEMPERATURE-CONTROLLED REEFER</option>
-              <option>OPEN DECK FLATBED / HEAVY-HAUL</option>
-            </select>
+      <!-- 04: Cryptographic eBOL & Compliance Assurance -->
+      <div class="lg:col-span-4 rounded-lg border border-white/10 bg-bro-steel/40 p-6 flex flex-col justify-between space-y-5 hover:border-emerald-400/50 transition-colors">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between font-mono text-[10px] uppercase">
+            <span class="text-slate-400">04 // CRYPTOGRAPHIC eBOL</span>
+            <span class="text-emerald-400 font-bold">ECDSA P-256</span>
           </div>
-          <div class="space-y-1">
-            <span class="text-slate-500 block uppercase">Origin Terminal:</span>
-            <input type="text" value="CHARLOTTETOWN, PE (PEI HQ)" class="w-full bg-[#030307]/50 border border-slate-900 rounded p-2 text-white outline-none focus:border-bro-cyan transition-colors" readonly />
-          </div>
-          <div class="space-y-1">
-            <span class="text-slate-500 block uppercase">Destination Port:</span>
-            <select class="w-full bg-[#030307]/50 border border-slate-900 rounded p-2 text-white outline-none focus:border-bro-cyan transition-colors">
-              <option>BOSTON, MA (U.S. HUB)</option>
-              <option>CHICAGO, IL (MIDWEST TERMINAL)</option>
-              <option>TORONTO, ON (CANADA CORRIDOR)</option>
-            </select>
+          <h2 class="text-lg font-display font-bold text-white">Tamper-Proof Chain of Custody</h2>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Every shipper release, driver pickup scan, and consignee POD is cryptographically signed via Web Crypto ECDSA P-256 and chained by SHA-256 digests—independently verifiable by brokers, insurers, and factoring partners.
+          </p>
+          <div class="p-3 rounded bg-bro-obsidian/80 border border-white/10 font-mono text-[10px] text-slate-300 space-y-1">
+            <div class="flex justify-between"><span>CBP ACE / PAPS:</span><span class="text-bro-cyan font-bold">SCAC BROP</span></div>
+            <div class="flex justify-between"><span>CBSA ACI / CARM R2:</span><span class="text-emerald-400 font-bold">IOR BOND GATED</span></div>
+            <div class="flex justify-between"><span>FMCSA Vetting:</span><span class="text-bro-gold font-bold">LIVE USDOT API</span></div>
           </div>
         </div>
-
-        <a 
-          href={`${base}quote`} 
-          class="block w-full text-center py-2.5 bg-bro-cyan text-black hover:bg-bro-cyan/90 rounded font-mono text-[9px] uppercase tracking-wider font-bold transition-colors duration-300"
+        <a
+          href="/verify"
+          data-astro-prefetch
+          class="block w-full text-center py-2.5 rounded border border-emerald-400/40 bg-emerald-950/30 hover:bg-emerald-950/60 text-emerald-300 font-mono text-xs font-bold uppercase tracking-wider transition-colors"
         >
-          Execute Quote Calculation
+          Open Cryptographic eBOL Lab →
+        </a>
+      </div>
+    </div>
+
+    <!-- 05: Active Commercial Fleet Blueprint Deck (Powered by Astro Content Collection MDX) -->
+    <div class="space-y-6 pt-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-white/10 pb-4">
+        <div>
+          <span class="font-mono text-[10px] uppercase tracking-widest text-bro-cyan font-bold">
+            05 // COMMERCIAL FLEET SPECIFICATIONS
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-display font-black uppercase tracking-tight text-white mt-1">
+            53ft North American Divisions
+          </h2>
+        </div>
+        <a href="/apply" class="font-mono text-xs uppercase text-bro-gold hover:underline">
+          Drive With #BRO (FMCSA Vetted Onboarding) →
         </a>
       </div>
 
+      <FleetBlueprintDeck />
     </div>
   </section>
-
-  <!-- Client Trust & Endorsements Section -->
-  <section class="max-w-7xl mx-auto px-6 py-16 space-y-12 relative z-20">
-    <div class="text-center space-y-2">
-      <span class="text-xs font-mono uppercase tracking-widest text-bro-gold font-bold select-none">// VERIFIED_PARTNER_LOGS</span>
-      <h2 class="text-2xl sm:text-3xl font-black font-display uppercase tracking-tight text-white">Endorsed Operations</h2>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto font-mono text-[10px] text-slate-400">
-      <!-- Testimonial 1 -->
-      <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded relative overflow-hidden space-y-4 hover:border-bro-cyan/30 transition-all duration-300">
-        <p class="italic leading-relaxed text-slate-350 font-sans text-xs">
-          "#BRO Transport handles our weekly regional food distribution runs. Their reefer temperature monitoring systems give us full log records for every shipment. With zero transit deviations and clean arrivals, they are the pinnacle of cold-chain logistics."
-        </p>
-        <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
-          <div>
-            <span class="text-white font-bold block">Arthur Pendelton</span>
-            <span class="text-slate-500 text-[8px]">Operations Director, Northern Foods Cooperative</span>
-          </div>
-          <span class="text-[#00f0ff] font-bold">// VERIFIED</span>
-        </div>
-      </div>
-
-      {/* Testimonial 2 */}
-      <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded relative overflow-hidden space-y-4 hover:border-bro-cyan/30 transition-all duration-300">
-        <p class="italic leading-relaxed text-slate-350 font-sans text-xs">
-          "Moving heavy steel beams and structural plates requires rigid flatbed loading. #BRO's strap tension securement and heavy tarping are flawless. Excellent cross-border manifest handling and zero port-of-entry delays."
-        </p>
-        <div class="pt-4 border-t border-slate-900/60 flex items-center justify-between">
-          <div>
-            <span class="text-white font-bold block">Marcus Vance</span>
-            <span class="text-slate-500 text-[8px]">Logistics Lead, Atlantic Infrastructure Corp.</span>
-          </div>
-          <span class="text-[#00f0ff] font-bold">// VERIFIED</span>
-        </div>
-      </div>
-    </div>
-  </section>
-</Layout>
+</PublicLayout>

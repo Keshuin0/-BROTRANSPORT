@@ -1,0 +1,77 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "brotransport-os",
+  "main": "./dist/_worker.js/index.js",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist"
+  },
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "PUBLIC_APP_URL": "https://brotransport.com",
+    "PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAA2I6F9JkSivv8tZ",
+    "SCAC_CODE": "BROP"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "brotransport-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "./packages/db/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "VAULT",
+      "bucket_name": "brotransport-vault-r2"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "00000000000000000000000000000000"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "OPS_HUB", "class_name": "OpsHubDO" },
+      { "name": "CUSTOMS_AGENT", "class_name": "CustomsPreFlightAgent" },
+      { "name": "DISPATCH_AGENT", "class_name": "DispatchCopilotAgent" },
+      { "name": "WATCHDOG_AGENT", "class_name": "FleetWatchdogAgent" }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "OpsHubDO",
+        "CustomsPreFlightAgent",
+        "DispatchCopilotAgent",
+        "FleetWatchdogAgent"
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "name": "document-processing-workflow",
+      "binding": "DOC_WORKFLOW",
+      "class_name": "DocumentProcessingWorkflow"
+    },
+    {
+      "name": "billing-settlement-workflow",
+      "binding": "BILLING_WORKFLOW",
+      "class_name": "BillingSettlementWorkflow"
+    }
+  ],
+  "triggers": {
+    "crons": ["*/10 * * * *"]
+  }
+}

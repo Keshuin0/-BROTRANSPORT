@@ -1,108 +1,78 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import PublicLayout from '../layouts/PublicLayout.astro';
+import BorderWaitStrip from '../components/public/BorderWaitStrip';
 import TransborderPipeline from '../components/TransborderPipeline';
-
-const base = import.meta.env.BASE_URL;
 ---
 
-<Layout title="Cross-Border Customs Compliance | #BRO Transport Corp." description="Frictionless transborder transit. Automated customs manifest processing for CBSA and CBP including PAPS, PARS, ACE, and ACI schemas.">
-  <!-- Customs Portal Hero -->
-  <section class="py-20 px-6 bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] border-b border-slate-900/60 relative z-10">
-    <div class="max-w-4xl mx-auto text-center space-y-4">
-      <span class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-bro-cyan font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-cyan/20">
-        // PORT_CLEARANCE_INTELLIGENCE
+<PublicLayout
+  title="Cross-Border Customs & CARM Compliance | #BRO Transport Corp."
+  description="Automated CBP ACE PAPS and CBSA ACI PARS eManifest validation, CARM Release 2 IOR bond verification, FDA 2-hour Prior Notice, and scannable Code-128B barcodes."
+>
+  <section class="py-12 px-4 sm:px-6 border-b border-white/10 bg-bro-steel/20">
+    <div class="max-w-6xl mx-auto space-y-3">
+      <span class="font-mono text-[10px] uppercase tracking-widest text-bro-cyan font-bold">
+        // TRANSBORDER_COMPLIANCE_ENGINE
       </span>
-      <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-none text-white font-display uppercase">
-        Customs Compliance
+      <h1 class="text-3xl sm:text-4xl font-display font-black uppercase tracking-tight text-white">
+        2026 Cross-Border Customs &amp; Border Intelligence
       </h1>
-      <p class="text-bro-ice/70 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-sans">
-        Frictionless transborder transit. Our automated compliance engine integrates directly with CBSA and CBP, verifying ACE and ACI manifests before your shipments reach the border.
+      <p class="text-sm text-slate-300 max-w-2xl">
+        Deterministic pre-flight auditing for U.S.-bound CBP ACE PAPS and Canada-bound CBSA ACI PARS—complete with ISO 3779 VIN check digits, CARM Release 2 Importer of Record verification, and FDA 2-hour Prior Notice gating.
       </p>
     </div>
   </section>
 
-  <!-- Customs Documentation Grid -->
-  <section class="py-16 px-6 relative z-10 max-w-6xl mx-auto space-y-12">
-    
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-      
-      <!-- CBP PAPS Pipeline Info -->
-      <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded-lg space-y-6 hover:border-bro-cyan/30 transition-all duration-300">
-        <div class="flex items-center gap-2 font-mono text-[10px] text-slate-500">
-          <span class="h-2 w-2 rounded-full bg-bro-cyan animate-pulse"></span>
-          <span>COMPLIANCE_PIPELINE // U.S. IMPORTATION</span>
-        </div>
-        
-        <h3 class="text-xl font-bold font-display uppercase text-white tracking-wide">PAPS / ACE eManifest</h3>
-        <p class="text-slate-400 text-xs leading-relaxed font-sans">
-          For shipments moving from Canada into the United States, the system coordinates the **Pre-Arrival Processing System (PAPS)**. Each trailer load is assigned a unique PAPS number using our Standard Carrier Alpha Code (**SCAC: `BROP`**).
-        </p>
+  <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-10">
+    <BorderWaitStrip client:load />
 
-        <div class="bg-[#030307]/50 border border-slate-900 rounded p-4 font-mono text-[9.5px] text-slate-450 space-y-3">
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Regulatory Agency:</span>
-            <span>U.S. Customs & Border Protection (CBP)</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Identifier Scheme:</span>
-            <span>SCAC + SCN (Shipment Control Number)</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Submission Threshold:</span>
-            <span class="text-bro-cyan">Minimum 1 hour prior to port arrival</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Electronic Interface:</span>
-            <span>Automated Broker Interface (ABI) to ACE</span>
-          </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="rounded-lg border border-white/10 bg-bro-steel/40 p-6 space-y-4">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-bro-cyan font-bold">
+          SOUTHBOUND // CANADA → UNITED STATES
+        </div>
+        <h2 class="text-xl font-display font-bold text-white">CBP PAPS / ACE eManifest</h2>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          For shipments moving from Canada into the United States, #BRO coordinates the{' '}
+          <strong class="text-white">Pre-Arrival Processing System (PAPS)</strong> using our Standard Carrier Alpha Code (
+          <code class="text-bro-cyan font-mono">SCAC: BROP</code>) prefixed to a unique Shipment Control Number (SCN). Food and Atlantic seafood shipments automatically enforce the mandatory{' '}
+          <strong class="text-white">FDA 2-Hour Prior Notice</strong> window.
+        </p>
+        <div class="rounded bg-bro-obsidian/80 border border-white/10 p-4 font-mono text-[11px] text-slate-300 space-y-2">
+          <div class="flex justify-between"><span class="text-slate-400">Agency:</span><span class="text-white">U.S. Customs &amp; Border Protection (CBP)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Identifier:</span><span class="text-bro-cyan">BROP + SCN (Code-128B Barcode)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Pre-Arrival Floor:</span><span class="text-white">1 hr Standard / 2 hr FDA Food</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Tariff Audit:</span><span class="text-bro-gold">CUSMA Origin &amp; 2026 HTS Surtax Check</span></div>
         </div>
       </div>
 
-      <!-- CBSA PARS Pipeline Info -->
-      <div class="bg-bro-steel/20 border border-slate-900 p-6 rounded-lg space-y-6 hover:border-bro-cyan/30 transition-all duration-300">
-        <div class="flex items-center gap-2 font-mono text-[10px] text-slate-500">
-          <span class="h-2 w-2 rounded-full bg-bro-cyan animate-pulse"></span>
-          <span>COMPLIANCE_PIPELINE // CANADIAN IMPORTATION</span>
+      <div class="rounded-lg border border-white/10 bg-bro-steel/40 p-6 space-y-4">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-bro-gold font-bold">
+          NORTHBOUND // UNITED STATES → CANADA
         </div>
-        
-        <h3 class="text-xl font-bold font-display uppercase text-white tracking-wide">PARS / ACI eManifest</h3>
-        <p class="text-slate-400 text-xs leading-relaxed font-sans">
-          For northbound transits entering Canada, our operations coordinate the **Pre-Arrival Review System (PARS)** and Advance Commercial Information (**ACI**) eManifest. Manifests are transmitted at least 1 hour before arrival.
+        <h2 class="text-xl font-display font-bold text-white">CBSA PARS / ACI &amp; CARM Release 2</h2>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          For northbound loads entering Canada, #BRO transmits{' '}
+          <strong class="text-white">Pre-Arrival Review System (PARS)</strong> and Advance Commercial Information (
+          <strong class="text-white">ACI</strong>) eManifests at least 1 hour before arrival, enforces{' '}
+          <strong class="text-white">CBSA CARM Release 2 Importer of Record RPP bond readiness</strong> prior to dispatch, and ingests HMAC-authenticated RNS release webhooks live.
         </p>
-
-        <div class="bg-[#030307]/50 border border-slate-900 rounded p-4 font-mono text-[9.5px] text-slate-450 space-y-3">
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Regulatory Agency:</span>
-            <span>Canada Border Services Agency (CBSA)</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Identifier Scheme:</span>
-            <span>Carrier Code + Cargo Control Number (CCN)</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Submission Threshold:</span>
-            <span class="text-bro-cyan">Minimum 1 hour prior to port arrival</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-white font-bold">Release Verification:</span>
-            <span>Release Notification System (RNS) sync</span>
-          </div>
+        <div class="rounded bg-bro-obsidian/80 border border-white/10 p-4 font-mono text-[11px] text-slate-300 space-y-2">
+          <div class="flex justify-between"><span class="text-slate-400">Agency:</span><span class="text-white">Canada Border Services Agency (CBSA)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Identifier:</span><span class="text-bro-gold">Carrier Code + Cargo Control Number (CCN)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">CARM Release 2:</span><span class="text-emerald-400">CRA BN RM Account + RPP Security Gated</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Release Sync:</span><span class="text-bro-cyan">Timing-Safe HMAC-SHA256 RNS Webhook</span></div>
         </div>
       </div>
-
     </div>
 
-    <!-- Interactive JSON eManifest Schema Block with Laser-Scan Validator -->
-    <div class="space-y-6">
-      <div class="space-y-2">
-        <h3 class="text-lg font-black font-display uppercase tracking-wide text-white">Live Developer Integration Deck</h3>
-        <p class="text-slate-400 text-xs leading-relaxed font-sans">
-          Modify parameter values in the JSON structure below and execute the validator. This simulates real-time schema validation compiled before reaching customs checkpoints:
+    <div class="space-y-4">
+      <div>
+        <h2 class="text-xl font-display font-bold text-white uppercase">Interactive ACE / ACI Pre-Flight Validator &amp; Barcode Engine</h2>
+        <p class="text-xs text-slate-400 mt-1">
+          Test real ISO 3779 VIN verification, CARM R2 gating, FDA 2-hour rules, and generate scannable Code-128B barcodes live.
         </p>
       </div>
-
       <TransborderPipeline client:load />
     </div>
-
   </section>
-</Layout>
+</PublicLayout>

@@ -1,0 +1,35 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import CarrierApplyForm from '../components/driver/CarrierApplyForm';
+---
+
+<PublicLayout
+  title="Carrier & Driver Onboarding (FMCSA Verified) | #BRO Transport Corp."
+  description="Apply to haul commercial Dry Van, Reefer, and Flatbed cross-border freight with live FMCSA QCMobile USDOT verification and border dead-zone offline submission support."
+>
+  <section class="py-12 px-4 sm:px-6 border-b border-white/10 bg-bro-steel/20">
+    <div class="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div class="space-y-2">
+        <span class="font-mono text-[10px] uppercase tracking-widest text-bro-gold font-bold">
+          // CAPACITY_PARTNER_GATEWAY
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-display font-black uppercase tracking-tight text-white">
+          Engineered for Capacity Partners
+        </h1>
+        <p class="text-sm text-slate-300 max-w-xl">
+          Live US DOT FMCSA carrier authority vetting, automated double-brokering protection, and 100% offline-capable onboarding for drivers in northern border dead zones.
+        </p>
+      </div>
+      <a
+        href="/portal/driver"
+        class="inline-flex items-center px-4 py-2.5 rounded border border-bro-gold/40 bg-bro-gold/10 text-bro-gold hover:bg-bro-gold/20 font-mono text-xs font-bold uppercase shrink-0"
+      >
+        Existing Driver? Open PWA →
+      </a>
+    </div>
+  </section>
+
+  <section class="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+    <CarrierApplyForm client:load />
+  </section>
+</PublicLayout>

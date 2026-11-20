@@ -1,0 +1,80 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import BroLogo from '../components/brand/BroLogo.astro';
+import CommandPalette from '../components/nav/CommandPalette';
+
+interface Props {
+  title: string;
+  portalType: 'shipper' | 'driver';
+}
+
+const { title, portalType } = Astro.props;
+const user = Astro.locals.user;
+const pathname = Astro.url.pathname;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#030307" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <title>{title} | #BRO External Portal</title>
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <ClientRouter />
+  </head>
+  <body class="bg-bro-obsidian bg-cyber-grid text-bro-ice min-h-screen flex flex-col selection:bg-bro-cyan/30">
+    <div class={`h-[2px] w-full ${portalType === 'driver' ? 'bg-gradient-to-r from-bro-gold via-amber-300 to-bro-gold' : 'bg-gradient-to-r from-bro-cyan via-sky-400 to-bro-gold'}`}></div>
+
+    <header class="sticky top-0 z-40 bg-bro-obsidian/95 backdrop-blur-xl border-b border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <a href="/" class="shrink-0">
+            <BroLogo compact />
+          </a>
+          <span class={`hidden sm:inline-flex items-center px-2.5 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider border ${
+            portalType === 'driver'
+              ? 'border-bro-gold/40 bg-bro-gold/10 text-bro-gold'
+              : 'border-bro-cyan/40 bg-bro-cyan/10 text-bro-cyan'
+          }`}>
+            {portalType === 'driver' ? 'PORTAL 1 // DRIVER OFFLINE PWA' : 'PORTAL 1 // CUSTOMER & SHIPPER'}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <CommandPalette client:load />
+          <a
+            href={portalType === 'driver' ? '/portal/shipper' : '/portal/driver'}
+            class="hidden md:inline-flex font-mono text-[11px] uppercase text-slate-400 hover:text-white px-2.5 py-1.5 rounded border border-white/10"
+          >
+            {portalType === 'driver' ? 'Shipper View' : 'Driver View'}
+          </a>
+          {user && (
+            <div class="flex items-center gap-2">
+              <span class="hidden sm:inline font-mono text-[11px] text-slate-300">{user.name}</span>
+              <form method="POST" action="/api/auth/logout">
+                <button
+                  type="submit"
+                  class="px-2.5 py-1.5 rounded border border-white/15 hover:border-rose-500/60 text-[11px] font-mono uppercase text-slate-300 hover:text-rose-300 cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <slot />
+    </main>
+
+    <footer class="border-t border-white/10 py-4 px-6 text-center font-mono text-[10px] text-slate-500">
+      #BRO Transport Corp. External Partner Portal · Path: {pathname}
+    </footer>
+  </body>
+</html>

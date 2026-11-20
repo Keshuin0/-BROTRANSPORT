@@ -1,0 +1,14 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import LoginForm from '../components/auth/LoginForm';
+
+const nextPath = Astro.url.searchParams.get('next') ?? '';
+const envMode = Astro.locals.runtime?.env?.ENVIRONMENT ?? (import.meta.env.DEV ? 'development' : 'production');
+const isDev = envMode === 'development' || import.meta.env.DEV;
+---
+
+<PublicLayout title="Zero-Trust Portal Sign-In | #BRO Transport Corp.">
+  <section class="py-16 px-4 sm:px-6">
+    <LoginForm client:load nextPath={nextPath} isDev={isDev} />
+  </section>
+</PublicLayout>

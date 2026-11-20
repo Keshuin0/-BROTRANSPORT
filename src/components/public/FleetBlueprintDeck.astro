@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+
+const fleetEntries = await getCollection('fleet');
+const order = { dry_van: 1, reefer: 2, flatbed: 3 };
+const sorted = [...fleetEntries].sort(
+  (a, b) => order[a.data.equipmentType] - order[b.data.equipmentType],
+);
+---
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  {sorted.map((entry) => {
+    const d = entry.data;
+    const isReefer = d.equipmentType === 'reefer';
+    const isFlatbed = d.equipmentType === 'flatbed';
+    const accentText = isFlatbed ? 'text-bro-gold' : 'text-bro-cyan';
+    const accentBorder = isFlatbed ? 'border-bro-gold/30 hover:border-bro-gold/70' : 'border-bro-cyan/30 hover:border-bro-cyan/70';
+
+    return (
+      <article class={`rounded-lg border bg-bro-steel/40 p-6 flex flex-col justify-between space-y-5 transition-colors ${accentBorder}`}>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider">
+            <span class="text-slate-400">53FT COMMERCIAL CLASS</span>
+            <span class={`font-bold px-2 py-0.5 rounded bg-bro-obsidian/80 border border-white/10 ${accentText}`}>
+              {d.equipmentType.replace('_', ' ')}
+            </span>
+          </div>
+
+          <h3 class="text-lg font-display font-bold text-white tracking-tight">{d.title}</h3>
+
+          <!-- Precision SVG Technical Elevation Diagram -->
+          <div class="rounded bg-bro-obsidian/90 border border-white/10 p-3">
+            <svg viewBox="0 0 320 96" class="w-full h-20" fill="none" aria-label={`${d.title} blueprint diagram`}>
+              {/* Ground baseline */}
+              <line x1="10" y1="80" x2="310" y2="80" stroke="#334155" stroke-width="1" stroke-dasharray="4 3" />
+              {/* Tractor cab */}
+              <path d="M22 68V42L36 32H62V68H22Z" stroke="#94a3b8" stroke-width="1.5" fill="#0e111f" />
+              <rect x="38" y="38" width="16" height="10" rx="1" stroke="#00f0ff" stroke-width="1" opacity="0.7" />
+              {/* Trailer deck / box */}
+              {isFlatbed ? (
+                <>
+                  <rect x="74" y="60" width="224" height="8" stroke="#ffaa00" stroke-width="1.6" fill="#ffaa00" fill-opacity="0.14" />
+                  <rect x="108" y="40" width="140" height="20" stroke="#ffaa00" stroke-width="1.2" stroke-dasharray="4 2" />
+                  <text x="178" y="53" fill="#ffaa00" font-size="8" font-family="monospace" text-anchor="middle">OPEN-DECK PAYLOAD</text>
+                </>
+              ) : (
+                <>
+                  <rect x="74" y="20" width="224" height="48" rx="2" stroke={isReefer ? '#00f0ff' : '#cbd5e1'} stroke-width="1.6" fill={isReefer ? '#00f0ff' : '#cbd5e1'} fill-opacity="0.06" />
+                  {isReefer && (
+                    <rect x="74" y="24" width="16" height="32" stroke="#00f0ff" stroke-width="1.4" fill="#00f0ff" fill-opacity="0.2" />
+                  )}
+                  <text x="190" y="47" fill={isReefer ? '#00f0ff' : '#e2f1f8'} font-size="8.5" font-family="monospace" text-anchor="middle">
+                    {isReefer ? 'THERMO KING -28°C TO +25°C' : '53FT HIGH-CUBE ENCLOSED'}
+                  </text>
+                </>
+              )}
+              {/* Wheels: Steer + Drive Tandem + Trailer Tandem */}
+              {[34, 58, 70, 256, 272].map((cx) => (
+                <g>
+                  <circle cx={cx} cy="73" r="6" fill="#030307" stroke="#94a3b8" stroke-width="1.5" />
+                  <circle cx={cx} cy="73" r="2" fill={isFlatbed ? '#ffaa00' : '#00f0ff'} />
+                </g>
+              ))}
+              {/* Dimension annotations */}
+              <text x="186" y="13" fill="#94a3b8" font-size="7.5" font-family="monospace" text-anchor="middle">
+                53'0" COMMERCIAL LENGTH · MAX {(d.capacityLbs / 1000).toFixed(1)}K LBS
+              </text>
+            </svg>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 font-mono text-[10px]">
+            <div class="p-2 rounded bg-bro-obsidian/70 border border-white/10">
+              <div class="text-slate-500">MAX PAYLOAD</div>
+              <div class="text-white font-bold tabular-nums">{d.capacityLbs.toLocaleString()} LBS</div>
+            </div>
+            <div class="p-2 rounded bg-bro-obsidian/70 border border-white/10">
+              <div class="text-slate-500">{d.tempRange ? 'THERMAL RANGE' : 'METRIC TONS'}</div>
+              <div class={`font-bold ${accentText}`}>{d.tempRange ?? `${d.capacityTonnage} MT`}</div>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-400 leading-relaxed">{entry.body}</p>
+
+          <ul class="space-y-1.5 font-mono text-[11px] text-slate-300 border-t border-white/10 pt-3">
+            {d.equipmentSpecs.map((spec) => (
+              <li class="flex items-start gap-2">
+                <span class={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${isFlatbed ? 'bg-bro-gold' : 'bg-bro-cyan'}`}></span>
+                <span>{spec}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <a
+          href={`/quote?equipment=${d.equipmentType}`}
+          data-astro-prefetch
+          class={`block w-full text-center py-2.5 rounded font-mono text-xs font-bold uppercase tracking-wider transition-colors ${
+            isFlatbed
+              ? 'bg-bro-gold text-black hover:bg-bro-gold/90'
+              : 'bg-bro-cyan text-black hover:bg-bro-cyan/90'
+          }`}
+        >
+          Quote {d.equipmentType.replace('_', ' ')} →
+        </a>
+      </article>
+    );
+  })}
+</div>

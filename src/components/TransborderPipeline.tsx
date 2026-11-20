@@ -1,175 +1,287 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { ShieldCheck, ShieldAlert, ScanLine } from 'lucide-react';
+import type { CustomsValidationReport } from '@bro/contracts';
+import { renderCode128Svg } from '../lib/barcode';
 
-const defaultManifest = {
-  manifestType: "ACE_EManifest",
-  scac: "BROP",
-  tripNumber: "BROP20261024A",
-  portOfEntry: "0115",
-  estimatedArrival: "2026-10-24T14:30:00Z",
-  conveyance: {
-    vin: "1FVACWDB2GHXXXXXX",
-    plate: "PE9948",
-    state: "PE"
+const futureEtaIso = (hoursAhead: number) =>
+  new Date(Date.now() + hoursAhead * 3600_000).toISOString();
+
+const MANIFEST_PRESETS: Record<string, { label: string; build: () => Record<string, unknown> }> = {
+  ace_valid: {
+    label: 'Valid U.S.-Bound ACE PAPS (PEI → Boston, FDA OK)',
+    build: () => ({
+      manifestType: 'ACE_PAPS',
+      scacOrCarrierCode: 'BROP',
+      controlNumber: 'BROP8843921',
+      tripNumber: 'BROP20261120A',
+      portCode: '0115',
+      etaUtc: futureEtaIso(4),
+      conveyance: { vin: '1HGCM82633A004352', plate: 'PE9948', jurisdiction: 'PE' },
+      crew: [{ fastCardNumber: '980012345', firstName: 'Liam', lastName: 'Gallant', dateOfBirth: '1984-05-10' }],
+      carmIorAccountVerified: false,
+      fdaPriorNoticeNumber: 'FDA-PN-88439210',
+      shipments: [
+        {
+          commodity: 'Fresh PEI Potatoes',
+          hsCode: '070190',
+          countryOfOrigin: 'CA',
+          cusmaCertOnFile: true,
+          invoiceValueCents: 4200000,
+          currency: 'USD',
+          weightKg: 21500,
+          quantity: 24,
+          packageType: 'Pallet',
+          isFoodFda: true,
+          shipperName: 'Cavendish Valley Produce Co.',
+          shipperAddress: '100 Harvest Rd, Summerside, PE',
+          consigneeName: 'New England Fresh Market Hub',
+          consigneeAddress: '45 Terminal Way, Boston, MA',
+        },
+      ],
+    }),
   },
-  crew: [
-    {
-      fastCardNumber: "980012345",
-      firstName: "Robert",
-      lastName: "MacDonald",
-      dateOfBirth: "1982-04-12"
-    }
-  ],
-  shipments: [
-    {
-      papsNumber: "BROP8843921",
-      shipper: {
-        name: "PEI Potato Co-Op",
-        address: "100 Spud Road, Summerside, PE"
-      },
-      consignee: {
-        name: "Boston Distribution Hub",
-        address: "45 Market Blvd, Boston, MA"
-      },
-      commodity: "Potatoes",
-      weight: 22679.6,
-      weightUnit: "KG",
-      quantity: 24,
-      packageType: "Pallet"
-    }
-  ]
+  aci_valid: {
+    label: 'Valid Canada-Bound ACI PARS (CARM Release 2 Verified)',
+    build: () => ({
+      manifestType: 'ACI_PARS',
+      scacOrCarrierCode: 'BROP',
+      controlNumber: 'BROP9948201',
+      tripNumber: 'BROP20261120B',
+      portCode: '0712',
+      etaUtc: futureEtaIso(3),
+      conveyance: { vin: '1HGCM82633A004352', plate: 'NB5022', jurisdiction: 'NB' },
+      crew: [{ fastCardNumber: '980077421', firstName: 'Nadia', lastName: 'Tremblay', dateOfBirth: '1987-09-22' }],
+      carmIorAccountVerified: true,
+      carmImporterBnRm: '604918220RM0001',
+      shipments: [
+        {
+          commodity: 'Galvanized Structural Steel I-Beams',
+          hsCode: '721632',
+          countryOfOrigin: 'US',
+          cusmaCertOnFile: true,
+          invoiceValueCents: 6150000,
+          currency: 'CAD',
+          weightKg: 29400,
+          quantity: 12,
+          packageType: 'Bundle',
+          isFoodFda: false,
+          shipperName: 'Northeast Steel Supply',
+          shipperAddress: '12 Foundry Rd, Albany, NY',
+          consigneeName: 'Fundy Structural Steel Ltd.',
+          consigneeAddress: '88 Industrial Pkwy, Moncton, NB',
+        },
+      ],
+    }),
+  },
+  violations: {
+    label: 'Failure Demo: Bad ISO VIN + Missing CARM RPP + Overweight',
+    build: () => ({
+      manifestType: 'ACI_PARS',
+      scacOrCarrierCode: 'BROP',
+      controlNumber: 'BADP0001234',
+      tripNumber: 'BROP20261120X',
+      portCode: '3801',
+      etaUtc: futureEtaIso(0.5),
+      conveyance: { vin: '1HGCM82693A004352', plate: 'ON4412', jurisdiction: 'ON' },
+      crew: [{ fastCardNumber: '12345', firstName: 'Test', lastName: 'Driver', dateOfBirth: '1990-01-01' }],
+      carmIorAccountVerified: false,
+      shipments: [
+        {
+          commodity: 'Unclassified Industrial Machinery',
+          hsCode: '842952',
+          countryOfOrigin: 'OTHER',
+          cusmaCertOnFile: false,
+          invoiceValueCents: 9200000,
+          currency: 'CAD',
+          weightKg: 39800,
+          quantity: 4,
+          packageType: 'Crate',
+          isFoodFda: false,
+          shipperName: 'Midwest Machinery',
+          shipperAddress: '900 Freight Ave, Detroit, MI',
+          consigneeName: 'Ontario Plant Works',
+          consigneeAddress: '400 Huron Rd, Windsor, ON',
+        },
+      ],
+    }),
+  },
 };
 
 export default function TransborderPipeline() {
-  const [manifestStr, setManifestStr] = useState(JSON.stringify(defaultManifest, null, 2));
-  const [logs, setLogs] = useState<string[]>([]);
+  const [presetKey, setPresetKey] = useState<string>('ace_valid');
+  const [manifestStr, setManifestStr] = useState(() => JSON.stringify(MANIFEST_PRESETS.ace_valid.build(), null, 2));
+  const [report, setReport] = useState<CustomsValidationReport | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const selectPreset = (key: string) => {
+    setPresetKey(key);
+    setManifestStr(JSON.stringify(MANIFEST_PRESETS[key].build(), null, 2));
+    setReport(null);
+    setParseError(null);
+  };
 
   const runValidation = async () => {
     setScanning(true);
-    setStatus('idle');
-    const initialLogs = [
-      "[SYSTEM] INITIATING MANIFEST STRUCTURE COMPLIANCE CHECK...",
-      "[ABI-GATE] TRANSMITTING PAYLOAD TO CLOUDFLARE WORKER COMPLIANCE PIPELINE..."
-    ];
-    setLogs(initialLogs);
-
-    const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://127.0.0.1:8787/api/customs/validate'
-      : 'https://brotransport-edge-api.keshuin0.workers.dev/api/customs/validate';
-
+    setParseError(null);
+    setReport(null);
     try {
       const obj = JSON.parse(manifestStr);
-      const res = await fetch(apiUrl, {
+      const res = await fetch('/api/customs/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(obj)
+        body: JSON.stringify(obj),
       });
-      const data = await res.json();
-      
-      const newLogs = [...initialLogs];
+      const data = (await res.json()) as CustomsValidationReport & { error?: string; issues?: string[] };
       if (!res.ok) {
-        throw new Error(data.error || 'Schema validation parse rejection.');
-      }
-
-      newLogs.push(`[SCHEMA] Manifest Model Verified. referenceId: ${data.manifestId}`);
-      if (data.warnings && data.warnings.length > 0) {
-        data.warnings.forEach((warn: string) => {
-          newLogs.push(`[WARNING] ${warn}`);
-        });
+        setParseError(data.issues ? data.issues.join(' | ') : data.error || 'Schema parse rejection.');
       } else {
-        newLogs.push("[COMPLIANT] Zero anomalies detected in cargo, vehicle, or crew credentials.");
+        setReport(data);
       }
-      newLogs.push("[SUCCESS] manifest cleared by Automated Broker Interface (ABI). ACE Manifest generated.");
-      
-      setLogs(newLogs);
-      setStatus(data.compliant ? 'success' : 'error');
-    } catch (err: any) {
-      setLogs(prev => [
-        ...prev,
-        `[CRITICAL] Compliance sync failed: ${err.message}`,
-        "[ABI-GATE] Manifest rejected by gatekeeper."
-      ]);
-      setStatus('error');
+    } catch (err) {
+      setParseError(err instanceof Error ? err.message : 'Invalid JSON payload.');
     } finally {
       setScanning(false);
     }
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setManifestStr(e.target.value);
-  };
+  const barcodeSvg = useMemo(() => {
+    if (!report?.compliant) return null;
+    try {
+      const obj = JSON.parse(manifestStr) as { controlNumber?: string };
+      if (!obj.controlNumber) return null;
+      return renderCode128Svg(obj.controlNumber, { height: 52, moduleWidth: 2, includeText: true });
+    } catch {
+      return null;
+    }
+  }, [report, manifestStr]);
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-6 items-stretch">
-      {/* JSON Schema Editor */}
-      <div className="flex-1 bg-bro-obsidian/75 border border-slate-900 rounded p-5 space-y-4 flex flex-col justify-between hover:border-bro-cyan/35 transition-colors relative overflow-hidden cyber-corners">
-        <div className="flex justify-between items-center border-b border-slate-900 pb-2 font-mono text-[10px]">
-          <span className="text-white font-bold">ACE_eMANIFEST_JSON_SCHEMA</span>
-          <span className="text-bro-cyan">// LIVE_EDITOR</span>
-        </div>
-        
-        <div className="relative flex-1 min-h-[280px] font-mono text-[9.5px]">
-          {scanning && <div className="laser-line"></div>}
-          <textarea
-            value={manifestStr}
-            onChange={handleTextChange}
-            spellCheck="false"
-            className="w-full h-full min-h-[280px] bg-[#030307]/80 text-cyan-400 border border-slate-950 rounded p-3 font-mono text-[9px] focus:outline-none focus:border-bro-cyan transition-colors resize-none select-text"
-          />
-        </div>
-
-        <div className="flex justify-between items-center pt-2 font-mono text-[9px]">
-          <span className="text-slate-500">Edit fields directly to test CBP validator thresholds.</span>
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(MANIFEST_PRESETS).map(([key, item]) => (
           <button
-            onClick={runValidation}
-            disabled={scanning}
-            className="px-4 py-2 bg-bro-cyan text-black font-bold uppercase tracking-wider rounded hover:bg-bro-cyan/90 transition-colors cursor-pointer"
+            key={key}
+            type="button"
+            onClick={() => selectPreset(key)}
+            className={`px-3 py-1.5 rounded border font-mono text-[11px] transition-colors cursor-pointer ${
+              presetKey === key
+                ? 'border-bro-cyan bg-bro-cyan/15 text-bro-cyan font-bold'
+                : 'border-white/10 bg-bro-steel/50 text-slate-300 hover:text-white'
+            }`}
           >
-            {scanning ? 'SCANNING...' : 'SCAN & VALIDATE'}
+            {item.label}
           </button>
-        </div>
+        ))}
       </div>
 
-      {/* Terminal Compliance Validator Logs */}
-      <div className="w-full lg:w-[320px] bg-bro-obsidian/75 border border-slate-900 rounded p-5 flex flex-col justify-between hover:border-bro-cyan/35 transition-colors relative overflow-hidden cyber-corners-gold">
-        <div className="flex justify-between items-center border-b border-slate-900 pb-2 font-mono text-[10px]">
-          <span className="text-white font-bold">COMPLIANCE_TERMINAL</span>
-          <span className={`font-bold px-2 py-0.5 rounded ${
-            status === 'success' ? 'text-bro-cyan bg-bro-cyan/10 border border-bro-cyan/20 animate-pulse' :
-            status === 'error' ? 'text-bro-crimson bg-bro-crimson/10 border border-bro-crimson/20' : 'text-slate-500 bg-slate-900/50'
-          }`}>
-            {status === 'success' ? 'CBP_COMPLIANT' : status === 'error' ? 'REJECTED' : 'AWAITING_SCAN'}
-          </span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-7 rounded-lg border border-white/10 bg-bro-obsidian/90 p-5 flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2 font-mono text-xs">
+            <span className="text-white font-bold">ACE_PAPS / ACI_PARS JSON MANIFEST</span>
+            <span className="text-bro-cyan">ISO 3779 · CARM R2 · FDA</span>
+          </div>
+
+          <textarea
+            aria-label="Customs eManifest JSON payload"
+            value={manifestStr}
+            onChange={(e) => setManifestStr(e.target.value)}
+            spellCheck={false}
+            className="w-full min-h-[340px] bg-black/70 text-cyan-300 border border-white/10 rounded p-3 font-mono text-[11px] outline-none focus:border-bro-cyan resize-y"
+          />
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-[10px] text-slate-400">
+              Deterministic validation against real CBP/CBSA compliance rules.
+            </span>
+            <button
+              type="button"
+              onClick={runValidation}
+              disabled={scanning}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-bro-cyan hover:bg-bro-cyan/90 text-black font-mono text-xs font-bold uppercase cursor-pointer disabled:opacity-50"
+            >
+              <ScanLine className="w-4 h-4" />
+              <span>{scanning ? 'Validating...' : 'Run Pre-Flight Check'}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Live log feed */}
-        <div className="flex-1 my-4 bg-[#030307]/90 border border-slate-950 rounded p-3 font-mono text-[9px] text-slate-400 overflow-y-auto space-y-1.5 min-h-[200px]">
-          {logs.length === 0 ? (
-            <div className="text-slate-600 italic">[Awaiting schema validation execution...]</div>
-          ) : (
-            logs.map((log, idx) => (
-              <div 
-                key={idx} 
-                className={`leading-relaxed border-l pl-1.5 ${
-                  log.includes('[SUCCESS]') ? 'border-bro-cyan text-bro-cyan font-bold' :
-                  log.includes('[WARNING]') ? 'border-bro-gold text-bro-gold' :
-                  log.includes('[CRITICAL]') || log.includes('[PARSING_ERROR]') ? 'border-bro-crimson text-bro-crimson font-bold' :
-                  'border-slate-800 text-slate-500'
+        <div className="lg:col-span-5 rounded-lg border border-white/10 bg-bro-steel/50 p-5 flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2 font-mono text-xs">
+            <span className="text-white font-bold">PRE-FLIGHT AUDIT TERMINAL</span>
+            {report ? (
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[10px] ${
+                  report.compliant
+                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
+                    : 'bg-rose-950 text-rose-200 border border-rose-500/50'
                 }`}
               >
-                {log}
-              </div>
-            ))
-          )}
-          {scanning && (
-            <div className="text-bro-cyan animate-pulse">Running checksum routines...</div>
-          )}
-        </div>
+                {report.compliant ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                {report.compliant ? 'BORDER COMPLIANT' : 'REJECTED — HOLD DISPATCH'}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-400">AWAITING SCAN</span>
+            )}
+          </div>
 
-        <div className="border-t border-slate-900/60 pt-3 flex justify-between font-mono text-[8px] text-slate-500">
-          <span>PORT 0115 // DESCARTES API</span>
-          <span>100% REGULATORY SYNC</span>
+          <div className="flex-1 space-y-2.5 font-mono text-[11px] overflow-y-auto max-h-[340px]">
+            {parseError && (
+              <div className="p-3 rounded bg-rose-950/50 border border-rose-500/40 text-rose-200">
+                [SCHEMA ERROR] {parseError}
+              </div>
+            )}
+
+            {report && (
+              <>
+                <div className="p-2.5 rounded bg-bro-obsidian/80 border border-white/10 text-slate-300 space-y-1">
+                  <div>Manifest ID: <strong className="text-white">{report.manifestId}</strong></div>
+                  <div>Port: <strong className="text-bro-cyan">{report.portName}</strong></div>
+                  <div>Lead Time: <strong className="tabular-nums">{report.leadTimeMinutes}m</strong> (min {report.requiredLeadTimeMinutes}m)</div>
+                </div>
+
+                {report.checks.map((chk) => (
+                  <div
+                    key={chk.code}
+                    className={`p-2 rounded border-l-2 bg-bro-obsidian/70 ${
+                      chk.status === 'pass'
+                        ? 'border-emerald-400 text-slate-200'
+                        : chk.status === 'warn'
+                          ? 'border-bro-gold text-amber-200'
+                          : 'border-rose-500 text-rose-200'
+                    }`}
+                  >
+                    <div className="flex justify-between font-bold">
+                      <span>{chk.label}</span>
+                      <span className="uppercase text-[10px]">{chk.status}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">{chk.detail}</div>
+                  </div>
+                ))}
+
+                {report.warnings.map((w, i) => (
+                  <div key={i} className="p-2 rounded bg-amber-950/30 border border-bro-gold/40 text-amber-200 text-[10px]">
+                    [WARNING] {w}
+                  </div>
+                ))}
+              </>
+            )}
+
+            {!report && !parseError && (
+              <div className="py-10 text-center text-slate-500">
+                Select a preset or edit the JSON manifest, then click Run Pre-Flight Check.
+              </div>
+            )}
+          </div>
+
+          {barcodeSvg && (
+            <div className="p-3 rounded bg-white text-black space-y-1">
+              <div className="font-mono text-[9px] font-bold uppercase text-slate-700 text-center">
+                Scannable ISO/IEC 15417 Code-128B PAPS/PARS Barcode
+              </div>
+              <div className="flex justify-center" dangerouslySetInnerHTML={{ __html: barcodeSvg }} />
+            </div>
+          )}
         </div>
       </div>
     </div>

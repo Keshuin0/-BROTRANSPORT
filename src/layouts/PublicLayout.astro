@@ -1,0 +1,165 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import BroLogo from '../components/brand/BroLogo.astro';
+import CommandPalette from '../components/nav/CommandPalette';
+import AllyEscalationDrawer from '../components/nav/AllyEscalationDrawer';
+import MobileNavDrawer from '../components/nav/MobileNavDrawer';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = '#BRO Transport Corp. | North American Transborder Logistics OS',
+  description = 'Bold. Reliable. Orchestrated. Commercial Dry Van, Cold-Chain Reefer, and Open-Deck Flatbed cross-border logistics with live CBP/CBSA border intelligence, cryptographic eBOL, and AI document automation.',
+} = Astro.props;
+
+const pathname = Astro.url.pathname;
+const canonicalUrl = new URL(pathname, Astro.site ?? 'https://brotransport.com').toString();
+const user = Astro.locals.user;
+
+const navLinks = [
+  { href: '/', label: 'Command' },
+  { href: '/quote', label: 'Rates' },
+  { href: '/customs', label: 'Customs' },
+  { href: '/verify', label: 'Verify eBOL' },
+  { href: '/apply', label: 'Carriers' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: '#BRO Transport Corp.',
+  url: 'https://brotransport.com',
+  slogan: 'A Bro in Need Is a Bro Indeed',
+  description,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Charlottetown',
+    addressRegion: 'PE',
+    addressCountry: 'CA',
+  },
+};
+---
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#030307" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="canonical" href={canonicalUrl} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <ClientRouter />
+  </head>
+  <body class="bg-bro-obsidian bg-cyber-grid text-bro-ice min-h-screen flex flex-col justify-between selection:bg-bro-cyan/30 selection:text-bro-cyan pb-16 md:pb-0">
+    <div>
+      <div class="h-[2px] w-full bg-gradient-to-r from-bro-gold via-bro-cyan to-bro-gold sticky top-0 z-50"></div>
+
+      <header class="sticky top-[2px] z-40 backdrop-blur-xl bg-bro-obsidian/90 border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          <a href="/" class="shrink-0 group">
+            <BroLogo compact />
+          </a>
+
+          <nav aria-label="Primary Navigation" class="hidden md:flex items-center gap-6 text-xs font-mono uppercase tracking-wider">
+            {navLinks.map((link) => {
+              const active = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+              return (
+                <a
+                  href={link.href}
+                  data-astro-prefetch
+                  aria-current={active ? 'page' : undefined}
+                  class={`transition-colors py-1 border-b-2 ${
+                    active
+                      ? 'text-bro-cyan border-bro-cyan font-bold'
+                      : 'text-slate-300 border-transparent hover:text-white hover:border-white/30'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
+          </nav>
+
+          <div class="flex items-center gap-2.5">
+            <CommandPalette client:load />
+            <a
+              href={user ? (user.role === 'carrier_driver' ? '/portal/driver' : user.role.startsWith('shipper') ? '/portal/shipper' : '/ops') : '/login'}
+              class="hidden lg:inline-flex items-center px-3 py-2 rounded border border-white/15 hover:border-bro-gold text-slate-200 hover:text-bro-gold font-mono text-[11px] uppercase tracking-wider transition-colors"
+            >
+              {user ? `Portal (${user.name.split(' ')[0]})` : 'Portals'}
+            </a>
+            <AllyEscalationDrawer client:load />
+            <MobileNavDrawer client:load currentPath={pathname} userRole={user?.role ?? null} />
+          </div>
+        </div>
+      </header>
+
+      <main class="w-full">
+        <slot />
+      </main>
+    </div>
+
+    <!-- Mobile Quick Command Dock (<768px) -->
+    <nav
+      aria-label="Mobile Quick Dock"
+      class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-bro-obsidian/95 backdrop-blur-xl border-t border-white/10 grid grid-cols-4 font-mono text-[10px] uppercase"
+    >
+      <a href="/" class={`py-3 text-center ${pathname === '/' ? 'text-bro-cyan font-bold' : 'text-slate-400'}`}>Home</a>
+      <a href="/quote" class={`py-3 text-center ${pathname.startsWith('/quote') ? 'text-bro-gold font-bold' : 'text-slate-400'}`}>Quote</a>
+      <a href="/portal/driver" class={`py-3 text-center ${pathname.startsWith('/portal/driver') ? 'text-bro-cyan font-bold' : 'text-slate-400'}`}>Driver</a>
+      <a href="/ops" class={`py-3 text-center ${pathname.startsWith('/ops') ? 'text-bro-gold font-bold' : 'text-slate-400'}`}>Ops</a>
+    </nav>
+
+    <footer class="w-full border-t border-white/10 bg-bro-obsidian/95 py-10 mt-16">
+      <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
+        <div class="space-y-2 md:col-span-2">
+          <BroLogo compact showSlogan />
+          <p class="text-slate-400 max-w-md pt-2 leading-relaxed">
+            Atlantic Canada & North America commercial cross-border freight carrier & digital logistics network.
+            SCAC: <code class="text-bro-cyan font-mono">BROP</code> · Charlottetown, PEI Headquarters.
+          </p>
+        </div>
+
+        <div class="space-y-2 font-mono text-[11px]">
+          <div class="text-white font-bold uppercase tracking-wider">Portal 1 · External</div>
+          <ul class="space-y-1.5 text-slate-400">
+            <li><a href="/quote" class="hover:text-bro-cyan">Instant Rate Engine</a></li>
+            <li><a href="/portal/shipper" class="hover:text-bro-cyan">Customer / Shipper Portal</a></li>
+            <li><a href="/portal/driver" class="hover:text-bro-cyan">Driver Offline PWA</a></li>
+            <li><a href="/verify" class="hover:text-bro-cyan">Cryptographic eBOL Verifier</a></li>
+          </ul>
+        </div>
+
+        <div class="space-y-2 font-mono text-[11px]">
+          <div class="text-bro-gold font-bold uppercase tracking-wider">Portal 2 · Operations</div>
+          <ul class="space-y-1.5 text-slate-400">
+            <li><a href="/ops" class="hover:text-bro-gold">Ops Control Tower</a></li>
+            <li><a href="/ops/documents" class="hover:text-bro-gold">AI Document OCR Queue</a></li>
+            <li><a href="/ops/customs" class="hover:text-bro-gold">ACE / ACI Customs Desk</a></li>
+            <li><a href="/ops/billing" class="hover:text-bro-gold">Billing, Factoring & IFTA</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="max-w-7xl mx-auto px-6 mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-3 font-mono text-[10px] text-slate-500">
+        <span>© 2026 #BRO Transport Corp. All rights reserved.</span>
+        <span>CBP ACE PAPS · CBSA ACI PARS · CARM Release 2 · ECDSA P-256 eBOL</span>
+      </div>
+    </footer>
+  </body>
+</html>

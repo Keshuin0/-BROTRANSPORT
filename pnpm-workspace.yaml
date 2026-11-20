@@ -1,7 +1,8 @@
 packages:
   - '.'
-  - 'edge'
+  - 'packages/*'
 allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+  better-sqlite3: true

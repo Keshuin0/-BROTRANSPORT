@@ -1,0 +1,111 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import BroLogo from '../components/brand/BroLogo.astro';
+import CommandPalette from '../components/nav/CommandPalette';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const pathname = Astro.url.pathname;
+const user = Astro.locals.user;
+
+const opsNav = [
+  { href: '/ops', label: 'Control Tower', code: '00' },
+  { href: '/ops/dispatch', label: 'Dispatch & EDI', code: '01' },
+  { href: '/ops/documents', label: 'AI OCR Queue', code: '02' },
+  { href: '/ops/customs', label: 'Customs & CARM', code: '03' },
+  { href: '/ops/billing', label: 'Billing & IFTA', code: '04' },
+  { href: '/ops/fleet', label: 'Fleet & Safety', code: '05' },
+  { href: '/ops/admin', label: 'Admin & Agents', code: '06' },
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#030307" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | #BRO Ops Command Tower</title>
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <ClientRouter />
+  </head>
+  <body class="bg-bro-obsidian text-bro-ice min-h-screen flex flex-col lg:flex-row selection:bg-bro-gold/30">
+    <!-- Left Command Sidebar (Desktop) -->
+    <aside class="w-full lg:w-64 shrink-0 bg-bro-steel/50 border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col justify-between">
+      <div>
+        <div class="p-4 border-b border-white/10 flex items-center justify-between">
+          <a href="/" class="shrink-0">
+            <BroLogo compact />
+          </a>
+        </div>
+        <div class="px-4 py-2.5 border-b border-white/10 bg-bro-gold/5 flex items-center justify-between font-mono text-[10px]">
+          <span class="text-bro-gold font-bold uppercase tracking-wider">PORTAL 2 // OPS TOWER</span>
+          <span class="inline-flex items-center gap-1 text-emerald-400">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> LIVE
+          </span>
+        </div>
+
+        <nav aria-label="Operations Navigation" class="p-3 flex lg:flex-col gap-1 overflow-x-auto">
+          {opsNav.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <a
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                class={`flex items-center gap-2.5 px-3 py-2 rounded font-mono text-xs whitespace-nowrap transition-colors ${
+                  active
+                    ? 'bg-bro-cyan/15 text-bro-cyan border border-bro-cyan/35 font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white border border-transparent'
+                }`}
+              >
+                <span class="text-[10px] text-slate-500">{item.code}</span>
+                <span>{item.label}</span>
+              </a>
+            );
+          })}
+        </nav>
+      </div>
+
+      <div class="hidden lg:block p-4 border-t border-white/10 space-y-3">
+        {user && (
+          <div class="font-mono text-[11px]">
+            <div class="text-white font-bold truncate">{user.name}</div>
+            <div class="text-bro-gold text-[10px] uppercase">{user.role.replace(/_/g, ' ')}</div>
+          </div>
+        )}
+        <div class="flex items-center gap-2">
+          <a href="/" class="flex-1 text-center py-1.5 rounded border border-white/10 text-[10px] font-mono uppercase text-slate-400 hover:text-white">
+            Public Site
+          </a>
+          <form method="POST" action="/api/auth/logout" class="flex-1">
+            <button type="submit" class="w-full py-1.5 rounded border border-rose-500/30 text-[10px] font-mono uppercase text-rose-300 hover:bg-rose-950/40 cursor-pointer">
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Ops Workspace -->
+    <div class="flex-1 min-w-0 flex flex-col">
+      <header class="h-14 border-b border-white/10 bg-bro-obsidian/90 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-30">
+        <div class="font-mono text-xs uppercase tracking-wider text-white font-bold truncate">
+          {title}
+        </div>
+        <div class="flex items-center gap-3">
+          <CommandPalette client:load />
+          <span class="hidden sm:inline font-mono text-[10px] text-slate-400">SCAC: BROP</span>
+        </div>
+      </header>
+
+      <main class="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

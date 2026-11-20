@@ -1,115 +1,91 @@
 ---
-import InteractiveGlobe from './InteractiveGlobe.astro';
-const base = import.meta.env.BASE_URL;
+import BroLogo from './brand/BroLogo.astro';
+import CommandGlobe from './globe/CommandGlobe';
 ---
-<div class="relative min-h-[90vh] flex flex-col justify-center items-center overflow-hidden py-16 px-6 select-none bg-carbon-fiber">
-  
-  {/* Cyber Grid Subtle Overlay */}
-  <div class="absolute inset-0 bg-cyber-grid opacity-10 pointer-events-none z-0"></div>
 
-  {/* Video Background Layer with Scroll Parallax */}
-  <div class="absolute inset-0 overflow-hidden z-0 pointer-events-none opacity-[0.08] select-none scroll-parallax-container">
-    <video 
-      autoplay 
-      muted 
-      loop 
-      playsinline 
-      class="w-full h-full object-cover scale-110 origin-center"
-    >
-      <source src="https://assets.mixkit.co/videos/preview/mixkit-cargo-truck-driving-on-a-highway-41122-large.mp4" type="video/mp4" />
-      <source src="https://assets.mixkit.co/videos/preview/mixkit-truck-on-the-highway-at-sunset-1736-large.mp4" type="video/mp4" />
-    </video>
-  </div>
+<section class="relative overflow-hidden border-b border-white/10 py-14 lg:py-20 px-4 sm:px-6">
+  <div class="absolute top-0 left-1/4 w-[28rem] h-[28rem] bg-bro-gold/5 rounded-full blur-[130px] pointer-events-none" aria-hidden="true"></div>
+  <div class="absolute bottom-0 right-1/4 w-[28rem] h-[28rem] bg-bro-cyan/5 rounded-full blur-[130px] pointer-events-none" aria-hidden="true"></div>
 
-  {/* Giant slogan pic watermark backdrop */}
-  <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] z-0 mix-blend-screen scale-150 select-none">
-    <img src={`${base}images/logo.png`} alt="" class="w-full max-w-5xl object-contain filter grayscale blur-sm" />
-  </div>
-  
-  {/* Gold subtle light pools */}
-  <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-bro-gold/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
-  <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-bro-cyan/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
-
-  <div class="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-    
-    {/* Left Column: Brand & Copywriting */}
-    <div class="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-      
-      {/* Slogan Pic - transparent and horizontal */}
-      <div class="w-full max-w-xl select-none shrink-0">
-        <img 
-          src={`${base}images/logo.png`} 
-          alt="#BRO TRANSPORT Slogan Pic" 
-          class="w-full h-auto object-contain" 
-        />
+  <div class="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+    <!-- Left Column: Brand Authority & Dual-Portal Entry -->
+    <div class="lg:col-span-6 space-y-7">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-bro-cyan/30 bg-bro-steel/70 font-mono text-[10px] uppercase tracking-widest text-bro-cyan">
+        <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan"></span>
+        <span>NORTH AMERICA TRANSBORDER LOGISTICS OS · SCAC BROP</span>
       </div>
 
+      <BroLogo showSlogan />
 
-      {/* Slogan Headline & Bhai Copywriting */}
-      <div class="space-y-4">
-        <span class="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-bro-cyan font-bold px-3 py-1 bg-bro-steel/30 rounded-full border border-bro-cyan/20">
-          // THE_BRO_COMMAND_CENTER
-        </span>
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-black font-display uppercase tracking-tight leading-none text-white drop-shadow-lg">
-          A BRO IN NEED <br />
-          <span class="text-bro-cyan glow-text-cyan block mt-1.5">
-            IS A BRO INDEED
-          </span>
+      <div class="space-y-3">
+        <h1 class="text-4xl sm:text-5xl xl:text-6xl font-display font-black uppercase tracking-tight leading-[1.02] text-white">
+          BOLD. RELIABLE. <br />
+          <span class="text-bro-cyan glow-text-cyan">ORCHESTRATED.</span>
         </h1>
-        <p class="text-xs sm:text-sm text-bro-ice/80 max-w-xl leading-relaxed font-sans pt-1">
-          Bold. Reliable. Orchestrated. North America's Elite Cross-Border Logistics Corridor. Engineered for Capacity Partners, managed with Unmatched Operational Loyalty.
+        <p class="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed">
+          Atlantic Canada to North America commercial Dry Van, Cold-Chain Reefer, and Open-Deck Flatbed freight—powered by live CBP/CBSA border intelligence, AI document processing, ECDSA cryptographic eBOL custody, and automated cross-border billing.
         </p>
       </div>
 
-      {/* Quick Action Bento-style Panels */}
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-xl">
-        <a 
-          href={`${base}quote`} 
-          data-astro-prefetch 
-          class="flex items-center justify-between p-5 rounded border border-bro-cyan/20 bg-bro-steel/40 hover:bg-bro-steel/70 hover:border-bro-cyan/60 hover:shadow-neon-glow transition-all duration-300 group shadow-lg"
+      <!-- Dual-Portal Action Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-w-xl">
+        <a
+          href="/quote"
+          data-astro-prefetch
+          class="flex items-center justify-between p-4 rounded-lg border border-bro-cyan/35 bg-bro-steel/60 hover:bg-bro-steel hover:border-bro-cyan transition-all group"
         >
-          <div class="text-left font-mono">
-            <h4 class="text-xs font-bold text-white tracking-wide uppercase group-hover:text-bro-cyan transition-colors">01 // RATES CALCULATOR</h4>
-            <p class="text-bro-ice/50 text-[9px] mt-1 font-sans">Request dry van, reefer, or flatbed pricing.</p>
+          <div>
+            <div class="font-mono text-xs font-bold text-white group-hover:text-bro-cyan uppercase">01 // Instant Rate Engine</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Highway-routed CAD/USD + CO₂e</p>
           </div>
-          <span class="text-bro-cyan font-bold font-mono transition-transform group-hover:translate-x-1 pl-2">→</span>
+          <span class="font-mono text-bro-cyan font-bold group-hover:translate-x-1 transition-transform">→</span>
         </a>
 
-        <a 
-          href={`${base}drivers`} 
-          data-astro-prefetch 
-          class="flex items-center justify-between p-5 rounded border border-bro-gold/20 bg-bro-steel/40 hover:bg-bro-steel/70 hover:border-bro-gold/60 hover:shadow-[0_0_15px_rgba(255,170,0,0.2)] transition-all duration-300 group shadow-lg"
+        <a
+          href="/portal/driver"
+          data-astro-prefetch
+          class="flex items-center justify-between p-4 rounded-lg border border-bro-gold/35 bg-bro-steel/60 hover:bg-bro-steel hover:border-bro-gold transition-all group"
         >
-          <div class="text-left font-mono">
-            <h4 class="text-xs font-bold text-white tracking-wide uppercase group-hover:text-bro-gold transition-colors">02 // DRIVER GATEWAY</h4>
-            <p class="text-bro-ice/50 text-[9px] mt-1 font-sans">Join the elite freight logistics fleet.</p>
+          <div>
+            <div class="font-mono text-xs font-bold text-white group-hover:text-bro-gold uppercase">02 // Driver Offline PWA</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Scan docs, DVIR, eBOL & settlements</p>
           </div>
-          <span class="text-bro-gold font-bold font-mono transition-transform group-hover:translate-x-1 pl-2">→</span>
+          <span class="font-mono text-bro-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
+        </a>
+
+        <a
+          href="/portal/shipper"
+          data-astro-prefetch
+          class="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-bro-steel/40 hover:bg-bro-steel hover:border-bro-cyan/60 transition-all group"
+        >
+          <div>
+            <div class="font-mono text-xs font-bold text-slate-100 group-hover:text-bro-cyan uppercase">03 // Shipper Portal</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Live tracking, FSMA temp & invoices</p>
+          </div>
+          <span class="font-mono text-slate-400 group-hover:text-bro-cyan group-hover:translate-x-1 transition-transform">→</span>
+        </a>
+
+        <a
+          href="/ops"
+          data-astro-prefetch
+          class="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-bro-steel/40 hover:bg-bro-steel hover:border-bro-gold/60 transition-all group"
+        >
+          <div>
+            <div class="font-mono text-xs font-bold text-slate-100 group-hover:text-bro-gold uppercase">04 // Ops Command Tower</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Dispatch, AI OCR, Customs & IFTA</p>
+          </div>
+          <span class="font-mono text-slate-400 group-hover:text-bro-gold group-hover:translate-x-1 transition-transform">→</span>
         </a>
       </div>
-
     </div>
 
-    {/* Right Column: Three.js Interactive Globe */}
-    <div class="lg:col-span-6 w-full flex flex-col justify-center items-center">
-      <div class="w-full max-w-lg p-1.5 bg-gradient-to-r from-bro-gold via-bro-cyan to-bro-gold rounded shadow-[0_0_35px_rgba(0,240,255,0.15)] relative cyber-corners">
-        <div class="absolute -top-3 left-6 font-mono text-[8px] bg-bro-obsidian px-2.5 py-0.5 border border-bro-gold/40 text-bro-gold rounded uppercase tracking-wider z-20">
-          SECURE_TELEMATIC_GLOBE
+    <!-- Right Column: Next-Gen Vector & Instanced 3D Command Globe -->
+    <div class="lg:col-span-6 w-full">
+      <div class="p-1 rounded-lg bg-gradient-to-br from-bro-cyan/40 via-white/10 to-bro-gold/40 shadow-2xl">
+        <div class="rounded-[7px] bg-bro-obsidian overflow-hidden">
+          <CommandGlobe client:load />
         </div>
-        <InteractiveGlobe />
       </div>
     </div>
-
   </div>
-</div>
-
-<script>
-  const updateParallax = () => {
-    const container = document.querySelector('.scroll-parallax-container');
-    if (container) {
-      const offset = window.scrollY * 0.45;
-      (container as HTMLElement).style.transform = `translateY(${offset}px)`;
-    }
-  };
-  window.addEventListener('scroll', updateParallax, { passive: true });
-</script>
+</section>

@@ -1,36 +1,56 @@
 {
   "name": "brotransport",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "preview": "wrangler dev",
+    "astro": "astro",
+    "typecheck": "astro check && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "pnpm --filter @bro/db run generate",
+    "db:migrate:local": "wrangler d1 migrations apply brotransport-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply brotransport-db --remote",
+    "deploy": "pnpm run build && wrangler deploy"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.0.0",
-    "@astrojs/react": "^5.0.7",
-    "@keystatic/astro": "^5.1.0",
-    "@keystatic/core": "^0.5.50",
+    "@astrojs/cloudflare": "^12.6.13",
+    "@astrojs/mdx": "^4.3.0",
+    "@astrojs/react": "^4.4.0",
+    "@bro/contracts": "workspace:*",
+    "@bro/db": "workspace:*",
     "@vite-pwa/astro": "^1.2.0",
-    "astro": "^5.0.0",
-    "jimp": "^1.6.1",
-    "motion": "^12.40.0",
+    "astro": "^5.16.0",
+    "better-auth": "^1.7.0",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.0",
+    "lucide-react": "^0.540.0",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "tailwindcss": "4.3.1",
     "three": "^0.184.0",
     "topojson-client": "^3.1.0",
-    "workbox-window": "^7.4.1",
     "world-atlas": "^2.0.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@cloudflare/workers-types": "^4.20260201.0",
     "@tailwindcss/vite": "4.3.1",
-    "@types/three": "^0.184.1"
+    "@types/node": "^22.12.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.184.1",
+    "@types/topojson-client": "^3.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.165.0"
   }
 }
