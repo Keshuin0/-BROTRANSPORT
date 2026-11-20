@@ -21,7 +21,7 @@
     {
       "binding": "DB",
       "database_name": "brotransport-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "a962cd18-864d-407b-8e45-9b17416a0c09",
       "migrations_dir": "./packages/db/migrations"
     }
   ],
@@ -34,7 +34,7 @@
   "kv_namespaces": [
     {
       "binding": "CACHE",
-      "id": "00000000000000000000000000000000"
+      "id": "c5cc6b6425cc4276b84708da8333021c"
     }
   ],
   "ai": {
