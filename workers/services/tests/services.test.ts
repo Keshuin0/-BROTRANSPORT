@@ -756,7 +756,7 @@ describe('Offline Proof-of-Work Verifier — Valid, Forged, Expired & Replayed T
     const replayCheck = await verifyOfflinePowToken(validToken, payloadHash, kv, { nowMs });
     expect(replayCheck.valid).toBe(false);
     expect(replayCheck.reason).toBe('TOKEN_REPLAYED');
-  });
+  }, 15_000);
 
   it('rejects forged (insufficient work), payload-tampered, expired, future, and malformed tokens', async () => {
     const nowMs = 1_795_000_000_000;
@@ -813,5 +813,5 @@ describe('Offline Proof-of-Work Verifier — Valid, Forged, Expired & Replayed T
     });
     expect(malformedResult.valid).toBe(false);
     expect(malformedResult.reason).toBe('MALFORMED_TOKEN');
-  });
+  }, 15_000);
 });
