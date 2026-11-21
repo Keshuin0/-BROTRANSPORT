@@ -472,7 +472,7 @@ export default function CarrierApplyForm() {
                 maxLength={8}
                 value={form.usdotNumber}
                 onChange={(e) => updateField('usdotNumber', e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="e.g. 3849201 (Dev test: 123456 or 999999)"
+                placeholder="e.g. 3849201 (4–8 digit USDOT)"
                 className="w-full bg-bro-steel/70 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-cyan tabular-nums"
               />
               {fieldErrors.usdotNumber && (

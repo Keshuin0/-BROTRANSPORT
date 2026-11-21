@@ -3,6 +3,7 @@ import type { CloudflareEnv } from '../../src/env.js';
 export const ALLOWED_ORIGINS = [
   'https://brotransport.com',
   'https://www.brotransport.com',
+  'https://brotransport-os.keshuin0.workers.dev',
   'http://localhost:4321',
   'http://127.0.0.1:4321',
   'http://localhost:8787',

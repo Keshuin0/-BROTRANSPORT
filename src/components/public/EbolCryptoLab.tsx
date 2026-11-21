@@ -145,6 +145,93 @@ export default function EbolCryptoLab({ initialLoadId = 'BROP-2026-9948' }: Ebol
     }
   };
 
+  /** Signs all 3 custody handoffs sequentially with fresh browser Web Crypto ECDSA P-256 keypairs. */
+  const signAllThreeStages = async () => {
+    setBusy(true);
+    setStatusMsg(null);
+    setTampered(false);
+    try {
+      const stages: Array<{
+        stage: EbolBlockRecord['stage'];
+        actorRole: EbolBlockRecord['actorRole'];
+        actorName: string;
+        gpsLat: number;
+        gpsLon: number;
+        payload: Record<string, unknown>;
+      }> = [
+        {
+          stage: 'SHIPPER_INIT',
+          actorRole: 'shipper',
+          actorName: 'Cavendish Valley Produce (Shipper Dispatch)',
+          gpsLat: 46.3959,
+          gpsLon: -63.7876,
+          payload: { commodity: 'Fresh PEI Potatoes', weightLbs: 38400, pallets: 24, setpointC: 4.0, scac: 'BROP' },
+        },
+        {
+          stage: 'CARRIER_PICKUP',
+          actorRole: 'driver',
+          actorName: '#BRO Operator · Unit RF-4221',
+          gpsLat: 46.3961,
+          gpsLon: -63.7872,
+          payload: { sealNumber: 'BROP-SEAL-8843', reeferTempC: 4.1, condition: 'INTACT_ZERO_OSD' },
+        },
+        {
+          stage: 'CONSIGNEE_POD',
+          actorRole: 'consignee',
+          actorName: 'New England Fresh Market Receiving Dock #4',
+          gpsLat: 42.3601,
+          gpsLon: -71.0589,
+          payload: { receivedPallets: 24, receivedTempC: 4.0, osdExceptions: 'NONE', custodySettled: true },
+        },
+      ];
+
+      let runningChain = [...blocks];
+      let genesis = await computeGenesisHash(loadId);
+      let serverCount = 0;
+
+      for (let i = runningChain.length; i < stages.length; i++) {
+        const spec = stages[i];
+        const keyPair = await generateActorKeyPair();
+        const prevHash = runningChain.length === 0 ? genesis : runningChain[runningChain.length - 1].blockHash;
+        const signedBlock = await createSignedEbolBlock({
+          loadId,
+          seq: runningChain.length + 1,
+          stage: spec.stage,
+          actorRole: spec.actorRole,
+          actorName: spec.actorName,
+          privateKey: keyPair.privateKey,
+          publicKeyJwk: keyPair.publicKeyJwk,
+          prevHash,
+          payload: spec.payload,
+          gpsLat: spec.gpsLat,
+          gpsLon: spec.gpsLon,
+          signedAt: Date.now() + i * 1500,
+        });
+        try {
+          const res = await fetch(`/api/ebol/${encodeURIComponent(loadId)}/sign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(signedBlock),
+          });
+          if (res.ok) serverCount++;
+        } catch {
+          // Local Web Crypto chain remains valid offline
+        }
+        runningChain = [...runningChain, signedBlock];
+      }
+
+      setBlocks(runningChain);
+      await runLocalVerification(loadId, runningChain);
+      setStatusMsg(
+        serverCount > 0
+          ? `Full 3-party ECDSA P-256 chain signed & committed (${serverCount} new block(s) written to Cloudflare D1).`
+          : 'Full 3-party ECDSA P-256 custody chain generated & verified via browser Web Crypto API.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   /** Mutates 1 single byte in Block 1's cargo payload to prove real cryptographic tamper detection! */
   const simulateOneByteTamper = async () => {
     if (blocks.length === 0) return;
@@ -180,16 +267,16 @@ export default function EbolCryptoLab({ initialLoadId = 'BROP-2026-9948' }: Ebol
   return (
     <div className="space-y-6">
       {/* Header & Lookup Bar */}
-      <div className="rounded-lg border border-white/10 bg-bro-steel/50 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="font-mono text-[10px] uppercase tracking-widest text-bro-cyan">
-            REAL WEB CRYPTO ECDSA P-256 + SHA-256 HASH CHAIN
+      <div className="rounded-3xl surface-ceramic p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="text-xs font-medium text-bro-cyan">
+            Web Crypto ECDSA P-256 · SHA-256 Custody Chain
           </div>
-          <h2 className="text-xl font-display font-bold text-white">
-            Zero-Trust Cryptographic eBOL Verifier & Tamper Lab
-          </h2>
-          <p className="text-xs text-slate-400">
-            Every custody handoff is independently signed with an ECDSA P-256 keypair and verified live in your browser via{' '}
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
+            Cryptographic eBOL Verifier &amp; Tamper Lab
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Sign Shipper Release, Driver Pickup, and Consignee POD with real asymmetric keys—verified live via{' '}
             <code className="text-bro-cyan">crypto.subtle.verify()</code>.
           </p>
         </div>
@@ -200,13 +287,13 @@ export default function EbolCryptoLab({ initialLoadId = 'BROP-2026-9948' }: Ebol
             aria-label="Load or eBOL Reference ID"
             value={loadId}
             onChange={(e) => setLoadId(e.target.value.trim() || 'BROP-2026-9948')}
-            className="bg-bro-obsidian border border-white/15 rounded px-3 py-2 font-mono text-xs text-white outline-none focus:border-bro-cyan w-44"
+            className="bg-[#060912] border border-white/15 rounded-full px-4 py-2 font-mono text-xs text-white outline-none focus:border-bro-cyan w-44"
           />
           {blocks.length > 0 && (
             <button
               type="button"
               onClick={downloadProofJson}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-white/15 hover:border-bro-cyan text-xs font-mono text-slate-200 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/15 hover:border-bro-cyan text-xs font-medium text-slate-200 cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" /> JSON-LD
             </button>
@@ -216,12 +303,12 @@ export default function EbolCryptoLab({ initialLoadId = 'BROP-2026-9948' }: Ebol
 
       {/* Live Cryptographic Seal Banner */}
       <div
-        className={`rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+        className={`rounded-3xl border p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
           verification === null
-            ? 'border-white/10 bg-bro-obsidian/70'
+            ? 'surface-ceramic'
             : verification.valid
-              ? 'border-emerald-500/40 bg-emerald-950/30'
-              : 'border-rose-500/50 bg-rose-950/40'
+              ? 'border-emerald-500/40 bg-emerald-950/25'
+              : 'border-rose-500/50 bg-rose-950/35'
         }`}
       >
         <div className="flex items-center gap-3">
@@ -235,7 +322,7 @@ export default function EbolCryptoLab({ initialLoadId = 'BROP-2026-9948' }: Ebol
           <div className="font-mono text-xs space-y-0.5">
             <div className="font-bold text-white uppercase">
               {verification === null
-                ? 'AWAITING FIRST ECDSA P-256 CUSTODY SIGNATURE'
+                ? 'READY TO SIGN LIVE 3-PARTY ECDSA P-256 CUSTODY CHAIN'
                 : verification.valid
                   ? `CRYPTOGRAPHICALLY VERIFIED (${verification.verifiedCount} SIGNED BLOCKS)`
                   : `TAMPER DETECTED ON BLOCK #${verification.brokenBlockSeq} — SIGNATURE REJECTED`}
@@ -250,29 +337,39 @@ export default function EbolCryptoLab({ initialLoadId = 'BROP-2026-9948' }: Ebol
 
         <div className="flex flex-wrap items-center gap-2">
           {blocks.length < 3 && !tampered && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={signNextStage}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-bro-cyan hover:bg-bro-cyan/90 text-black font-mono text-xs font-bold uppercase cursor-pointer disabled:opacity-50"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>
-                {busy
-                  ? 'Signing ECDSA...'
-                  : blocks.length === 0
-                    ? 'Sign Step 1: Shipper Key A'
-                    : blocks.length === 1
-                      ? 'Sign Step 2: Driver Key B'
-                      : 'Sign Step 3: Consignee POD Key C'}
-              </span>
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={signNextStage}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-bro-cyan text-black text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>
+                  {busy
+                    ? 'Signing ECDSA...'
+                    : blocks.length === 0
+                      ? 'Sign Step 1: Shipper'
+                      : blocks.length === 1
+                        ? 'Sign Step 2: Driver'
+                        : 'Sign Step 3: Consignee POD'}
+                </span>
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void signAllThreeStages()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-bro-cyan/40 bg-bro-cyan/15 hover:bg-bro-cyan/25 text-bro-cyan text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
+              >
+                Auto-Sign All 3 Handoffs
+              </button>
+            </>
           )}
           {blocks.length > 0 && !tampered && (
             <button
               type="button"
               onClick={simulateOneByteTamper}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-rose-500/50 bg-rose-950/30 hover:bg-rose-950/60 text-rose-200 font-mono text-xs font-bold uppercase cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/50 bg-rose-950/30 hover:bg-rose-950/60 text-rose-200 text-xs font-semibold cursor-pointer"
             >
               <Bug className="w-3.5 h-3.5" /> Simulate 1-Byte Tamper
             </button>

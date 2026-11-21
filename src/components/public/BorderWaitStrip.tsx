@@ -37,6 +37,12 @@ export default function BorderWaitStrip() {
         const wb = Math.max(b.southboundCommercialMinutes ?? 999, b.northboundCommercialMinutes ?? 999);
         return wa - wb;
       });
+    } else if (filter === 'all') {
+      filtered.sort((a, b) => {
+        const score = (p: (typeof list)[number]) =>
+          (p.southboundCommercialMinutes !== null ? 2 : 0) + (p.northboundCommercialMinutes !== null ? 1 : 0);
+        return score(b) - score(a);
+      });
     }
     return filtered.slice(0, 8);
   }, [feed, filter]);

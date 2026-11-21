@@ -93,9 +93,18 @@ bordersAndQuotesRoutes.post('/quotes', async (c) => {
   }
 
   const user = c.get('user');
-  if (!user && c.env.TURNSTILE_SECRET_KEY) {
-    const check = await verifyTurnstileFailClosed(parsed.data.turnstileToken, c.env, ip);
-    if (!check.ok) return c.json({ error: check.error }, 403);
+  if (!user) {
+    if (parsed.data.offlinePowToken) {
+      const corePayload = `${parsed.data.contactEmail}:${parsed.data.originCountry}:${parsed.data.destCountry}:${parsed.data.equipmentType}`;
+      const payloadHash = await sha256Hex(corePayload);
+      const powCheck = await verifyOfflinePowToken(parsed.data.offlinePowToken, payloadHash, c.env.CACHE);
+      if (!powCheck.valid) {
+        return c.json({ error: `Security proof verification failed: ${powCheck.reason}` }, 403);
+      }
+    } else if (c.env.TURNSTILE_SECRET_KEY) {
+      const check = await verifyTurnstileFailClosed(parsed.data.turnstileToken, c.env, ip);
+      if (!check.ok) return c.json({ error: check.error }, 403);
+    }
   }
 
   const input = parsed.data;

@@ -226,6 +226,25 @@ export default function AgentControlCenter() {
     );
   });
 
+  const handleBootstrapSeed = async () => {
+    setBusyAgent('__seed__');
+    setBanner(null);
+    try {
+      const res = await fetch('/api/ops/admin/bootstrap-seed', { method: 'POST' });
+      const data = (await res.json()) as { success?: boolean; message?: string; error?: string };
+      if (!res.ok) throw new Error(data.error || 'Unable to seed reference data.');
+      setBanner({
+        kind: 'success',
+        text: data.message || 'Reference commercial fleet, lanes, and manifests initialized.',
+      });
+      await fetchAdminData();
+    } catch (err) {
+      setBanner({ kind: 'error', text: err instanceof Error ? err.message : 'Seed failed.' });
+    } finally {
+      setBusyAgent(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -238,14 +257,25 @@ export default function AgentControlCenter() {
             Autonomous Agent &amp; Security Control Center
           </h1>
         </div>
-        <button
-          type="button"
-          onClick={() => void fetchAdminData()}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-steel border border-white/15 hover:border-bro-cyan/50 font-mono text-xs text-white cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Sync Governance State
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={busyAgent === '__seed__'}
+            onClick={() => void handleBootstrapSeed()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-gold/15 border border-bro-gold/40 hover:bg-bro-gold/25 font-mono text-xs font-bold text-bro-gold cursor-pointer disabled:opacity-50"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            {busyAgent === '__seed__' ? 'Seeding Fleet...' : 'Initialize Fleet Seed'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void fetchAdminData()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-steel border border-white/15 hover:border-bro-cyan/50 font-mono text-xs text-white cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Sync Governance State
+          </button>
+        </div>
       </div>
 
       {/* Inline Feedback Banner */}

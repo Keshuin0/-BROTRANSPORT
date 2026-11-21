@@ -37,6 +37,7 @@ export const QuoteRequestSchema = QuoteEstimateInputSchema.extend({
   contactPhone: z.string().trim().min(10, { error: 'Provide a valid 10-digit phone number.' }),
   commodity: z.string().trim().min(2).max(120).default('General Commercial Freight'),
   turnstileToken: z.string().optional(),
+  offlinePowToken: z.string().optional(),
 });
 
 export type QuoteEstimateInput = z.infer<typeof QuoteEstimateInputSchema>;

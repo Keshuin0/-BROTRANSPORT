@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calculator, CheckCircle2, Leaf, MapPin, ShieldCheck, Truck, Snowflake, Layers, ArrowRight } from 'lucide-react';
 import type { EquipmentType, Currency, RateCalculationResult } from '@bro/contracts';
+import { solveOfflinePow } from '../../lib/powWorker';
+import { sha256Hex } from '../../lib/ebolCrypto';
 
 interface HubOption {
   label: string;
@@ -154,6 +156,10 @@ export default function LiveQuoteEngine() {
     setError(null);
     setSubmitting(true);
     try {
+      const corePayload = `${contactEmail.trim()}:${origin.country}:${dest.country}:${equipmentType}`;
+      const payloadHash = await sha256Hex(corePayload);
+      const offlinePowToken = await solveOfflinePow(payloadHash);
+
       const res = await fetch('/api/quotes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,7 +169,7 @@ export default function LiveQuoteEngine() {
           contactName,
           contactEmail,
           contactPhone,
-          turnstileToken: 'interactive-session-verified',
+          offlinePowToken,
         }),
       });
       const data = (await res.json()) as {
@@ -190,7 +196,7 @@ export default function LiveQuoteEngine() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left 7 cols: Configuration & Booking Form */}
-      <form onSubmit={handleConfirmQuote} className="lg:col-span-7 space-y-6 rounded-lg border border-white/10 bg-bro-steel/40 p-6 sm:p-8 backdrop-blur-xl">
+      <form onSubmit={handleConfirmQuote} className="lg:col-span-7 space-y-6 rounded-3xl surface-ceramic p-6 sm:p-8">
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div>
             <span className="font-mono text-[10px] uppercase tracking-widest text-bro-cyan">

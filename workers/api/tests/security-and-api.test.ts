@@ -20,6 +20,7 @@ describe('workers/api — Security, RBAC, HMAC Webhooks & AI OCR HITL Gates', ()
 
   it('strictly allowlists CORS origins and rejects arbitrary origins', () => {
     expect(isAllowedOrigin('https://brotransport.com')).toBe(true);
+    expect(isAllowedOrigin('https://brotransport-os.keshuin0.workers.dev')).toBe(true);
     expect(isAllowedOrigin('http://localhost:4321')).toBe(true);
     expect(isAllowedOrigin('https://evil-scraper.example')).toBe(false);
   });

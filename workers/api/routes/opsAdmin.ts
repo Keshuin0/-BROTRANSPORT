@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { desc, eq } from 'drizzle-orm';
-import { createDb, users, auditLogs } from '@bro/db';
+import { createDb, users, auditLogs, seedDatabase } from '@bro/db';
 import { UserRoleSchema, isOpsRole } from '@bro/contracts';
 import type { ApiEnv } from './authRoutes.js';
 
@@ -164,4 +164,24 @@ opsAdminRoutes.post('/ops/admin/agents/:name/action', async (c) => {
   });
 
   return c.json({ success: true, result: payload });
+});
+
+opsAdminRoutes.post('/ops/admin/bootstrap-seed', async (c) => {
+  const admin = c.get('user')!;
+  const db = createDb(c.env.DB);
+  await seedDatabase(db);
+  await db.insert(auditLogs).values({
+    id: `aud_${crypto.randomUUID()}`,
+    actorUserId: admin.id,
+    actorType: 'user',
+    action: 'ADMIN_BOOTSTRAP_SEED_EXECUTED',
+    entityType: 'system',
+    entityId: 'brotransport-db',
+    detailJson: JSON.stringify({ initiatedBy: admin.email }),
+    createdAt: Date.now(),
+  });
+  return c.json({
+    success: true,
+    message: 'Commercial fleet, drivers, corridors, customs manifests, and audit baseline initialized safely.',
+  });
 });
