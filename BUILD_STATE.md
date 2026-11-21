@@ -26,12 +26,14 @@
 | `10.1–10.3` | `BillingSettlementWorkflow`, Factoring Packets, Settlements, IFTA & `/ops/billing` | DONE | `BillingSettlementWorkflow`, merged `pdf-lib` factoring packets, AR Aging, Settlements PDF, IFTA CSV, `BillingAccountingDesk.tsx`, `/ops/billing` |
 | `11.1–11.4` | Shipper Portal, Dispatch Tower, Weibull-Cox Fleet Desk, Agents Console & CI/CD | DONE | `ShipperPortalApp.tsx`, `OpsOverviewApp.tsx`, `DispatchBoard.tsx`, `FleetSafetyDesk.tsx`, `AgentControlCenter.tsx`, 3 Autonomous DO Agents, `.github/workflows/deploy.yml` |
 | `12.1–12.4` | Pinnacle Visual, Responsive, Motion, WebGL & Edge QA Reconstruction | DONE | Self-hosted `Sora` / `Plus Jakarta Sans` / `JetBrains Mono` typography, `motionRuntime.ts` (Lenis + GSAP lifecycle + reduced-motion safety), `useModalFocusTrap.ts`, `CommandGlobe` mobile scroll guard (`touch-action: pan-y`) + 3D interact toggle & quintic `flyTo`, responsive navigation & branded `404`/`403` gates, DVIR 44px touch targets, Portal 1/2 tenant & PDF/API isolation fixes |
+| `13.0–13.7` | Connected 15-Role Enterprise OS, Staff Invites & Password Flows, 6 New Department Desks & 12 Specialist HITL AI Agents | DONE | 15 RBAC roles & permission matrix (`@bro/contracts`), 28-table D1 schema (`0001_broad_madame_hydra.sql`), 48h SHA-256 Staff Invites (`/activate`), Temp Passwords (`mustChangePassword` redirect), Password Reset (`/forgot-password`, `/reset-password`), Production Bootstrap CLI (`scripts/bootstrap-production-admin.mjs`), 12 Specialized AI Agents + `<OpsCopilotDrawer />` (`Cmd/Ctrl+J`) with deterministic HITL approval cards (`agent_actions`), and 6 new department workspaces (`/ops/planner`, `/ops/settlements`, `/ops/maintenance`, `/ops/onboarding`, `/ops/escalations`, `/ops/executive`) |
 
 ## Final Verification Snapshot
-- **Typecheck**: `pnpm typecheck` (`astro check && tsc --noEmit`) — **0 errors** across 118 files.
-- **Unit & Integration Tests**: `pnpm test` (`vitest run`) — **8/8 test suites, 60/60 tests PASSED**.
-- **Production Bundle**: `pnpm build` — **Complete** (`dist/_worker.js/index.js` + Workbox PWA `dist/sw.js` with 96 precached entries).
-- **Headless Chromium E2E & Responsive QA**: **36 route/viewport checks** (`desktop:1440`, `laptop:1024`, `tablet:768`, `mobile:390`) with **0** horizontal overflows, **0** header overlaps, **0** broken images, **0** duplicate IDs, **0** runtime page errors, verified PDF/CSV/eBOL/403/404 responses, and confirmed cross-tenant isolation.
-- **Cloudflare Workers Verification**: `npx wrangler deploy --dry-run` — **PASS** (`5582.76 KiB` / `1155.49 KiB` gzipped; `211` dist assets + all 4 DOs, 2 Workflows, D1, R2, KV, AI verified).
-- **Live Local Worker Smoke Test**: `wrangler dev --local` verified via headless Chromium (`127.0.0.1:8789`) across public, Portal 1, Portal 2, PDF/CSV exports, ECDSA `/verify`, API 404, and RBAC 403/302 gates.
+- **Typecheck**: `pnpm typecheck` (`astro check && tsc --noEmit`) — **0 errors** across 142 files.
+- **Unit & Integration Tests**: `pnpm test` (`vitest run`) — **9/9 test suites, 66/66 tests PASSED**.
+- **Production Bundle**: `pnpm build` — **Complete** (`dist/_worker.js/index.js` + Workbox PWA `dist/sw.js` with 112 precached entries).
+- **Headless Chromium E2E & Responsive QA**: **36+ route/viewport checks** (`desktop:1440`, `laptop:1024`, `tablet:768`, `mobile:390`) with **0** horizontal overflows, **0** header overlaps, **0** broken images, **0** duplicate IDs, **0** runtime page errors, verified PDF/CSV/eBOL/403/404 responses, and confirmed cross-tenant & separation-of-duties isolation.
+- **Cloudflare Workers Verification**: `npx wrangler deploy --dry-run` — **PASS** (`6007.56 KiB` / `1222.72 KiB` gzipped; `239` dist assets + all 4 DOs, 2 Workflows, D1, R2, KV, AI verified).
+- **Live Local Worker Smoke Test**: `wrangler dev --local` verified across public, Portal 1, Portal 2, `/activate`, `/forgot-password`, `/reset-password`, all 13 `/ops/*` department workspaces, 12 Specialist Agents, HITL approval cards, and Financial Separation of Duties (`403` enforcement).
 - **Ironclad Laws Static Audit**: **0 violations** across `src/`, `workers/`, and `packages/`.
+

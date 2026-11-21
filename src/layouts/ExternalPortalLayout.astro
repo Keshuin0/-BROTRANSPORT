@@ -5,6 +5,7 @@ import '../styles/global.css';
 import BroLogo from '../components/brand/BroLogo.astro';
 import CommandPalette from '../components/nav/CommandPalette';
 import MobileNavDrawer from '../components/nav/MobileNavDrawer';
+import OpsCopilotDrawer from '../components/agents/OpsCopilotDrawer';
 
 interface Props {
   title: string;
@@ -73,6 +74,12 @@ const canOps = isOpsRole(role);
           </div>
 
           <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <OpsCopilotDrawer
+              client:load
+              currentPath={pathname}
+              userRole={role}
+              userName={user?.name ?? null}
+            />
             <CommandPalette client:load userRole={user?.role ?? null} />
 
             {portalType === 'driver' && canShipper && (

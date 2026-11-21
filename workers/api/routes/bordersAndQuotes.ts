@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import { desc, eq } from 'drizzle-orm';
-import { createDb, quotes, drivers, organizations, auditLogs } from '@bro/db';
+import { createDb, quotes, drivers, organizations, staffInvites, auditLogs } from '@bro/db';
 import {
   CarrierApplicationSchema,
   QuoteEstimateInputSchema,
   QuoteRequestSchema,
   calculateFreightRate,
+  hasPermission,
   isOpsRole,
 } from '@bro/contracts';
 import type { ApiEnv } from './authRoutes.js';
@@ -14,7 +15,7 @@ import { calculateHighwayRoute } from '../../services/routing.js';
 import { verifyFmcsaCarrier } from '../../services/fmcsa.js';
 import { sendQuoteEmail } from '../../services/email.js';
 import { verifyOfflinePowToken, sha256Hex } from '../../services/powVerify.js';
-import { checkRateLimit, verifyTurnstileFailClosed } from '../security.js';
+import { bytesToHex, checkRateLimit, verifyTurnstileFailClosed } from '../security.js';
 
 export const bordersAndQuotesRoutes = new Hono<ApiEnv>();
 
@@ -320,11 +321,99 @@ bordersAndQuotesRoutes.get('/ops/carriers', async (c) => {
 
 bordersAndQuotesRoutes.patch('/ops/carriers/:id/approve', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'safety_officer' && user.role !== 'super_admin')) {
-    return c.json({ error: 'Safety Officer or Super Admin required.' }, 403);
+  if (!user || !hasPermission(user.role, 'recruiting:approve')) {
+    return c.json({ error: 'Carrier Recruiter, Safety Officer, or Super Admin required.' }, 403);
   }
   const id = c.req.param('id');
   const db = createDb(c.env.DB);
-  await db.update(drivers).set({ status: 'active', updatedAt: Date.now() }).where(eq(drivers.id, id));
-  return c.json({ success: true, id, status: 'active' });
+  const now = Date.now();
+
+  const drvRows = await db.select().from(drivers).where(eq(drivers.id, id)).limit(1);
+  const drv = drvRows[0];
+  if (!drv) {
+    return c.json({ error: 'Driver record not found.' }, 404);
+  }
+
+  await db.update(drivers).set({ status: 'active', updatedAt: now }).where(eq(drivers.id, id));
+  if (drv.organizationId) {
+    await db
+      .update(organizations)
+      .set({ status: 'active', updatedAt: now })
+      .where(eq(organizations.id, drv.organizationId));
+  }
+
+  const rawToken = bytesToHex(crypto.getRandomValues(new Uint8Array(32)));
+  const tokenHash = await sha256Hex(rawToken);
+  const inviteId = `inv_${crypto.randomUUID()}`;
+  const expiresAt = now + 48 * 3600_000;
+
+  await db.insert(staffInvites).values({
+    id: inviteId,
+    email: drv.email.trim().toLowerCase(),
+    name: drv.fullName,
+    role: 'carrier_driver',
+    title: `Commercial Driver (${drv.equipmentDivision.replace('_', ' ').toUpperCase()})`,
+    organizationId: drv.organizationId ?? 'org_bro_internal',
+    driverId: drv.id,
+    tokenHash,
+    invitedByUserId: user.id,
+    expiresAt,
+    createdAt: now,
+  });
+
+  await db.insert(auditLogs).values({
+    id: `aud_${crypto.randomUUID()}`,
+    actorUserId: user.id,
+    actorType: 'user',
+    action: 'DRIVER_APPLICANT_APPROVED_AND_INVITED',
+    entityType: 'driver',
+    entityId: drv.id,
+    detailJson: JSON.stringify({
+      driverName: drv.fullName,
+      email: drv.email,
+      inviteId,
+    }),
+    createdAt: now,
+  });
+
+  const origin = new URL(c.req.url).origin;
+  const activateUrl = `${origin}/activate?token=${rawToken}`;
+
+  return c.json({
+    success: true,
+    id,
+    status: 'active',
+    inviteId,
+    activateUrl,
+  });
+});
+
+bordersAndQuotesRoutes.patch('/ops/carriers/organizations/:id/approve', async (c) => {
+  const user = c.get('user');
+  if (!user || !hasPermission(user.role, 'recruiting:approve')) {
+    return c.json({ error: 'Carrier Recruiter, Safety Officer, or Super Admin required.' }, 403);
+  }
+  const id = c.req.param('id');
+  const body = (await c.req.json().catch(() => ({}))) as { status?: 'active' | 'rejected' };
+  const nextStatus = body.status === 'rejected' ? 'rejected' : 'active';
+  const db = createDb(c.env.DB);
+  const now = Date.now();
+
+  await db
+    .update(organizations)
+    .set({ status: nextStatus, updatedAt: now })
+    .where(eq(organizations.id, id));
+
+  await db.insert(auditLogs).values({
+    id: `aud_${crypto.randomUUID()}`,
+    actorUserId: user.id,
+    actorType: 'user',
+    action: nextStatus === 'active' ? 'CARRIER_ORG_APPROVED' : 'CARRIER_ORG_REJECTED',
+    entityType: 'organization',
+    entityId: id,
+    detailJson: JSON.stringify({ status: nextStatus }),
+    createdAt: now,
+  });
+
+  return c.json({ success: true, id, status: nextStatus });
 });

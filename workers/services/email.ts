@@ -65,6 +65,24 @@ export interface OtpEmailPayload {
   purpose?: string;
 }
 
+export interface StaffInviteEmailPayload {
+  to: string;
+  recipientName: string;
+  roleLabel: string;
+  title?: string | null;
+  invitedByName: string;
+  activateUrl: string;
+  expiresInHours?: number;
+}
+
+export interface PasswordResetEmailPayload {
+  to: string;
+  recipientName: string;
+  resetUrl: string;
+  otpCode?: string;
+  expiresInMinutes?: number;
+}
+
 const HTML_ESCAPE_MAP: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',
@@ -348,3 +366,89 @@ export async function sendOtpEmail(
     fetchImpl,
   );
 }
+
+export async function sendStaffInviteEmail(
+  env: Pick<Partial<CloudflareEnv>, 'RESEND_API_KEY'>,
+  payload: StaffInviteEmailPayload,
+  fetchImpl: typeof fetch = fetch,
+): Promise<EmailDispatchResult> {
+  const safeName = escapeHtml(payload.recipientName);
+  const safeRole = escapeHtml(payload.roleLabel);
+  const safeTitle = payload.title ? escapeHtml(payload.title) : null;
+  const safeInvitedBy = escapeHtml(payload.invitedByName);
+  const safeActivateUrl = sanitizeSafeHttpUrl(payload.activateUrl);
+  const expiresHours = Math.max(1, Math.round(payload.expiresInHours ?? 48));
+
+  const titleRow = safeTitle
+    ? `<tr><td style="padding:6px 0;color:#94a3b8;">Specialist Title</td><td style="padding:6px 0;color:#f8fafc;text-align:right;">${safeTitle}</td></tr>`
+    : '';
+
+  const activateBlock = safeActivateUrl
+    ? `<p style="margin:20px 0;"><a href="${escapeHtml(safeActivateUrl)}" style="display:inline-block;padding:12px 20px;background:#38bdf8;color:#020617;text-decoration:none;border-radius:8px;font-weight:700;">Activate Account &amp; Set Password</a></p>
+       <p style="font-size:12px;color:#94a3b8;word-break:break-all;">Direct activation link: <span style="font-family:monospace;color:#cbd5e1;">${escapeHtml(safeActivateUrl)}</span></p>`
+    : '';
+
+  const html = renderCorporateEmailShell(
+    'Staff & Portal Onboarding Invitation',
+    `<p>Hello ${safeName},</p>
+     <p><strong>${safeInvitedBy}</strong> has provisioned your zero-trust account for <strong>#BRO Transport Corp.</strong></p>
+     <table style="width:100%;border-collapse:collapse;margin:16px 0;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;">
+       <tr><td style="padding:6px 0;color:#94a3b8;">Assigned RBAC Role</td><td style="padding:6px 0;color:#38bdf8;text-align:right;font-weight:700;">${safeRole}</td></tr>
+       ${titleRow}
+       <tr><td style="padding:6px 0;color:#94a3b8;">Provisioned By</td><td style="padding:6px 0;color:#f8fafc;text-align:right;">${safeInvitedBy}</td></tr>
+       <tr><td style="padding:6px 0;color:#94a3b8;">Link Expiration</td><td style="padding:6px 0;color:#f8fafc;text-align:right;">${expiresHours} hours</td></tr>
+     </table>
+     ${activateBlock}
+     <p style="font-size:12px;color:#94a3b8;">This single-use onboarding link expires in ${expiresHours} hours.</p>`,
+  );
+
+  return sendResendEmail(
+    env,
+    {
+      to: payload.to,
+      subject: `#BRO Transport Invitation — ${sanitizeHeaderText(payload.roleLabel)} Access`,
+      html,
+    },
+    fetchImpl,
+  );
+}
+
+export async function sendPasswordResetEmail(
+  env: Pick<Partial<CloudflareEnv>, 'RESEND_API_KEY'>,
+  payload: PasswordResetEmailPayload,
+  fetchImpl: typeof fetch = fetch,
+): Promise<EmailDispatchResult> {
+  const safeName = escapeHtml(payload.recipientName || 'Authorized User');
+  const safeResetUrl = sanitizeSafeHttpUrl(payload.resetUrl);
+  const safeOtp = payload.otpCode ? escapeHtml(payload.otpCode) : null;
+  const expiresMinutes = Math.max(1, Math.round(payload.expiresInMinutes ?? 30));
+
+  const resetLinkBlock = safeResetUrl
+    ? `<p style="margin:20px 0;"><a href="${escapeHtml(safeResetUrl)}" style="display:inline-block;padding:12px 20px;background:#38bdf8;color:#020617;text-decoration:none;border-radius:8px;font-weight:700;">Reset Portal Password</a></p>
+       <p style="font-size:12px;color:#94a3b8;word-break:break-all;">Direct recovery URL: <span style="font-family:monospace;color:#cbd5e1;">${escapeHtml(safeResetUrl)}</span></p>`
+    : '';
+
+  const otpBlock = safeOtp
+    ? `<div style="margin:16px 0;padding:14px;text-align:center;background:#0f172a;border:1px solid #38bdf8;border-radius:8px;font-size:24px;letter-spacing:0.25em;font-weight:700;color:#f8fafc;font-family:monospace;">${safeOtp}</div>`
+    : '';
+
+  const html = renderCorporateEmailShell(
+    'Password Reset & Account Recovery',
+    `<p>Hello ${safeName},</p>
+     <p>We received a request to reset the password for your #BRO Transport portal account.</p>
+     ${resetLinkBlock}
+     ${otpBlock}
+     <p style="font-size:12px;color:#94a3b8;">This password reset token expires in ${expiresMinutes} minutes. If you did not request a password reset, you can safely ignore this message.</p>`,
+  );
+
+  return sendResendEmail(
+    env,
+    {
+      to: payload.to,
+      subject: '#BRO Transport Password Reset Request',
+      html,
+    },
+    fetchImpl,
+  );
+}
+

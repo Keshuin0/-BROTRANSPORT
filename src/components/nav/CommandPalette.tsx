@@ -38,12 +38,18 @@ const STATIC_ACTIONS: CommandAction[] = [
   { id: 'shipper', label: 'Customer / Shipper Self-Serve Portal', hint: '/portal/shipper', href: '/portal/shipper', category: 'Portal 1', icon: 'shipper', protectedRoute: true },
   { id: 'driver', label: 'Driver Mobile PWA (Docs, DVIR, Pay)', hint: '/portal/driver', href: '/portal/driver', category: 'Portal 1', icon: 'driver', protectedRoute: true },
   { id: 'ops', label: 'Ops Control Tower Overview', hint: '/ops', href: '/ops', category: 'Portal 2 (Internal)', icon: 'ops', protectedRoute: true },
+  { id: 'executive', label: 'Executive P&L, Operating Ratio & Conflict Radar', hint: '/ops/executive', href: '/ops/executive', category: 'Portal 2 (Internal)', icon: 'ops', protectedRoute: true },
   { id: 'dispatch', label: 'Dispatch Load Board & EDI 204/990/214', hint: '/ops/dispatch', href: '/ops/dispatch', category: 'Portal 2 (Internal)', icon: 'ops', protectedRoute: true },
+  { id: 'planner', label: 'Corridor Load Planner & Backhaul Yield Desk', hint: '/ops/planner', href: '/ops/planner', category: 'Portal 2 (Internal)', icon: 'ops', protectedRoute: true },
   { id: 'docs', label: 'AI Document OCR Verification Queue', hint: '/ops/documents', href: '/ops/documents', category: 'Portal 2 (Internal)', icon: 'customs', protectedRoute: true },
   { id: 'ops-customs', label: 'Cross-Border Customs & CARM Desk', hint: '/ops/customs', href: '/ops/customs', category: 'Portal 2 (Internal)', icon: 'customs', protectedRoute: true },
-  { id: 'billing', label: 'Billing, Factoring Packets, Settlements & IFTA', hint: '/ops/billing', href: '/ops/billing', category: 'Portal 2 (Internal)', icon: 'quote', protectedRoute: true },
+  { id: 'billing', label: 'Billing, Factoring Packets & IFTA', hint: '/ops/billing', href: '/ops/billing', category: 'Portal 2 (Internal)', icon: 'quote', protectedRoute: true },
+  { id: 'settlements', label: 'Driver Payroll & Settlement Audit Desk', hint: '/ops/settlements', href: '/ops/settlements', category: 'Portal 2 (Internal)', icon: 'quote', protectedRoute: true },
   { id: 'fleet', label: 'Fleet Safety, DVIR & Weibull-Cox Twin', hint: '/ops/fleet', href: '/ops/fleet', category: 'Portal 2 (Internal)', icon: 'driver', protectedRoute: true },
-  { id: 'admin', label: 'Admin RBAC & Autonomous Agent Controls', hint: '/ops/admin', href: '/ops/admin', category: 'Portal 2 (Admin)', icon: 'ops', protectedRoute: true },
+  { id: 'maintenance', label: 'Shop Maintenance & DVIR Work Orders', hint: '/ops/maintenance', href: '/ops/maintenance', category: 'Portal 2 (Internal)', icon: 'driver', protectedRoute: true },
+  { id: 'onboarding', label: 'Driver Recruiting & FMCSA Carrier Vetting', hint: '/ops/onboarding', href: '/ops/onboarding', category: 'Portal 2 (Internal)', icon: 'driver', protectedRoute: true },
+  { id: 'escalations', label: '24/7 Escalations & Night Shift Handoffs', hint: '/ops/escalations', href: '/ops/escalations', category: 'Portal 2 (Internal)', icon: 'ops', protectedRoute: true },
+  { id: 'admin', label: 'Admin Team Invites, RBAC & Agent Controls', hint: '/ops/admin', href: '/ops/admin', category: 'Portal 2 (Admin)', icon: 'ops', protectedRoute: true },
 ];
 
 export default function CommandPalette({ userRole, showMobileIcon = false }: CommandPaletteProps) {

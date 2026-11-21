@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   createDb,
@@ -8,6 +8,7 @@ import {
   organizations,
   drivers,
   driverSettlements,
+  settlementBatches,
   iftaLogs,
   documents,
   auditLogs,
@@ -41,12 +42,27 @@ const GenerateSettlementSchema = z.object({
   driverId: z.string().trim().min(1, { error: 'driverId required.' }),
   periodStart: z.number().int().optional(),
   periodEnd: z.number().int().optional(),
+  loadIds: z.array(z.string().trim().min(1)).optional(),
+  reimbursementsCents: z.number().int().min(0).optional(),
   fuelDeductionCents: z.number().int().min(0).optional(),
   insuranceDeductionCents: z.number().int().min(0).optional(),
 });
 
 function isBillingRole(role: string): boolean {
+  return (
+    role === 'billing_clerk' ||
+    role === 'settlement_clerk' ||
+    role === 'executive' ||
+    role === 'super_admin'
+  );
+}
+
+function canMutateBilling(role: string): boolean {
   return role === 'billing_clerk' || role === 'super_admin';
+}
+
+function canMutateSettlements(role: string): boolean {
+  return role === 'settlement_clerk' || role === 'billing_clerk' || role === 'super_admin';
 }
 
 function safeFilename(raw: string): string {
@@ -161,7 +177,7 @@ billingAndIftaRoutes.get('/ops/billing/invoices', async (c) => {
 
 billingAndIftaRoutes.post('/ops/billing/invoices', async (c) => {
   const user = c.get('user');
-  if (!user || !isBillingRole(user.role)) {
+  if (!user || !canMutateBilling(user.role)) {
     return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const parsed = CreateInvoiceSchema.safeParse(await c.req.json().catch(() => ({})));
@@ -200,7 +216,7 @@ billingAndIftaRoutes.post('/ops/billing/invoices', async (c) => {
 
 billingAndIftaRoutes.post('/ops/billing/invoices/:id/approve', async (c) => {
   const user = c.get('user');
-  if (!user || !isBillingRole(user.role)) {
+  if (!user || !canMutateBilling(user.role)) {
     return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const id = c.req.param('id');
@@ -265,7 +281,7 @@ billingAndIftaRoutes.post('/ops/billing/invoices/:id/approve', async (c) => {
 
 billingAndIftaRoutes.post('/ops/billing/invoices/:id/mark-paid', async (c) => {
   const user = c.get('user');
-  if (!user || !isBillingRole(user.role)) {
+  if (!user || !canMutateBilling(user.role)) {
     return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const id = c.req.param('id');
@@ -407,20 +423,27 @@ billingAndIftaRoutes.get('/ops/billing/invoices/:id/factoring-packet.pdf', async
 billingAndIftaRoutes.get('/ops/settlements', async (c) => {
   const user = c.get('user');
   if (!user || !isBillingRole(user.role)) {
-    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
+    return c.json({ error: 'Settlement Clerk, Billing Clerk, Executive, or Super Admin role required.' }, 403);
   }
   const db = createDb(c.env.DB);
-  const [rows, drvList] = await Promise.all([
+  const [rows, drvList, batchRows, allLoads] = await Promise.all([
     db.select().from(driverSettlements).orderBy(desc(driverSettlements.createdAt)).limit(50),
     db.select().from(drivers).limit(50),
+    db.select().from(settlementBatches).orderBy(desc(settlementBatches.createdAt)).limit(50),
+    db.select().from(loads).orderBy(desc(loads.updatedAt)).limit(100),
   ]);
-  return c.json({ settlements: rows, drivers: drvList });
+  return c.json({
+    settlements: rows,
+    drivers: drvList,
+    batches: batchRows,
+    loads: allLoads,
+  });
 });
 
 billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
   const user = c.get('user');
-  if (!user || !isBillingRole(user.role)) {
-    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
+  if (!user || !canMutateSettlements(user.role)) {
+    return c.json({ error: 'Settlement Clerk, Billing Clerk, or Super Admin role required.' }, 403);
   }
   const parsed = GenerateSettlementSchema.safeParse(await c.req.json().catch(() => ({})));
   if (!parsed.success) {
@@ -433,9 +456,29 @@ billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
   const drv = drvRows[0];
   if (!drv) return c.json({ error: 'Driver not found.' }, 404);
 
-  const drvLoads = await db.select().from(loads).where(eq(loads.assignedDriverId, drv.id));
+  const allDrvLoads = await db.select().from(loads).where(eq(loads.assignedDriverId, drv.id));
+  const requestedIds = body.loadIds && body.loadIds.length > 0 ? new Set(body.loadIds) : null;
+  const drvLoads = allDrvLoads.filter(
+    (l) => !l.settlementBatchId && (!requestedIds || requestedIds.has(l.id)),
+  );
+
+  if (drvLoads.length === 0 && allDrvLoads.length > 0) {
+    return c.json(
+      {
+        error:
+          'All assigned loads for this driver are already locked in a finalized settlement batch (double-payout protection).',
+      },
+      409,
+    );
+  }
+
   const totalMiles = drvLoads.reduce((s, l) => s + l.loadedMiles, 0);
   const totalLoadGross = drvLoads.reduce((s, l) => s + l.rateCustomerCents, 0);
+  const totalDetentionCents = drvLoads.reduce(
+    (s, l) => s + (l.detentionMinutes > 120 ? Math.round(((l.detentionMinutes - 120) / 60) * 6500) : 0),
+    0,
+  );
+  const reimbursementsCents = body.reimbursementsCents ?? 0;
   const deductions = [
     ...(body.fuelDeductionCents ? [{ code: 'FUEL_CARD', label: 'Fleet Fuel Card Deductions', amountCents: body.fuelDeductionCents }] : []),
     ...(body.insuranceDeductionCents ? [{ code: 'INS_ESCROW', label: 'Occupational Insurance / Escrow', amountCents: body.insuranceDeductionCents }] : []),
@@ -447,11 +490,14 @@ billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
     rateValue: drv.payRateValue,
     loadedMiles: totalMiles,
     loadGrossCents: totalLoadGross,
+    detentionPayCents: totalDetentionCents,
+    reimbursementsCents,
     deductionsCents: deductionsTotal,
   });
 
   const now = Date.now();
   const id = `stl_${crypto.randomUUID()}`;
+  const batchId = `sb_${crypto.randomUUID()}`;
   const settlementNumber = `STL-${new Date(now).getUTCFullYear()}-${crypto.randomUUID().slice(0, 5).toUpperCase()}`;
   const periodStart = body.periodStart ?? now - 14 * 86_400_000;
   const periodEnd = body.periodEnd ?? now;
@@ -484,6 +530,34 @@ billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
     await c.env.VAULT.put(pdfKey, pdfBytes, { httpMetadata: { contentType: 'application/pdf' } });
   }
 
+  await db.insert(settlementBatches).values({
+    id: batchId,
+    driverId: drv.id,
+    periodStart,
+    periodEnd,
+    grossPayCents: calc.grossPayCents,
+    reimbursementsCents: calc.reimbursementsCents,
+    deductionsCents: calc.deductionsCents,
+    netPayCents: calc.netPayCents,
+    loadCount: drvLoads.length,
+    status: 'approved',
+    pdfR2Key: pdfKey,
+    approvedByUserId: user.id,
+    createdAt: now,
+  });
+
+  if (drvLoads.length > 0) {
+    await db
+      .update(loads)
+      .set({ settlementBatchId: batchId, updatedAt: now })
+      .where(
+        inArray(
+          loads.id,
+          drvLoads.map((l) => l.id),
+        ),
+      );
+  }
+
   await db.insert(driverSettlements).values({
     id,
     settlementNumber,
@@ -510,11 +584,27 @@ billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
     action: 'DRIVER_SETTLEMENT_GENERATED',
     entityType: 'settlement',
     entityId: id,
-    detailJson: JSON.stringify({ settlementNumber, netPayCents: calc.netPayCents }),
+    detailJson: JSON.stringify({
+      settlementNumber,
+      batchId,
+      settledLoadIds: drvLoads.map((l) => l.id),
+      netPayCents: calc.netPayCents,
+    }),
     createdAt: now,
   });
 
-  return c.json({ success: true, id, settlementNumber, calculation: calc, pdfUrl: `/api/settlements/${id}/pdf` }, 201);
+  return c.json(
+    {
+      success: true,
+      id,
+      batchId,
+      settlementNumber,
+      settledLoadCount: drvLoads.length,
+      calculation: calc,
+      pdfUrl: `/api/settlements/${id}/pdf`,
+    },
+    201,
+  );
 });
 
 billingAndIftaRoutes.get('/settlements/:id/pdf', async (c) => {

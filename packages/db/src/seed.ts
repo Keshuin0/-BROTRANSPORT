@@ -10,12 +10,16 @@ import {
   invoices,
   iftaLogs,
   telematicsEvents,
+  workOrders,
+  loadCheckCalls,
+  agentActions,
   auditLogs,
 } from './schema.js';
 
 /**
  * Deterministic seed dataset for local development and demo verification.
  * Uses authentic Atlantic Canada <-> North America commercial lanes (zero cliché placeholder names).
+ * Security: Zero passwords inserted into `accounts` for seeded identities.
  */
 export async function seedDatabase(db: BroDatabase, now = Date.now()): Promise<void> {
   const day = 86_400_000;
@@ -74,17 +78,17 @@ export async function seedDatabase(db: BroDatabase, now = Date.now()): Promise<v
     ])
     .onConflictDoNothing();
 
-  await db
-    .insert(users)
-    .values([
+  const seedUsers = [
       {
         id: 'usr_admin_01',
         name: 'Keshav Operations Admin',
         email: 'admin@brotransport.com',
         emailVerified: true,
-        role: 'super_admin',
+        role: 'super_admin' as const,
+        title: 'Operations & Platform Admin',
         organizationId: 'org_bro_internal',
         phone: '902-555-0101',
+        mustChangePassword: false,
         active: true,
         createdAt: now,
         updatedAt: now,
@@ -94,9 +98,137 @@ export async function seedDatabase(db: BroDatabase, now = Date.now()): Promise<v
         name: 'Claire Arsenault',
         email: 'dispatch@brotransport.com',
         emailVerified: true,
-        role: 'dispatcher',
+        role: 'dispatcher' as const,
+        title: 'Lead Cross-Border Dispatcher',
         organizationId: 'org_bro_internal',
         phone: '902-555-0102',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_planner_01',
+        name: 'Marcus Belliveau',
+        email: 'planner@brotransport.com',
+        emailVerified: true,
+        role: 'load_planner' as const,
+        title: 'Senior Corridor Load Planner',
+        organizationId: 'org_bro_internal',
+        phone: '902-555-0103',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_customs_01',
+        name: 'Genevieve Poirier',
+        email: 'customs@brotransport.com',
+        emailVerified: true,
+        role: 'customs_broker' as const,
+        title: 'Licensed CBSA / CBP Customs Broker',
+        organizationId: 'org_bro_internal',
+        phone: '506-555-0104',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_billing_01',
+        name: 'Hannah MacKinnon',
+        email: 'billing@brotransport.com',
+        emailVerified: true,
+        role: 'billing_clerk' as const,
+        title: 'Freight AR & IFTA Billing Clerk',
+        organizationId: 'org_bro_internal',
+        phone: '902-555-0105',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_settle_01',
+        name: 'Trevor Cormier',
+        email: 'settlements@brotransport.com',
+        emailVerified: true,
+        role: 'settlement_clerk' as const,
+        title: 'Driver Payroll & Settlement Specialist',
+        organizationId: 'org_bro_internal',
+        phone: '506-555-0106',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_safety_01',
+        name: 'Danielle Gaudet',
+        email: 'safety@brotransport.com',
+        emailVerified: true,
+        role: 'safety_officer' as const,
+        title: 'DOT / NSC Fleet Safety Officer',
+        organizationId: 'org_bro_internal',
+        phone: '902-555-0107',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_maint_01',
+        name: 'Marc-Andre Leblanc',
+        email: 'maintenance@brotransport.com',
+        emailVerified: true,
+        role: 'maintenance_manager' as const,
+        title: 'Class-8 Shop & Maintenance Manager',
+        organizationId: 'org_bro_internal',
+        phone: '506-555-0108',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_recruit_01',
+        name: 'Sophie Thibodeau',
+        email: 'recruiting@brotransport.com',
+        emailVerified: true,
+        role: 'carrier_recruiter' as const,
+        title: 'Carrier & Driver Onboarding Lead',
+        organizationId: 'org_bro_internal',
+        phone: '902-555-0109',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_night_01',
+        name: 'Devon Chaisson',
+        email: 'night@brotransport.com',
+        emailVerified: true,
+        role: 'night_coordinator' as const,
+        title: 'Night Operations & Escalation Lead',
+        organizationId: 'org_bro_internal',
+        phone: '902-555-0110',
+        mustChangePassword: false,
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'usr_exec_01',
+        name: 'Natalie Boudreau',
+        email: 'exec@brotransport.com',
+        emailVerified: true,
+        role: 'executive' as const,
+        title: 'VP Freight Operations & Finance',
+        organizationId: 'org_bro_internal',
+        phone: '902-555-0111',
+        mustChangePassword: false,
         active: true,
         createdAt: now,
         updatedAt: now,
@@ -106,9 +238,11 @@ export async function seedDatabase(db: BroDatabase, now = Date.now()): Promise<v
         name: 'Owen MacLeod',
         email: 'owen@cavendishvalley.example',
         emailVerified: true,
-        role: 'shipper_admin',
+        role: 'shipper_admin' as const,
+        title: 'VP Supply Chain',
         organizationId: 'org_cavendish_produce',
         phone: '902-555-0192',
+        mustChangePassword: false,
         active: true,
         createdAt: now,
         updatedAt: now,
@@ -118,15 +252,20 @@ export async function seedDatabase(db: BroDatabase, now = Date.now()): Promise<v
         name: 'Liam Gallant',
         email: 'liam.gallant@brotransport.com',
         emailVerified: true,
-        role: 'carrier_driver',
+        role: 'carrier_driver' as const,
+        title: 'Company Reefer Operator',
         organizationId: 'org_bro_internal',
         phone: '902-555-0174',
+        mustChangePassword: false,
         active: true,
         createdAt: now,
         updatedAt: now,
       },
-    ])
-    .onConflictDoNothing();
+  ];
+
+  for (const u of seedUsers) {
+    await db.insert(users).values(u).onConflictDoNothing();
+  }
 
   await db
     .insert(drivers)
@@ -398,6 +537,199 @@ export async function seedDatabase(db: BroDatabase, now = Date.now()): Promise<v
     .onConflictDoNothing();
 
   await db
+    .insert(workOrders)
+    .values([
+      {
+        id: 'wo_seed_1',
+        equipmentId: 'eq_fb_5022',
+        unitNumber: 'FB-5022',
+        priority: 'high',
+        status: 'open',
+        title: 'Annual CVIP Inspection & Brake Slack Adjuster Service',
+        description:
+          'Annual NSC/DOT safety inspection expires in 18 days. Inspect rear tandem air chambers, slack adjusters, and deck winches prior to next Moncton-Toronto dispatch.',
+        estimatedCostCents: 68500,
+        vendorName: 'Atlantic Heavy Fleet Services — Moncton',
+        assignedMechanic: 'Marc-Andre Leblanc',
+        createdAt: now - 6 * 3600_000,
+        updatedAt: now - 3600_000,
+      },
+      {
+        id: 'wo_seed_2',
+        equipmentId: 'eq_rf_4221',
+        unitNumber: 'RF-4221',
+        priority: 'medium',
+        status: 'in_progress',
+        title: 'Thermo King Precedent S-600 Defrost Sensor Calibration',
+        description:
+          'Preventive calibration check on return-air thermistor and door seal integrity for cross-border FDA chilled produce lanes.',
+        estimatedCostCents: 32000,
+        vendorName: 'Charlottetown Reefer Bay 2',
+        assignedMechanic: 'Marc-Andre Leblanc',
+        createdAt: now - 12 * 3600_000,
+        updatedAt: now - 1800_000,
+      },
+    ])
+    .onConflictDoNothing();
+
+  await db
+    .insert(loadCheckCalls)
+    .values([
+      {
+        id: 'cc_seed_1',
+        loadId: 'load_9948',
+        driverId: 'drv_01',
+        recordedByUserId: 'usr_disp_01',
+        recordedByType: 'dispatcher',
+        statusNote:
+          'Arrived at CBP Calais / St. Stephen Port 0115. ACE PAPS manifest BROP8843921 in queue; reefer setpoint +4.0C verified at +4.1C.',
+        etaUtc: new Date(now + 6 * 3600_000).toISOString(),
+        locationText: 'Calais, ME / St. Stephen, NB (Port 0115)',
+        detentionMinutes: 0,
+        createdAt: now - 1200_000,
+      },
+      {
+        id: 'cc_seed_2',
+        loadId: 'load_9949',
+        driverId: 'drv_02',
+        recordedByUserId: 'usr_night_01',
+        recordedByType: 'night_coordinator',
+        statusNote:
+          'Unloaded galvanized structural steel I-beams at Moncton yard. 45 minutes billable detention logged beyond 2h free time.',
+        etaUtc: new Date(now - 3600_000).toISOString(),
+        locationText: '88 Caledonia Industrial Pkwy, Moncton, NB',
+        detentionMinutes: 45,
+        createdAt: now - 3600_000,
+      },
+    ])
+    .onConflictDoNothing();
+
+  const seedActions = [
+      {
+        id: 'agact_seed_1',
+        agentId: 'CustomsPreFlightAgent',
+        targetRole: 'customs_broker' as const,
+        organizationId: 'org_cavendish_produce',
+        entityType: 'customs_manifest',
+        entityId: 'man_9948',
+        actionType: 'PREFLIGHT_VERIFICATION',
+        title: 'Verify FDA Prior Notice & CBP RNS Queue for BROP-2026-9948',
+        rationale:
+          'Load BROP-2026-9948 carrying perishable PEI potatoes & seafood at Port 0115 requires customs broker confirmation of FDA PN-88439210 prior to border release.',
+        payloadJson: JSON.stringify({
+          manifestId: 'man_9948',
+          controlNumber: 'BROP8843921',
+          portCode: '0115',
+        }),
+        deterministicPreviewJson: JSON.stringify({
+          compliant: true,
+          fdaLeadMinutes: 180,
+          carmIorVerified: true,
+        }),
+        status: 'pending' as const,
+        createdAt: now - 900_000,
+      },
+      {
+        id: 'agact_seed_2',
+        agentId: 'BillingCollectionsAgent',
+        targetRole: 'billing_clerk' as const,
+        organizationId: 'org_fundy_steel',
+        entityType: 'invoice',
+        entityId: 'inv_9949',
+        actionType: 'APPROVE_AND_ISSUE_INVOICE',
+        title: 'Approve & Issue Zero-Rated Invoice INV-2026-9949 ($4,613.75 USD)',
+        rationale:
+          'Delivered flatbed load BROP-2026-9949 includes 45 min detention ($63.75) and tarping ($150.00). Zero-rated under Canada ETA Schedule VI Part VII.',
+        payloadJson: JSON.stringify({
+          invoiceId: 'inv_9949',
+          invoiceNumber: 'INV-2026-9949',
+          nextStatus: 'sent',
+        }),
+        deterministicPreviewJson: JSON.stringify({
+          subtotalCents: 461375,
+          taxCents: 0,
+          totalCents: 461375,
+          currency: 'USD',
+        }),
+        status: 'pending' as const,
+        createdAt: now - 800_000,
+      },
+      {
+        id: 'agact_seed_3',
+        agentId: 'SettlementAuditAgent',
+        targetRole: 'settlement_clerk' as const,
+        organizationId: 'org_bro_internal',
+        entityType: 'load',
+        entityId: 'load_9949',
+        actionType: 'CREATE_SETTLEMENT_BATCH',
+        title: 'Queue Driver Settlement Batch for Nadia Tremblay (BROP-2026-9949)',
+        rationale:
+          'Owner-operator load BROP-2026-9949 is DELIVERED with 82.00% gross contract split ($3,788.40 USD gross) ready for settlement batch verification.',
+        payloadJson: JSON.stringify({
+          driverId: 'drv_02',
+          loadIds: ['load_9949'],
+        }),
+        deterministicPreviewJson: JSON.stringify({
+          payModel: 'percent_gross',
+          rateBps: 8200,
+          grossPayCents: 378840,
+          currency: 'USD',
+        }),
+        status: 'pending' as const,
+        createdAt: now - 700_000,
+      },
+      {
+        id: 'agact_seed_4',
+        agentId: 'FleetWatchdogAgent',
+        targetRole: 'safety_officer' as const,
+        organizationId: 'org_bro_internal',
+        entityType: 'driver',
+        entityId: 'drv_01',
+        actionType: 'COMPLIANCE_RENEWAL_NOTICE',
+        title: 'Medical Certificate Expiring in 22 Days — Liam Gallant',
+        rationale:
+          '49 CFR § 391.45 medical card expires within the 30-day Fleet Watchdog threshold. Approve compliance notice dispatch to driver.',
+        payloadJson: JSON.stringify({
+          driverId: 'drv_01',
+          daysRemaining: 22,
+        }),
+        deterministicPreviewJson: JSON.stringify({
+          severity: 'ELEVATED',
+          regulatoryCode: '49 CFR 391.45',
+        }),
+        status: 'pending' as const,
+        createdAt: now - 600_000,
+      },
+      {
+        id: 'agact_seed_5',
+        agentId: 'ShopMaintenanceAgent',
+        targetRole: 'maintenance_manager' as const,
+        organizationId: 'org_bro_internal',
+        entityType: 'work_order',
+        entityId: 'wo_seed_1',
+        actionType: 'ASSIGN_SHOP_BAY',
+        title: 'Assign Moncton Bay 1 for Flatbed FB-5022 CVIP Inspection',
+        rationale:
+          'Equipment FB-5022 annual inspection expires in 18 days; work order wo_seed_1 ($685.00 est.) is open and ready for bay scheduling.',
+        payloadJson: JSON.stringify({
+          workOrderId: 'wo_seed_1',
+          equipmentId: 'eq_fb_5022',
+          unitNumber: 'FB-5022',
+        }),
+        deterministicPreviewJson: JSON.stringify({
+          estimatedCostCents: 68500,
+          daysUntilExpiry: 18,
+        }),
+        status: 'pending' as const,
+        createdAt: now - 500_000,
+      },
+  ];
+
+  for (const act of seedActions) {
+    await db.insert(agentActions).values(act).onConflictDoNothing();
+  }
+
+  await db
     .insert(auditLogs)
     .values([
       {
@@ -406,7 +738,7 @@ export async function seedDatabase(db: BroDatabase, now = Date.now()): Promise<v
         action: 'DB_SEED_INITIALIZED',
         entityType: 'system',
         entityId: 'brotransport-db',
-        detailJson: JSON.stringify({ version: '1.0.0' }),
+        detailJson: JSON.stringify({ version: '2.0.0' }),
         createdAt: now,
       },
     ])

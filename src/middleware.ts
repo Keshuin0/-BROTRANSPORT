@@ -206,6 +206,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const lowerPath = pathname.toLowerCase();
   const role: UserRole = user?.role ?? 'visitor';
 
+  if (
+    user &&
+    user.mustChangePassword &&
+    (lowerPath.startsWith('/ops') || lowerPath.startsWith('/portal/'))
+  ) {
+    return context.redirect(`/activate?mode=set-password&next=${encodeURIComponent(pathname)}`, 302);
+  }
+
   const isProtectedPage =
     lowerPath.startsWith('/ops') ||
     lowerPath.startsWith('/portal/shipper') ||

@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { and, eq } from 'drizzle-orm';
+import { createDb, drivers } from '@bro/db';
 import { isOpsRole } from '@bro/contracts';
 import type { ApiEnv } from './authRoutes.js';
 import { hmacSha256Hex, hexToBytes, timingSafeEqualBytes } from '../security.js';
@@ -23,8 +25,20 @@ wsRoutes.post('/ws/ticket', async (c) => {
       return c.json({ error: 'Forbidden channel' }, 403);
     }
   } else if (channel.startsWith('driver:')) {
-    if (!user || (user.role !== 'carrier_driver' && !isOpsRole(user.role))) {
+    const driverId = channel.slice(7).trim();
+    if (!user || !driverId || (user.role !== 'carrier_driver' && !isOpsRole(user.role))) {
       return c.json({ error: 'Forbidden channel' }, 403);
+    }
+    if (user.role === 'carrier_driver' && c.env.DB) {
+      const db = createDb(c.env.DB);
+      const matched = await db
+        .select({ id: drivers.id })
+        .from(drivers)
+        .where(and(eq(drivers.id, driverId), eq(drivers.userId, user.id)))
+        .limit(1);
+      if (!matched[0]) {
+        return c.json({ error: 'Forbidden channel' }, 403);
+      }
     }
   } else if (channel !== 'public:borders') {
     return c.json({ error: 'Unknown WebSocket channel' }, 400);

@@ -9,6 +9,7 @@ import {
   dvirInspections,
   equipment,
   driverSettlements,
+  customsManifests,
   ediMessages,
   auditLogs,
   type BroDatabase,
@@ -25,7 +26,7 @@ import {
 import type { SessionUser } from '../../../src/env.js';
 import type { ApiEnv } from './authRoutes.js';
 import { bytesToHex } from '../security.js';
-import { emitHubEvent } from '../../agents/hubEvents.js';
+import { emitHubEvent, emitMultiChannelHubEvents } from '../../agents/hubEvents.js';
 
 export const driverPortalRoutes = new Hono<ApiEnv>();
 
@@ -124,8 +125,25 @@ driverPortalRoutes.get('/driver/dashboard', async (c) => {
     .limit(20);
 
   const stopsByLoad: Record<string, typeof loadStops.$inferSelect[]> = {};
+  const customsByLoad: Record<
+    string,
+    { manifestType: string; controlNumber: string; portCode: string; status: string }
+  > = {};
   for (const l of assignedLoads) {
     stopsByLoad[l.id] = await db.select().from(loadStops).where(eq(loadStops.loadId, l.id));
+    const man = await db
+      .select()
+      .from(customsManifests)
+      .where(eq(customsManifests.loadId, l.id))
+      .limit(1);
+    if (man[0]) {
+      customsByLoad[l.id] = {
+        manifestType: man[0].manifestType,
+        controlNumber: man[0].controlNumber,
+        portCode: man[0].portCode,
+        status: man[0].status,
+      };
+    }
   }
 
   const recentDocs = await db
@@ -144,7 +162,15 @@ driverPortalRoutes.get('/driver/dashboard', async (c) => {
 
   const fleetUnits = await db.select().from(equipment).limit(25);
 
-  return c.json({ driver, assignedLoads, stopsByLoad, recentDocs, settlements, fleetUnits });
+  return c.json({
+    driver,
+    assignedLoads,
+    stopsByLoad,
+    customsByLoad,
+    recentDocs,
+    settlements,
+    fleetUnits,
+  });
 });
 
 driverPortalRoutes.post('/driver/loads/:loadId/stops/:stopId/checkin', async (c) => {
@@ -228,11 +254,14 @@ driverPortalRoutes.post('/driver/loads/:loadId/stops/:stopId/checkin', async (c)
     createdAt: now,
   });
 
-  await emitHubEvent(c.env, {
-    type: 'LOAD_STATUS_CHANGED',
-    channel: 'ops:all',
-    payload: { loadId, loadNumber: load.loadNumber, status: nextStatus, detentionMinutes },
-  });
+  await emitMultiChannelHubEvents(
+    c.env,
+    ['ops:all', `org:${load.shipperOrgId}`, `driver:${driver.id}`],
+    {
+      type: 'LOAD_STATUS_CHANGED',
+      payload: { loadId, loadNumber: load.loadNumber, status: nextStatus, detentionMinutes },
+    },
+  );
 
   return c.json({ success: true, loadStatus: nextStatus, detentionMinutes, edi214Issued: true });
 });

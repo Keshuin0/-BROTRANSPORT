@@ -39,3 +39,21 @@ export async function emitHubEvent(
     console.warn('[OpsHubDO] broadcast skipped:', err);
   }
 }
+
+export async function emitMultiChannelHubEvents(
+  env: Partial<CloudflareEnv> | undefined,
+  channels: readonly string[],
+  event: Omit<HubBroadcastEvent, 'channel' | 'timestamp'>,
+): Promise<void> {
+  if (!env?.OPS_HUB) return;
+  const uniqueChannels = Array.from(new Set(channels.filter(Boolean)));
+  await Promise.all(
+    uniqueChannels.map((channel) =>
+      emitHubEvent(env, {
+        ...event,
+        channel,
+      }),
+    ),
+  );
+}
+

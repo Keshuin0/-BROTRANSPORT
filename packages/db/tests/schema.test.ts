@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getTableName } from 'drizzle-orm';
+import { getTableName, getTableColumns } from 'drizzle-orm';
 import * as schema from '../src/schema.js';
 
-describe('@bro/db — 18-Table Cloudflare D1 Relational Schema', () => {
-  it('defines all expected normalized trucking, customs, eBOL, billing, and auth tables', () => {
+describe('@bro/db — 28-Table Cloudflare D1 Relational Schema', () => {
+  it('defines all expected normalized trucking, customs, eBOL, billing, agent OS, and auth tables', () => {
     const tables = [
       schema.organizations,
       schema.users,
@@ -27,6 +27,12 @@ describe('@bro/db — 18-Table Cloudflare D1 Relational Schema', () => {
       schema.ediMessages,
       schema.escalations,
       schema.auditLogs,
+      schema.staffInvites,
+      schema.agentActions,
+      schema.workOrders,
+      schema.settlementBatches,
+      schema.loadCheckCalls,
+      schema.shiftHandoffs,
     ];
     const names = tables.map((t) => getTableName(t));
     expect(names).toContain('organizations');
@@ -40,6 +46,22 @@ describe('@bro/db — 18-Table Cloudflare D1 Relational Schema', () => {
     expect(names).toContain('dvir_inspections');
     expect(names).toContain('edi_messages');
     expect(names).toContain('escalations');
+    expect(names).toContain('staff_invites');
+    expect(names).toContain('agent_actions');
+    expect(names).toContain('work_orders');
+    expect(names).toContain('settlement_batches');
+    expect(names).toContain('load_check_calls');
+    expect(names).toContain('shift_handoffs');
     expect(new Set(names).size).toBe(tables.length);
+    expect(tables).toHaveLength(28);
+
+    const userCols = getTableColumns(schema.users);
+    expect(userCols.mustChangePassword).toBeDefined();
+    expect(userCols.title).toBeDefined();
+    expect(userCols.invitedByUserId).toBeDefined();
+    expect(userCols.lastLoginAt).toBeDefined();
+
+    const loadCols = getTableColumns(schema.loads);
+    expect(loadCols.settlementBatchId).toBeDefined();
   });
 });

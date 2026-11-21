@@ -1,6 +1,6 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers';
 import { eq } from 'drizzle-orm';
-import { createDb, loads, organizations, invoices, documents, ediMessages, auditLogs } from '@bro/db';
+import { createDb, loads, loadStops, organizations, invoices, documents, ediMessages, auditLogs } from '@bro/db';
 import { calculateInvoiceTotals, generateEdi210, type InvoiceLineItem } from '@bro/contracts';
 import type { CloudflareEnv } from '../../src/env.js';
 import { generateInvoicePdf, mergeFactoringPacketPdf } from '../services/pdfGenerator.js';
@@ -76,10 +76,16 @@ export class BillingSettlementWorkflow extends WorkflowEntrypoint<CloudflareEnv,
         }
       }
 
+      const stopRows = await db.select().from(loadStops).where(eq(loadStops.loadId, loadId));
+      const deliveryStop = stopRows.find((s) => s.stopType === 'delivery');
+      const addrCandidate = `${deliveryStop?.address ?? ''} ${org?.address ?? ''}`;
+      const provMatch = addrCandidate.match(/\b(PE|NB|NS|NL|ON|QC|AB|BC|MB|SK)\b/i);
+      const destinationProvince = provMatch ? provMatch[1]!.toUpperCase() : 'PE';
+
       const totals = calculateInvoiceTotals({
         lineItems,
         direction: load.direction,
-        destinationProvince: 'PE',
+        destinationProvince,
       });
 
       const now = Date.now();

@@ -25,7 +25,7 @@ export const organizations = sqliteTable(
   (t) => [index('idx_orgs_usdot').on(t.usdot), index('idx_orgs_type').on(t.type)],
 );
 
-// 2. Users (Better Auth compatible + Dual-Portal RBAC)
+// 2. Users (Better Auth compatible + Dual-Portal 15-Role RBAC)
 export const users = sqliteTable(
   'users',
   {
@@ -41,9 +41,15 @@ export const users = sqliteTable(
         'shipper_admin',
         'carrier_driver',
         'dispatcher',
+        'load_planner',
         'customs_broker',
         'billing_clerk',
+        'settlement_clerk',
         'safety_officer',
+        'maintenance_manager',
+        'carrier_recruiter',
+        'night_coordinator',
+        'executive',
         'super_admin',
       ],
     })
@@ -51,6 +57,10 @@ export const users = sqliteTable(
       .default('shipper_user'),
     organizationId: text('organization_id').references(() => organizations.id),
     phone: text('phone'),
+    title: text('title'),
+    invitedByUserId: text('invited_by_user_id'),
+    mustChangePassword: integer('must_change_password', { mode: 'boolean' }).notNull().default(false),
+    lastLoginAt: integer('last_login_at'),
     active: integer('active', { mode: 'boolean' }).notNull().default(true),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
@@ -242,6 +252,7 @@ export const loads = sqliteTable(
     rateCarrierCents: integer('rate_carrier_cents').notNull().default(0),
     currency: text('currency', { enum: ['CAD', 'USD'] }).notNull().default('CAD'),
     detentionMinutes: integer('detention_minutes').notNull().default(0),
+    settlementBatchId: text('settlement_batch_id'),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
   },
@@ -543,4 +554,167 @@ export const auditLogs = sqliteTable(
     createdAt: integer('created_at').notNull(),
   },
   (t) => [index('idx_audit_entity').on(t.entityType, t.entityId)],
+);
+
+// 19. Staff & Portal Onboarding Invites (SHA-256/HMAC hashed activation tokens)
+export const staffInvites = sqliteTable(
+  'staff_invites',
+  {
+    id: text('id').primaryKey(),
+    email: text('email').notNull(),
+    name: text('name').notNull(),
+    role: text('role', {
+      enum: [
+        'visitor',
+        'shipper_user',
+        'shipper_admin',
+        'carrier_driver',
+        'dispatcher',
+        'load_planner',
+        'customs_broker',
+        'billing_clerk',
+        'settlement_clerk',
+        'safety_officer',
+        'maintenance_manager',
+        'carrier_recruiter',
+        'night_coordinator',
+        'executive',
+        'super_admin',
+      ],
+    }).notNull(),
+    title: text('title'),
+    organizationId: text('organization_id').references(() => organizations.id),
+    driverId: text('driver_id').references(() => drivers.id),
+    tokenHash: text('token_hash').notNull().unique(),
+    invitedByUserId: text('invited_by_user_id').references(() => users.id),
+    expiresAt: integer('expires_at').notNull(),
+    acceptedAt: integer('accepted_at'),
+    revokedAt: integer('revoked_at'),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [index('idx_staff_invites_email').on(t.email)],
+);
+
+// 20. Autonomous Agent HITL Action Proposals & Execution Ledger
+export const agentActions = sqliteTable(
+  'agent_actions',
+  {
+    id: text('id').primaryKey(),
+    agentId: text('agent_id').notNull(),
+    targetRole: text('target_role').notNull(),
+    targetUserId: text('target_user_id').references(() => users.id),
+    organizationId: text('organization_id').references(() => organizations.id),
+    entityType: text('entity_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    actionType: text('action_type').notNull(),
+    title: text('title').notNull(),
+    rationale: text('rationale').notNull(),
+    payloadJson: text('payload_json').notNull(),
+    deterministicPreviewJson: text('deterministic_preview_json'),
+    status: text('status', { enum: ['pending', 'approved', 'rejected', 'executed', 'expired'] })
+      .notNull()
+      .default('pending'),
+    decidedByUserId: text('decided_by_user_id').references(() => users.id),
+    decidedAt: integer('decided_at'),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [
+    index('idx_agent_actions_status').on(t.status),
+    index('idx_agent_actions_role').on(t.targetRole, t.status),
+    index('idx_agent_actions_agent').on(t.agentId),
+  ],
+);
+
+// 21. Shop Maintenance Work Orders (Linked to Equipment & DVIR Defects)
+export const workOrders = sqliteTable(
+  'work_orders',
+  {
+    id: text('id').primaryKey(),
+    equipmentId: text('equipment_id')
+      .notNull()
+      .references(() => equipment.id),
+    dvirId: text('dvir_id').references(() => dvirInspections.id),
+    unitNumber: text('unit_number').notNull(),
+    priority: text('priority', { enum: ['low', 'medium', 'high', 'critical'] })
+      .notNull()
+      .default('medium'),
+    status: text('status', { enum: ['open', 'in_progress', 'awaiting_parts', 'completed', 'cancelled'] })
+      .notNull()
+      .default('open'),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    estimatedCostCents: integer('estimated_cost_cents').notNull().default(0),
+    actualCostCents: integer('actual_cost_cents'),
+    vendorName: text('vendor_name'),
+    assignedMechanic: text('assigned_mechanic'),
+    clearedByUserId: text('cleared_by_user_id').references(() => users.id),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [index('idx_work_orders_equip').on(t.equipmentId), index('idx_work_orders_status').on(t.status)],
+);
+
+// 22. Driver Settlement Batches (Period Payroll Aggregation)
+export const settlementBatches = sqliteTable(
+  'settlement_batches',
+  {
+    id: text('id').primaryKey(),
+    driverId: text('driver_id')
+      .notNull()
+      .references(() => drivers.id),
+    periodStart: integer('period_start').notNull(),
+    periodEnd: integer('period_end').notNull(),
+    grossPayCents: integer('gross_pay_cents').notNull(),
+    reimbursementsCents: integer('reimbursements_cents').notNull().default(0),
+    deductionsCents: integer('deductions_cents').notNull().default(0),
+    netPayCents: integer('net_pay_cents').notNull(),
+    loadCount: integer('load_count').notNull().default(0),
+    status: text('status', { enum: ['draft', 'approved', 'paid'] })
+      .notNull()
+      .default('draft'),
+    pdfR2Key: text('pdf_r2_key'),
+    approvedByUserId: text('approved_by_user_id').references(() => users.id),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [index('idx_settle_batches_driver').on(t.driverId), index('idx_settle_batches_status').on(t.status)],
+);
+
+// 23. Dispatch & Night Desk Load Check-Calls
+export const loadCheckCalls = sqliteTable(
+  'load_check_calls',
+  {
+    id: text('id').primaryKey(),
+    loadId: text('load_id')
+      .notNull()
+      .references(() => loads.id, { onDelete: 'cascade' }),
+    driverId: text('driver_id').references(() => drivers.id),
+    recordedByUserId: text('recorded_by_user_id').references(() => users.id),
+    recordedByType: text('recorded_by_type', {
+      enum: ['dispatcher', 'driver', 'night_coordinator', 'system', 'agent'],
+    })
+      .notNull()
+      .default('dispatcher'),
+    statusNote: text('status_note').notNull(),
+    etaUtc: text('eta_utc'),
+    locationText: text('location_text').notNull(),
+    detentionMinutes: integer('detention_minutes').notNull().default(0),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [index('idx_check_calls_load').on(t.loadId, t.createdAt)],
+);
+
+// 24. Night Operations Shift Handoffs
+export const shiftHandoffs = sqliteTable(
+  'shift_handoffs',
+  {
+    id: text('id').primaryKey(),
+    shiftWindow: text('shift_window').notNull(),
+    outgoingUserId: text('outgoing_user_id')
+      .notNull()
+      .references(() => users.id),
+    summaryMarkdown: text('summary_markdown').notNull(),
+    openEscalationIdsJson: text('open_escalation_ids_json').notNull().default('[]'),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [index('idx_shift_handoffs_created').on(t.createdAt)],
 );

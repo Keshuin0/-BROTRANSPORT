@@ -5,6 +5,7 @@ import {
   createDb,
   loads,
   loadStops,
+  quotes,
   drivers,
   equipment,
   documents,
@@ -13,14 +14,19 @@ import {
   dvirInspections,
   telematicsEvents,
   ediMessages,
+  loadCheckCalls,
   auditLogs,
 } from '@bro/db';
 import {
   CreateLoadSchema,
+  LoadCheckCallCreateSchema,
   LoadStatusSchema,
+  calculateDetentionCents,
+  canAccessRoute,
   canTransitionLoadStatus,
   computeWeibullSurvival,
   generateEdi214,
+  hasPermission,
   isOpsRole,
   type LoadStatus,
 } from '@bro/contracts';
@@ -271,8 +277,8 @@ opsDispatchRoutes.get('/ops/fleet', async (c) => {
 
 opsDispatchRoutes.post('/ops/fleet/dvir/:id/clear', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'safety_officer' && user.role !== 'super_admin' && user.role !== 'dispatcher')) {
-    return c.json({ error: 'Safety Officer or Admin role required to clear Out-Of-Service lock.' }, 403);
+  if (!user || !hasPermission(user.role, 'maintenance:workorder')) {
+    return c.json({ error: 'Safety Officer, Maintenance Manager, Dispatcher, or Admin role required to clear Out-Of-Service lock.' }, 403);
   }
   const dvirId = c.req.param('id');
   const db = createDb(c.env.DB);
@@ -303,6 +309,253 @@ opsDispatchRoutes.post('/ops/fleet/dvir/:id/clear', async (c) => {
   });
 
   return c.json({ success: true, dvirId, equipmentStatus: 'active' });
+});
+
+/** Deterministic Driver + Tractor + Trailer Matcher for Dispatcher Productivity. */
+opsDispatchRoutes.get('/ops/loads/:id/match-candidates', async (c) => {
+  const user = c.get('user');
+  if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
+
+  const loadId = c.req.param('id');
+  const db = createDb(c.env.DB);
+  const loadRows = await db.select().from(loads).where(eq(loads.id, loadId)).limit(1);
+  const load = loadRows[0];
+  if (!load) return c.json({ error: 'Load not found.' }, 404);
+
+  const now = Date.now();
+  const [allDrivers, allEquip] = await Promise.all([
+    db.select().from(drivers).where(eq(drivers.status, 'active')).limit(50),
+    db.select().from(equipment).limit(50),
+  ]);
+
+  const isCrossBorder = load.direction === 'ca_to_us' || load.direction === 'us_to_ca';
+
+  const rankedDrivers = allDrivers
+    .map((d) => {
+      let score = 60;
+      const reasons: string[] = [];
+      const blockers: string[] = [];
+
+      if (d.equipmentDivision === load.equipmentType) {
+        score += 25;
+        reasons.push(`Certified ${load.equipmentType.replace('_', ' ')} division`);
+      }
+      if (isCrossBorder && d.fastCardNumber) {
+        score += 15;
+        reasons.push(`FAST #${d.fastCardNumber}`);
+      } else if (isCrossBorder && !d.fastCardNumber) {
+        score -= 10;
+        reasons.push('No FAST card on file');
+      }
+      if (d.medicalCardExpiry && d.medicalCardExpiry < now) {
+        score -= 100;
+        blockers.push('Medical card expired');
+      }
+      if (d.licenseExpiry && d.licenseExpiry < now) {
+        score -= 100;
+        blockers.push('CDL expired');
+      }
+      return {
+        driver: d,
+        score: Math.max(0, Math.min(100, score)),
+        eligible: blockers.length === 0,
+        reasons,
+        blockers,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const tractors = allEquip
+    .filter((e) => e.type === 'tractor')
+    .map((e) => ({
+      equipment: e,
+      eligible: e.status === 'active' && e.annualInspectionExpiry > now,
+      reason:
+        e.status !== 'active'
+          ? `Blocked: ${e.status.toUpperCase()}`
+          : e.annualInspectionExpiry <= now
+            ? 'Blocked: Annual CVIP expired'
+            : `Ready (${e.jurisdiction} · ${e.operatingHours} hrs)`,
+    }));
+
+  const trailers = allEquip
+    .filter((e) => e.type === load.equipmentType)
+    .map((e) => ({
+      equipment: e,
+      eligible: e.status === 'active' && e.annualInspectionExpiry > now,
+      reason:
+        e.status !== 'active'
+          ? `Blocked: ${e.status.toUpperCase()}`
+          : `Ready ${e.type.replace('_', ' ')} (${e.plate})`,
+    }));
+
+  return c.json({
+    loadId: load.id,
+    loadNumber: load.loadNumber,
+    equipmentType: load.equipmentType,
+    rankedDrivers,
+    tractors,
+    trailers,
+  });
+});
+
+/** Dispatch & Night Coordinator Check-Calls + Detention Calculator. */
+opsDispatchRoutes.get('/ops/loads/:id/check-calls', async (c) => {
+  const user = c.get('user');
+  if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
+  const loadId = c.req.param('id');
+  const db = createDb(c.env.DB);
+  const rows = await db
+    .select()
+    .from(loadCheckCalls)
+    .where(eq(loadCheckCalls.loadId, loadId))
+    .orderBy(desc(loadCheckCalls.createdAt))
+    .limit(50);
+  return c.json({ checkCalls: rows });
+});
+
+opsDispatchRoutes.post('/ops/loads/:id/check-calls', async (c) => {
+  const user = c.get('user');
+  if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
+
+  const loadId = c.req.param('id');
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const parsed = LoadCheckCallCreateSchema.safeParse({ ...body, loadId });
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Invalid check-call payload.' }, 400);
+  }
+
+  const db = createDb(c.env.DB);
+  const now = Date.now();
+  const id = `chk_${crypto.randomUUID()}`;
+  const data = parsed.data;
+
+  await db.insert(loadCheckCalls).values({
+    id,
+    loadId: data.loadId,
+    driverId: data.driverId ?? null,
+    recordedByUserId: user.id,
+    recordedByType: user.role === 'night_coordinator' ? 'night_coordinator' : 'dispatcher',
+    statusNote: data.statusNote,
+    etaUtc: data.etaUtc ?? null,
+    locationText: data.locationText,
+    detentionMinutes: data.detentionMinutes,
+    createdAt: now,
+  });
+
+  if (data.detentionMinutes > 0) {
+    await db
+      .update(loads)
+      .set({ detentionMinutes: data.detentionMinutes, updatedAt: now })
+      .where(eq(loads.id, data.loadId));
+  }
+
+  const billableDetentionCents = calculateDetentionCents(0, data.detentionMinutes * 60_000).detentionCents;
+
+  await db.insert(auditLogs).values({
+    id: `aud_${crypto.randomUUID()}`,
+    actorUserId: user.id,
+    actorType: 'user',
+    action: 'LOAD_CHECK_CALL_LOGGED',
+    entityType: 'load',
+    entityId: data.loadId,
+    detailJson: JSON.stringify({
+      checkCallId: id,
+      locationText: data.locationText,
+      detentionMinutes: data.detentionMinutes,
+      billableDetentionCents,
+    }),
+    createdAt: now,
+  });
+
+  return c.json({ success: true, id, billableDetentionCents }, 201);
+});
+
+/** Load Planner & Backhaul Yield Desk Endpoints. */
+opsDispatchRoutes.get('/ops/planner', async (c) => {
+  const user = c.get('user');
+  if (!user || !canAccessRoute(user.role, '/ops/planner')) {
+    return c.json({ error: 'Load Planner, Dispatcher, Executive, or Super Admin required.' }, 403);
+  }
+
+  const db = createDb(c.env.DB);
+  const [openQuotes, allLoads, allDrivers, allEquip] = await Promise.all([
+    db.select().from(quotes).orderBy(desc(quotes.createdAt)).limit(50),
+    db.select().from(loads).orderBy(desc(loads.updatedAt)).limit(100),
+    db.select().from(drivers).where(eq(drivers.status, 'active')).limit(50),
+    db.select().from(equipment).limit(50),
+  ]);
+
+  return c.json({
+    quotes: openQuotes,
+    loads: allLoads,
+    drivers: allDrivers,
+    equipment: allEquip,
+  });
+});
+
+opsDispatchRoutes.post('/ops/planner/promote-quote/:id', async (c) => {
+  const user = c.get('user');
+  if (!user || !hasPermission(user.role, 'load:plan')) {
+    return c.json({ error: 'Load planning permission required.' }, 403);
+  }
+
+  const quoteId = c.req.param('id');
+  const db = createDb(c.env.DB);
+  const qRows = await db.select().from(quotes).where(eq(quotes.id, quoteId)).limit(1);
+  const q = qRows[0];
+  if (!q) return c.json({ error: 'Quote not found.' }, 404);
+  if (q.status === 'booked') {
+    return c.json({ error: 'Quote is already booked into an active load.' }, 409);
+  }
+
+  const now = Date.now();
+  const loadId = `ld_${crypto.randomUUID()}`;
+  const loadNumber = `BROP-${new Date(now).getUTCFullYear()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
+  const direction =
+    q.originCountry === 'CA' && q.destCountry === 'US'
+      ? 'ca_to_us'
+      : q.originCountry === 'US' && q.destCountry === 'CA'
+        ? 'us_to_ca'
+        : q.originCountry === 'US'
+          ? 'domestic_us'
+          : 'domestic_ca';
+
+  await db.insert(loads).values({
+    id: loadId,
+    loadNumber,
+    quoteId: q.id,
+    shipperOrgId: q.shipperOrgId ?? 'org_cavendish_produce',
+    equipmentType: q.equipmentType,
+    direction,
+    status: 'BOOKED',
+    commodity: q.commodity,
+    weightLbs: q.weightLbs,
+    loadedMiles: Math.max(50, Math.round(q.distanceKm * 0.621371)),
+    tempSetpointC: q.tempSetpointC,
+    isFoodFda: q.equipmentType === 'reefer',
+    rateCustomerCents: q.totalCents,
+    rateCarrierCents: Math.round(q.totalCents * 0.8),
+    currency: q.currency,
+    detentionMinutes: 0,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  await db.update(quotes).set({ status: 'booked' }).where(eq(quotes.id, q.id));
+
+  await db.insert(auditLogs).values({
+    id: `aud_${crypto.randomUUID()}`,
+    actorUserId: user.id,
+    actorType: 'user',
+    action: 'QUOTE_PROMOTED_TO_LOAD',
+    entityType: 'load',
+    entityId: loadId,
+    detailJson: JSON.stringify({ quoteRef: q.quoteRef, loadNumber, totalCents: q.totalCents }),
+    createdAt: now,
+  });
+
+  return c.json({ success: true, loadId, loadNumber }, 201);
 });
 
 /** Real HMAC-verified ELD / Trailer Telematics Ingest with authentic Weibull-Cox RUL scoring. */

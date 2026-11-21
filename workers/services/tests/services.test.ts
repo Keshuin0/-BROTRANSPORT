@@ -358,7 +358,7 @@ describe('Border Wait Times — CBSA CSV & CBP XML Parsers + KV Stale Fallback',
     const result = await runBorderSync({ CACHE: kv, OPS_HUB: opsHub }, '*/10 * * * *', liveFetch);
     expect(result.hubNotified).toBe(true);
     expect(result.feed.stale).toBe(false);
-    expect(hubFetch).toHaveBeenCalledTimes(1);
+    expect(hubFetch).toHaveBeenCalledTimes(2);
   });
 });
 

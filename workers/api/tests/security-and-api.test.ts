@@ -9,6 +9,8 @@ import {
 } from '../security.js';
 import { apiApp } from '../app.js';
 import { extractDocumentWithWorkersAi } from '../../services/aiDocumentOcr.js';
+import { runSpecialistCopilotTurn } from '../../services/aiCopilot.js';
+import { sendStaffInviteEmail, sendPasswordResetEmail } from '../../services/email.js';
 
 describe('workers/api — Security, RBAC, HMAC Webhooks & AI OCR HITL Gates', () => {
   it('hashes and verifies passwords with Web Crypto PBKDF2-SHA256', async () => {
@@ -116,5 +118,128 @@ describe('workers/api — Security, RBAC, HMAC Webhooks & AI OCR HITL Gates', ()
     expect(ocr.needsHumanReview).toBe(true);
     expect(ocr.hasOsdDamageOrShortage).toBe(true);
     expect(ocr.reviewReasons.length).toBeGreaterThan(0);
+  });
+
+  it('enforces Zero-Trust RBAC isolation across all 12 specialist agents and new /api/ops/* desks', async () => {
+    for (const path of [
+      '/api/ops/planner',
+      '/api/ops/settlements',
+      '/api/ops/maintenance',
+      '/api/ops/carriers',
+      '/api/ops/escalations',
+      '/api/ops/admin/users',
+    ]) {
+      const res = await apiApp.fetch(new Request(`https://brotransport.com${path}`), {} as never);
+      expect(res.status).toBe(403);
+    }
+
+    const unauthAgentChat = await apiApp.fetch(
+      new Request('https://brotransport.com/api/agents/DispatchCopilotAgent/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Summarize active loads' }),
+      }),
+      {} as never,
+    );
+    expect(unauthAgentChat.status).toBe(401);
+
+    // Billing clerk cannot invoke DispatchCopilotAgent
+    await expect(
+      runSpecialistCopilotTurn(
+        {},
+        {
+          user: {
+            id: 'usr_bill',
+            name: 'Billing Clerk',
+            email: 'billing@brotransport.com',
+            role: 'billing_clerk',
+            organizationId: 'org_bro_internal',
+          },
+          input: {
+            agentId: 'DispatchCopilotAgent',
+            message: 'Assign driver to load',
+          },
+        },
+      ),
+    ).rejects.toThrow(/not authorized/);
+
+    // Shipper user cannot invoke ExecutiveChiefOfStaffAgent
+    await expect(
+      runSpecialistCopilotTurn(
+        {},
+        {
+          user: {
+            id: 'usr_ship',
+            name: 'Shipper User',
+            email: 'shipper@example.com',
+            role: 'shipper_user',
+            organizationId: 'org_cavendish_produce',
+          },
+          input: {
+            agentId: 'ExecutiveChiefOfStaffAgent',
+            message: 'Show executive P&L',
+          },
+        },
+      ),
+    ).rejects.toThrow(/not authorized/);
+
+    // Authorized dispatcher succeeds on DispatchCopilotAgent
+    const dispTurn = await runSpecialistCopilotTurn(
+      {},
+      {
+        user: {
+          id: 'usr_disp',
+          name: 'Claire Arsenault',
+          email: 'dispatch@brotransport.com',
+          role: 'dispatcher',
+          organizationId: 'org_bro_internal',
+        },
+        input: {
+          agentId: 'DispatchCopilotAgent',
+          message: 'Summarize active loads',
+        },
+      },
+    );
+    expect(dispTurn.agentId).toBe('DispatchCopilotAgent');
+    expect(dispTurn.spec.name).toBe('Dispatch Copilot');
+  });
+
+  it('strictly escapes HTML in staff invite and password reset Resend emails', async () => {
+    let capturedHtml = '';
+    const mockFetch: typeof fetch = async (_url, init) => {
+      const body = JSON.parse(String(init?.body || '{}')) as { html?: string };
+      capturedHtml = body.html || '';
+      return new Response(JSON.stringify({ id: 're_test_123' }), { status: 200 });
+    };
+
+    const inviteRes = await sendStaffInviteEmail(
+      { RESEND_API_KEY: 're_live_key' },
+      {
+        to: 'new.dispatcher@brotransport.com',
+        recipientName: '<script>alert("xss")</script>Claire',
+        roleLabel: 'Dispatcher',
+        title: 'Senior Corridor Dispatcher',
+        invitedByName: 'Keshav Admin',
+        activateUrl: 'https://brotransport.com/activate?token=abc12345678901234567890',
+      },
+      mockFetch,
+    );
+    expect(inviteRes.sent).toBe(true);
+    expect(capturedHtml).not.toContain('<script>');
+    expect(capturedHtml).toContain('&lt;script&gt;');
+
+    const resetRes = await sendPasswordResetEmail(
+      { RESEND_API_KEY: 're_live_key' },
+      {
+        to: 'dispatch@brotransport.com',
+        recipientName: '<img src=x onerror=alert(1)>',
+        resetUrl: 'https://brotransport.com/reset-password?token=def12345678901234567890',
+        otpCode: '482910',
+      },
+      mockFetch,
+    );
+    expect(resetRes.sent).toBe(true);
+    expect(capturedHtml).not.toContain('<img src=x');
+    expect(capturedHtml).toContain('&lt;img src=x');
   });
 });

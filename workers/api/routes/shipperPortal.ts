@@ -11,13 +11,22 @@ import {
   ebolBlocks,
   organizations,
   users,
+  staffInvites,
+  auditLogs,
   type BroDatabase,
 } from '@bro/db';
-import { DocumentTypeSchema, ALLOWED_DOC_MIMES, MAX_DOC_BYTES } from '@bro/contracts';
+import {
+  DocumentTypeSchema,
+  ALLOWED_DOC_MIMES,
+  MAX_DOC_BYTES,
+  ShipperInviteMemberSchema,
+  hasPermission,
+} from '@bro/contracts';
 import type { SessionUser } from '../../../src/env.js';
 import type { ApiEnv } from './authRoutes.js';
 import { bytesToHex } from '../security.js';
-import { emitHubEvent } from '../../agents/hubEvents.js';
+import { sha256HexToken } from '../auth.js';
+import { emitMultiChannelHubEvents } from '../../agents/hubEvents.js';
 
 export const shipperPortalRoutes = new Hono<ApiEnv>();
 
@@ -380,17 +389,112 @@ shipperPortalRoutes.post('/shipper/documents/upload', async (c) => {
       .where(eq(documents.id, docId));
   }
 
-  await emitHubEvent(c.env, {
-    type: 'DOC_OCR_READY',
-    channel: 'ops:all',
-    payload: {
-      documentId: docId,
-      loadId,
-      docType: docTypeParsed.data,
-      uploadedBy: user.name,
-      source: 'shipper_portal',
+  await emitMultiChannelHubEvents(
+    c.env,
+    ['ops:all', `org:${orgId}`],
+    {
+      type: 'DOC_OCR_READY',
+      payload: {
+        documentId: docId,
+        loadId,
+        docType: docTypeParsed.data,
+        uploadedBy: user.name,
+        source: 'shipper_portal',
+      },
     },
-  });
+  );
 
   return c.json({ success: true, documentId: docId, sha256, workflowInstanceId }, 201);
+});
+
+shipperPortalRoutes.get('/shipper/team', async (c) => {
+  const user = c.get('user')!;
+  const db = createDb(c.env.DB);
+  const orgId = await ensureShipperOrgForUser(db, user);
+
+  const [members, invites] = await Promise.all([
+    db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        active: users.active,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.organizationId, orgId))
+      .orderBy(desc(users.createdAt))
+      .limit(50),
+    db
+      .select({
+        id: staffInvites.id,
+        name: staffInvites.name,
+        email: staffInvites.email,
+        role: staffInvites.role,
+        expiresAt: staffInvites.expiresAt,
+        acceptedAt: staffInvites.acceptedAt,
+        revokedAt: staffInvites.revokedAt,
+        createdAt: staffInvites.createdAt,
+      })
+      .from(staffInvites)
+      .where(eq(staffInvites.organizationId, orgId))
+      .orderBy(desc(staffInvites.createdAt))
+      .limit(50),
+  ]);
+
+  return c.json({ organizationId: orgId, members, invites });
+});
+
+shipperPortalRoutes.post('/shipper/team/invite', async (c) => {
+  const user = c.get('user')!;
+  if (!hasPermission(user.role, 'shipper:manage_org')) {
+    return c.json({ error: 'Shipper Admin role required to invite organization team members.' }, 403);
+  }
+
+  const parsed = ShipperInviteMemberSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Invalid member invite payload.' }, 400);
+  }
+
+  const db = createDb(c.env.DB);
+  const orgId = await ensureShipperOrgForUser(db, user);
+  const now = Date.now();
+  const rawToken = bytesToHex(crypto.getRandomValues(new Uint8Array(32)));
+  const tokenHash = await sha256HexToken(rawToken);
+  const inviteId = `inv_${crypto.randomUUID()}`;
+  const expiresAt = now + 48 * 3600_000;
+
+  await db.insert(staffInvites).values({
+    id: inviteId,
+    email: parsed.data.email.trim().toLowerCase(),
+    name: parsed.data.name,
+    role: parsed.data.role,
+    title: parsed.data.role === 'shipper_admin' ? 'Shipper Logistics Administrator' : 'Shipper Logistics Coordinator',
+    organizationId: orgId,
+    tokenHash,
+    invitedByUserId: user.id,
+    expiresAt,
+    createdAt: now,
+  });
+
+  await db.insert(auditLogs).values({
+    id: `aud_${crypto.randomUUID()}`,
+    actorUserId: user.id,
+    actorType: 'user',
+    action: 'SHIPPER_TEAM_MEMBER_INVITED',
+    entityType: 'staff_invite',
+    entityId: inviteId,
+    detailJson: JSON.stringify({
+      organizationId: orgId,
+      email: parsed.data.email,
+      role: parsed.data.role,
+    }),
+    createdAt: now,
+  });
+
+  const origin = new URL(c.req.url).origin;
+  const activateUrl = `${origin}/activate?token=${rawToken}`;
+
+  return c.json({ success: true, inviteId, activateUrl, expiresAt }, 201);
 });

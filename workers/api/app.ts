@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { canAccessRoute } from '@bro/contracts';
 import { authRoutes, type ApiEnv } from './routes/authRoutes.js';
 import { escalationRoutes } from './routes/escalations.js';
 import { wsRoutes } from './routes/ws.js';
@@ -13,6 +14,8 @@ import { opsDispatchRoutes } from './routes/opsDispatch.js';
 import { ediRoutes } from './routes/edi.js';
 import { billingAndIftaRoutes } from './routes/billingAndIfta.js';
 import { opsAdminRoutes } from './routes/opsAdmin.js';
+import { agentRoutes } from './routes/agentRoutes.js';
+import { opsFleetMaintenanceRoutes } from './routes/opsFleetMaintenance.js';
 import { ALLOWED_ORIGINS, isAllowedOrigin } from './security.js';
 import { resolveSessionFromCookie } from './auth.js';
 
@@ -30,11 +33,26 @@ apiApp.use(
   }),
 );
 
-// Session resolution on every API request
+// Session resolution + Zero-Trust RBAC route parity on every API request
 apiApp.use('*', async (c, next) => {
   const { user, sessionId } = await resolveSessionFromCookie(c.env, c.req.header('cookie'));
   c.set('user', user);
   c.set('sessionId', sessionId);
+
+  const path = c.req.path.toLowerCase();
+  if (path.startsWith('/api/ops') || path.startsWith('/api/shipper') || path.startsWith('/api/driver')) {
+    const role = user?.role ?? 'visitor';
+    if (!user || !canAccessRoute(role, path)) {
+      return c.json(
+        {
+          error: 'Forbidden',
+          message: `Role '${role}' is not authorized to access ${c.req.path}.`,
+        },
+        403,
+      );
+    }
+  }
+
   await next();
 });
 
@@ -66,6 +84,8 @@ apiApp.route('/', opsDispatchRoutes);
 apiApp.route('/', ediRoutes);
 apiApp.route('/', billingAndIftaRoutes);
 apiApp.route('/', opsAdminRoutes);
+apiApp.route('/', agentRoutes);
+apiApp.route('/', opsFleetMaintenanceRoutes);
 
 apiApp.notFound((c) => c.json({ error: 'API endpoint not found', path: c.req.path }, 404));
 

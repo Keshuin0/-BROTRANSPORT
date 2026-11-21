@@ -69,6 +69,11 @@ export async function createSessionForUser(
   return { token: rawToken, sessionId, expiresAt };
 }
 
+export async function sha256HexToken(rawToken: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawToken));
+  return bytesToHex(new Uint8Array(digest));
+}
+
 export async function resolveSessionFromCookie(
   env: CloudflareEnv | undefined,
   cookieHeader: string | null | undefined,
@@ -92,6 +97,8 @@ export async function resolveSessionFromCookie(
         email: users.email,
         role: users.role,
         organizationId: users.organizationId,
+        mustChangePassword: users.mustChangePassword,
+        title: users.title,
         active: users.active,
       })
       .from(sessions)
@@ -110,6 +117,8 @@ export async function resolveSessionFromCookie(
         email: match.email,
         role: match.role as UserRole,
         organizationId: match.organizationId,
+        mustChangePassword: Boolean(match.mustChangePassword),
+        title: match.title ?? null,
       },
     };
   } catch {
@@ -140,6 +149,8 @@ export async function registerPasswordUser(
     emailVerified: false,
     role: assignedRole,
     organizationId: params.organizationId ?? null,
+    mustChangePassword: false,
+    lastLoginAt: now,
     active: true,
     createdAt: now,
     updatedAt: now,
@@ -172,6 +183,8 @@ export async function registerPasswordUser(
     email: emailLower,
     role: assignedRole,
     organizationId: params.organizationId ?? null,
+    mustChangePassword: false,
+    title: null,
   };
 }
 
@@ -190,6 +203,8 @@ export async function authenticateWithPassword(
       email: users.email,
       role: users.role,
       organizationId: users.organizationId,
+      mustChangePassword: users.mustChangePassword,
+      title: users.title,
       active: users.active,
       passwordHash: accounts.password,
     })
@@ -204,12 +219,20 @@ export async function authenticateWithPassword(
   const valid = await verifyPassword(password, row.passwordHash);
   if (!valid) return null;
 
+  const now = Date.now();
+  await db
+    .update(users)
+    .set({ lastLoginAt: now, updatedAt: now })
+    .where(eq(users.id, row.userId));
+
   return {
     id: row.userId,
     name: row.name,
     email: row.email,
     role: row.role as UserRole,
     organizationId: row.organizationId,
+    mustChangePassword: Boolean(row.mustChangePassword),
+    title: row.title ?? null,
   };
 }
 
@@ -223,11 +246,14 @@ export async function issueEmailOtp(env: CloudflareEnv, email: string): Promise<
   const now = Date.now();
   const expiresAt = now + 10 * 60_000;
   const emailLower = email.trim().toLowerCase();
+  const identifier = `otp:${emailLower}`;
   const hashed = await hmacSha256Hex(secret, `${emailLower}:${code}`);
+
+  await db.delete(verifications).where(eq(verifications.identifier, identifier));
 
   await db.insert(verifications).values({
     id: `otp_${crypto.randomUUID()}`,
-    identifier: `otp:${emailLower}`,
+    identifier,
     value: hashed,
     expiresAt,
     createdAt: now,
@@ -263,11 +289,22 @@ export async function verifyEmailOtp(env: CloudflareEnv, email: string, code: st
   const u = userRows[0];
   if (!u || !u.active) return null;
 
+  await db
+    .update(users)
+    .set({
+      emailVerified: true,
+      lastLoginAt: now,
+      updatedAt: now,
+    })
+    .where(eq(users.id, u.id));
+
   return {
     id: u.id,
     name: u.name,
     email: u.email,
     role: u.role as UserRole,
     organizationId: u.organizationId,
+    mustChangePassword: Boolean(u.mustChangePassword),
+    title: u.title ?? null,
   };
 }

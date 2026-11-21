@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
-import { ShieldCheck, KeyRound, Mail, ArrowRight, Lock, Truck, Building2, Radio } from 'lucide-react';
-import { canAccessRoute, type UserRole } from '@bro/contracts';
+import {
+  ShieldCheck,
+  KeyRound,
+  Mail,
+  ArrowRight,
+  Lock,
+  Truck,
+  Building2,
+  Radio,
+  RefreshCw,
+} from 'lucide-react';
+import { ROLE_LABELS, canAccessRoute, defaultHomeForRole, type UserRole } from '@bro/contracts';
 
 interface LoginFormProps {
   nextPath?: string;
@@ -12,8 +22,31 @@ interface AuthResponsePayload {
   redirectTo?: string;
   user?: {
     role?: UserRole;
+    mustChangePassword?: boolean;
   };
 }
+
+interface DevPersonaPill {
+  role: UserRole;
+  email: string;
+  accent: 'gold' | 'cyan' | 'neutral';
+}
+
+const DEV_PERSONA_PILLS: readonly DevPersonaPill[] = [
+  { role: 'super_admin', email: 'admin@brotransport.com', accent: 'gold' },
+  { role: 'executive', email: 'exec@brotransport.com', accent: 'gold' },
+  { role: 'dispatcher', email: 'dispatch@brotransport.com', accent: 'cyan' },
+  { role: 'load_planner', email: 'planner@brotransport.com', accent: 'cyan' },
+  { role: 'customs_broker', email: 'customs@brotransport.com', accent: 'cyan' },
+  { role: 'billing_clerk', email: 'billing@brotransport.com', accent: 'cyan' },
+  { role: 'settlement_clerk', email: 'settlements@brotransport.com', accent: 'cyan' },
+  { role: 'safety_officer', email: 'safety@brotransport.com', accent: 'cyan' },
+  { role: 'maintenance_manager', email: 'maintenance@brotransport.com', accent: 'cyan' },
+  { role: 'carrier_recruiter', email: 'recruiting@brotransport.com', accent: 'cyan' },
+  { role: 'night_coordinator', email: 'night@brotransport.com', accent: 'cyan' },
+  { role: 'shipper_admin', email: 'owen@cavendishvalley.example', accent: 'neutral' },
+  { role: 'carrier_driver', email: 'liam.gallant@brotransport.com', accent: 'gold' },
+] as const;
 
 function resolveSafePostLoginDestination(
   rawNext: string,
@@ -57,10 +90,41 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const requestOtpCode = async () => {
+    setError(null);
+    setNotice(null);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/otp/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = (await res.json()) as { error?: string; devCode?: string };
+      if (!res.ok) throw new Error(data.error || 'Unable to dispatch OTP code.');
+      setOtpRequested(true);
+      setNotice(
+        data.devCode
+          ? `Verification code dispatched (Local Dev OTP: ${data.devCode}).`
+          : 'One-time 6-digit security code sent to your email.',
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setNotice(null);
+
+    if (mode === 'otp' && !otpRequested) {
+      await requestOtpCode();
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -72,32 +136,24 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
         });
         const data = (await res.json()) as AuthResponsePayload;
         if (!res.ok) throw new Error(data.error || 'Authentication rejected.');
+        if (data.user?.mustChangePassword) {
+          window.location.href = `/activate?mode=set-password${nextPath ? `&next=${encodeURIComponent(nextPath)}` : ''}`;
+          return;
+        }
         window.location.href = resolveSafePostLoginDestination(nextPath, data.user?.role, data.redirectTo);
       } else if (mode === 'otp') {
-        if (!otpRequested) {
-          const res = await fetch('/api/auth/otp/request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
-          });
-          const data = (await res.json()) as { error?: string; devCode?: string };
-          if (!res.ok) throw new Error(data.error || 'Unable to dispatch OTP code.');
-          setOtpRequested(true);
-          setNotice(
-            data.devCode
-              ? `Verification code dispatched (Local Dev OTP: ${data.devCode}).`
-              : 'One-time 6-digit security code sent to your email.',
-          );
-        } else {
-          const res = await fetch('/api/auth/otp/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, code: otpCode }),
-          });
-          const data = (await res.json()) as AuthResponsePayload;
-          if (!res.ok) throw new Error(data.error || 'Invalid or expired security code.');
-          window.location.href = resolveSafePostLoginDestination(nextPath, data.user?.role, data.redirectTo);
+        const res = await fetch('/api/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code: otpCode }),
+        });
+        const data = (await res.json()) as AuthResponsePayload;
+        if (!res.ok) throw new Error(data.error || 'Invalid or expired security code.');
+        if (data.user?.mustChangePassword) {
+          window.location.href = `/activate?mode=set-password${nextPath ? `&next=${encodeURIComponent(nextPath)}` : ''}`;
+          return;
         }
+        window.location.href = resolveSafePostLoginDestination(nextPath, data.user?.role, data.redirectTo);
       } else {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
@@ -135,7 +191,7 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
   };
 
   return (
-    <div className="w-full max-w-md mx-auto surface-ceramic rounded-3xl p-6 sm:p-8 space-y-6">
+    <div className="w-full max-w-lg mx-auto surface-ceramic rounded-3xl p-6 sm:p-8 space-y-6">
       <div className="space-y-2 border-b border-white/[0.08] pb-5">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bro-cyan/10 border border-bro-cyan/30 text-bro-cyan text-xs font-medium">
           <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -158,7 +214,7 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
         <button
           type="button"
           aria-pressed={mode === 'password'}
-          onClick={() => { setMode('password'); setError(null); }}
+          onClick={() => { setMode('password'); setError(null); setNotice(null); }}
           className={`min-h-[44px] px-3 py-2 rounded-full transition-colors cursor-pointer font-medium ${
             mode === 'password' ? 'bg-white text-black font-semibold shadow-sm' : 'text-slate-300 hover:text-white'
           }`}
@@ -168,7 +224,7 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
         <button
           type="button"
           aria-pressed={mode === 'otp'}
-          onClick={() => { setMode('otp'); setOtpRequested(false); setError(null); }}
+          onClick={() => { setMode('otp'); setOtpRequested(false); setError(null); setNotice(null); }}
           className={`min-h-[44px] px-3 py-2 rounded-full transition-colors cursor-pointer font-medium ${
             mode === 'otp' ? 'bg-white text-black font-semibold shadow-sm' : 'text-slate-300 hover:text-white'
           }`}
@@ -178,7 +234,7 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
         <button
           type="button"
           aria-pressed={mode === 'register'}
-          onClick={() => { setMode('register'); setError(null); }}
+          onClick={() => { setMode('register'); setError(null); setNotice(null); }}
           className={`min-h-[44px] px-3 py-2 rounded-full transition-colors cursor-pointer font-medium ${
             mode === 'register' ? 'bg-bro-gold text-black font-semibold shadow-sm' : 'text-slate-300 hover:text-white'
           }`}
@@ -249,20 +305,31 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
               id="login-email"
               type="email"
               required
+              readOnly={mode === 'otp' && otpRequested}
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@company.com"
-              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan read-only:opacity-75"
             />
           </div>
         </div>
 
         {(mode === 'password' || mode === 'register') && (
           <div className="space-y-1.5">
-            <label htmlFor="login-password" className="block text-xs font-medium text-slate-300">
-              {mode === 'register' ? 'Password (min 10 characters)' : 'Password'}
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="login-password" className="block text-xs font-medium text-slate-300">
+                {mode === 'register' ? 'Password (min 10 characters)' : 'Password'}
+              </label>
+              {mode === 'password' && (
+                <a
+                  href="/forgot-password"
+                  className="text-xs font-medium text-bro-cyan hover:text-cyan-300 transition-colors"
+                >
+                  Forgot password?
+                </a>
+              )}
+            </div>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               <input
@@ -281,23 +348,49 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
         )}
 
         {mode === 'otp' && otpRequested && (
-          <div className="space-y-1.5">
-            <label htmlFor="login-otp" className="block text-xs font-medium text-slate-300">
-              6-Digit Security Code
-            </label>
-            <div className="relative">
-              <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
-              <input
-                id="login-otp"
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                required
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value)}
-                placeholder="000000"
-                className="w-full min-h-[44px] bg-[#060912] border border-bro-cyan/50 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-mono tracking-widest text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan"
-              />
+          <div className="space-y-2">
+            <div className="space-y-1.5">
+              <label htmlFor="login-otp" className="block text-xs font-medium text-slate-300">
+                6-Digit Security Code
+              </label>
+              <div className="relative">
+                <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                <input
+                  id="login-otp"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  required
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="000000"
+                  className="w-full min-h-[44px] bg-[#060912] border border-bro-cyan/50 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-mono tracking-widest text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => void requestOtpCode()}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-bro-cyan hover:text-cyan-300 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Resend Code</span>
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => {
+                  setOtpRequested(false);
+                  setOtpCode('');
+                  setNotice(null);
+                  setError(null);
+                }}
+                className="text-xs font-medium text-slate-300 hover:text-white cursor-pointer"
+              >
+                Change Email
+              </button>
             </div>
           </div>
         )}
@@ -337,39 +430,35 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
 
       {isDev && (
         <div className="pt-4 border-t border-white/10 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-medium text-bro-gold">
-            <Radio className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-            <span>Local Dev Quick-Role Switch (Disabled in Production)</span>
+          <div className="flex items-center justify-between gap-2 text-xs font-medium text-bro-gold">
+            <div className="flex items-center gap-2">
+              <Radio className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <span>Local Dev 13-Persona Specialist Switcher (Disabled in Prod)</span>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2.5 text-xs">
-            <button
-              type="button"
-              onClick={() => handleDevDemoLogin('admin@brotransport.com')}
-              className="min-h-[44px] px-3 py-2 rounded-xl border border-bro-gold/35 bg-[#060912] hover:border-bro-gold text-slate-200 font-medium cursor-pointer text-left transition-colors"
-            >
-              Super Admin → /ops
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDevDemoLogin('dispatch@brotransport.com')}
-              className="min-h-[44px] px-3 py-2 rounded-xl border border-bro-cyan/35 bg-[#060912] hover:border-bro-cyan text-slate-200 font-medium cursor-pointer text-left transition-colors"
-            >
-              Dispatcher → /ops
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDevDemoLogin('owen@cavendishvalley.example')}
-              className="min-h-[44px] px-3 py-2 rounded-xl border border-white/15 bg-[#060912] hover:border-bro-cyan text-slate-200 font-medium cursor-pointer text-left transition-colors"
-            >
-              Shipper → /portal/shipper
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDevDemoLogin('liam.gallant@brotransport.com')}
-              className="min-h-[44px] px-3 py-2 rounded-xl border border-white/15 bg-[#060912] hover:border-bro-gold text-slate-200 font-medium cursor-pointer text-left transition-colors"
-            >
-              Driver → /portal/driver
-            </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            {DEV_PERSONA_PILLS.map((pill) => {
+              const borderClass =
+                pill.accent === 'gold'
+                  ? 'border-bro-gold/35 hover:border-bro-gold'
+                  : pill.accent === 'cyan'
+                    ? 'border-bro-cyan/35 hover:border-bro-cyan'
+                    : 'border-white/15 hover:border-bro-cyan';
+              return (
+                <button
+                  key={pill.email}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => void handleDevDemoLogin(pill.email)}
+                  className={`min-h-[44px] px-3 py-2 rounded-xl border bg-[#060912] ${borderClass} text-slate-200 font-medium cursor-pointer text-left transition-colors flex items-center justify-between gap-2`}
+                >
+                  <span className="truncate font-semibold text-white">{ROLE_LABELS[pill.role]}</span>
+                  <span className="font-mono text-[11px] text-slate-400 shrink-0">
+                    {defaultHomeForRole(pill.role)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

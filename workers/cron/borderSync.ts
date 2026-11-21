@@ -2,6 +2,7 @@ import type { CloudflareEnv } from '../../src/env';
 import { syncBorderWaitTimes, type BorderWaitFeed } from '../services/borderWaitTimes';
 
 const OPS_HUB_SINGLETON_NAME = 'global-ops-hub';
+export const BORDER_WAIT_BROADCAST_CHANNELS = ['ops:all', 'public:borders'] as const;
 
 export interface BorderSyncCronResult {
   feed: BorderWaitFeed;
@@ -26,27 +27,40 @@ export async function runBorderSync(
   try {
     const id = env.OPS_HUB.idFromName(OPS_HUB_SINGLETON_NAME);
     const stub = env.OPS_HUB.get(id);
-    const response = await stub.fetch('https://ops-hub.internal/broadcast', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'BORDER_WAIT_TIMES_SYNCED',
-        cron,
-        fetchedAt: feed.fetchedAt,
-        stale: feed.stale,
-        sources: feed.sources,
-        ports: feed.ports,
-      }),
-    });
+    const timestamp = Date.now();
 
-    if (!response.ok) {
-      return {
-        feed,
-        hubNotified: false,
-        hubError: `OpsHubDO responded with HTTP ${response.status}`,
-      };
+    for (const channel of BORDER_WAIT_BROADCAST_CHANNELS) {
+      const response = await stub.fetch('https://ops-hub.internal/broadcast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'BORDER_WAIT_UPDATED',
+          channel,
+          timestamp,
+          payload: {
+            cron,
+            fetchedAt: feed.fetchedAt,
+            stale: feed.stale,
+            sources: feed.sources,
+            ports: feed.ports,
+          },
+          cron,
+          fetchedAt: feed.fetchedAt,
+          stale: feed.stale,
+          sources: feed.sources,
+          ports: feed.ports,
+        }),
+      });
+
+      if (!response.ok) {
+        return {
+          feed,
+          hubNotified: false,
+          hubError: `OpsHubDO responded with HTTP ${response.status}`,
+        };
+      }
     }
 
     return { feed, hubNotified: true };

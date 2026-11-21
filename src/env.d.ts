@@ -46,6 +46,8 @@ export interface SessionUser {
   email: string;
   role: UserRole;
   organizationId: string | null;
+  mustChangePassword?: boolean;
+  title?: string | null;
 }
 
 declare global {
