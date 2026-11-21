@@ -11,49 +11,60 @@ const { compact = false, showSlogan = false, class: className = '' } = Astro.pro
 <div class={`inline-flex flex-col select-none ${className}`}>
   <div class="inline-flex items-center gap-3">
     <svg
-      class={compact ? 'h-8 w-8 shrink-0' : 'h-11 w-11 shrink-0'}
+      class={compact ? 'h-8 w-8 shrink-0 drop-shadow-[0_4px_12px_rgba(0,240,255,0.22)]' : 'h-12 w-12 shrink-0 drop-shadow-[0_6px_18px_rgba(0,240,255,0.25)]'}
       viewBox="0 0 128 128"
       fill="none"
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="bro-mark-gold" x1="16" y1="16" x2="112" y2="112" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#FFE082" />
-          <stop offset="50%" stop-color="#FFAA00" />
-          <stop offset="100%" stop-color="#C67E00" />
+        <linearGradient id="bro-squircle-bg" x1="16" y1="4" x2="112" y2="124" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#19223B" />
+          <stop offset="55%" stop-color="#0B1020" />
+          <stop offset="100%" stop-color="#04060E" />
         </linearGradient>
-        <linearGradient id="bro-mark-cyan" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#00F0FF" />
-          <stop offset="100%" stop-color="#009BB5" />
+        <linearGradient id="bro-bezel-specular" x1="64" y1="2" x2="64" y2="126" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45" />
+          <stop offset="28%" stop-color="#FFAA00" stop-opacity="0.55" />
+          <stop offset="100%" stop-color="#00F0FF" stop-opacity="0.32" />
+        </linearGradient>
+        <linearGradient id="bro-mark-gold" x1="20" y1="30" x2="72" y2="96" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FFF0B8" />
+          <stop offset="45%" stop-color="#FFAA00" />
+          <stop offset="100%" stop-color="#D97706" />
+        </linearGradient>
+        <linearGradient id="bro-mark-cyan" x1="78" y1="36" x2="114" y2="92" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#A5F3FC" />
+          <stop offset="50%" stop-color="#00F0FF" />
+          <stop offset="100%" stop-color="#0284C7" />
         </linearGradient>
       </defs>
-      <rect width="128" height="128" rx="20" fill="#0B0E1A" />
-      <rect x="4" y="4" width="120" height="120" rx="17" stroke="url(#bro-mark-gold)" stroke-width="3" stroke-opacity="0.7" />
-      <path d="M40 34L32 94M64 34L56 94M24 52H72M20 76H68" stroke="url(#bro-mark-gold)" stroke-width="8" stroke-linecap="square" />
+      <rect x="2" y="2" width="124" height="124" rx="28" fill="url(#bro-squircle-bg)" />
+      <rect x="3" y="3" width="122" height="122" rx="27" stroke="url(#bro-bezel-specular)" stroke-width="2.5" />
+      <path d="M40 34L32 94M64 34L56 94M24 52H72M20 76H68" stroke="url(#bro-mark-gold)" stroke-width="8" stroke-linecap="round" />
       <path d="M80 38H96C104.5 38 110 43.2 110 51C110 56.5 106.5 60.8 101.2 62.5C107.6 64.2 111.5 69.2 111.5 76C111.5 85 105 90 95.5 90H80V38Z" stroke="url(#bro-mark-cyan)" stroke-width="6.5" stroke-linejoin="round" />
-      <line x1="80" y1="63" x2="100" y2="63" stroke="url(#bro-mark-cyan)" stroke-width="5.5" />
+      <line x1="80" y1="63" x2="100" y2="63" stroke="url(#bro-mark-cyan)" stroke-width="5.5" stroke-linecap="round" />
     </svg>
 
     <div class="flex flex-col leading-none">
       <div class="flex items-baseline gap-1.5">
         <span
-          class={`font-display font-black tracking-[0.14em] bg-gradient-to-r from-amber-200 via-bro-gold to-amber-500 bg-clip-text text-transparent ${
+          class={`font-display font-bold tracking-[-0.02em] bg-gradient-to-b from-amber-100 via-bro-gold to-amber-500 bg-clip-text text-transparent ${
             compact ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'
           }`}
         >
           #BRO
         </span>
         <span
-          class={`font-display font-light tracking-[0.22em] text-white ${
-            compact ? 'text-sm sm:text-base' : 'text-lg sm:text-2xl'
+          class={`font-display font-medium tracking-[0.14em] text-white/95 ${
+            compact ? 'text-xs sm:text-sm' : 'text-base sm:text-lg'
           }`}
         >
           TRANSPORT
         </span>
       </div>
       {showSlogan && (
-        <span class="mt-1 font-mono text-[10px] tracking-[0.24em] uppercase text-bro-cyan/90">
-          A BRO IN NEED IS A BRO INDEED
+        <span class="mt-1 font-mono text-[10px] tracking-[0.2em] uppercase text-slate-400">
+          A Bro in Need Is a Bro Indeed
         </span>
       )}
     </div>

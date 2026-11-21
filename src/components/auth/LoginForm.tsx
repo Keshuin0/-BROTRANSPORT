@@ -96,40 +96,40 @@ export default function LoginForm({ nextPath = '', isDev = false }: LoginFormPro
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-bro-steel/70 border border-white/10 rounded-lg p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-6">
-      <div className="space-y-2 border-b border-white/10 pb-4">
-        <div className="flex items-center gap-2 text-bro-cyan font-mono text-xs uppercase tracking-widest">
+    <div className="w-full max-w-md mx-auto surface-ceramic rounded-3xl p-6 sm:p-8 space-y-6">
+      <div className="space-y-2 border-b border-white/[0.08] pb-5">
+        <div className="flex items-center gap-2 text-bro-cyan text-xs font-medium">
           <ShieldCheck className="w-4 h-4" />
-          <span>ZERO-TRUST PORTAL GATEWAY</span>
+          <span>Zero-Trust Portal Gateway</span>
         </div>
         <h1 className="text-2xl font-display font-bold text-white tracking-tight">
           #BRO Command Sign-In
         </h1>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 leading-relaxed">
           Unified RBAC authentication for Shippers, Drivers, Dispatchers, Customs Brokers, and Admins.
         </p>
       </div>
 
-      {/* Mode Tabs */}
-      <div className="grid grid-cols-3 gap-1 p-1 bg-bro-obsidian/80 border border-white/10 rounded font-mono text-[11px]">
+      {/* Apple Segmented Mode Control */}
+      <div className="grid grid-cols-3 gap-1 p-1 bg-[#060912] border border-white/[0.08] rounded-full text-xs">
         <button
           type="button"
           onClick={() => { setMode('password'); setError(null); }}
-          className={`py-2 rounded transition-colors cursor-pointer ${mode === 'password' ? 'bg-bro-cyan text-black font-bold' : 'text-slate-400 hover:text-white'}`}
+          className={`py-2 rounded-full transition-all cursor-pointer font-medium ${mode === 'password' ? 'bg-white text-black font-semibold shadow-sm' : 'text-slate-300 hover:text-white'}`}
         >
           Password
         </button>
         <button
           type="button"
           onClick={() => { setMode('otp'); setOtpRequested(false); setError(null); }}
-          className={`py-2 rounded transition-colors cursor-pointer ${mode === 'otp' ? 'bg-bro-cyan text-black font-bold' : 'text-slate-400 hover:text-white'}`}
+          className={`py-2 rounded-full transition-all cursor-pointer font-medium ${mode === 'otp' ? 'bg-white text-black font-semibold shadow-sm' : 'text-slate-300 hover:text-white'}`}
         >
           Email OTP
         </button>
         <button
           type="button"
           onClick={() => { setMode('register'); setError(null); }}
-          className={`py-2 rounded transition-colors cursor-pointer ${mode === 'register' ? 'bg-bro-gold text-black font-bold' : 'text-slate-400 hover:text-white'}`}
+          className={`py-2 rounded-full transition-all cursor-pointer font-medium ${mode === 'register' ? 'bg-bro-gold text-black font-semibold shadow-sm' : 'text-slate-300 hover:text-white'}`}
         >
           Register
         </button>

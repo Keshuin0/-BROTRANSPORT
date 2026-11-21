@@ -305,6 +305,62 @@ export class GlobeEngine {
     this.focusReticleMesh.visible = false;
     this.scene.add(this.focusReticleMesh);
 
+    // 11b. Deterministic Deep-Space Starfield (Fibonacci sphere + prime jitter, 1 draw call, zero Math.random())
+    const starCount = 650;
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+    const phi = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < starCount; i++) {
+      const y = 1 - (i / (starCount - 1)) * 2;
+      const rSlice = Math.sqrt(Math.max(0, 1 - y * y));
+      const theta = phi * i + ((i * 19) % 13) * 0.08;
+      const dist = 210 + ((i * 37) % 97);
+      starPositions[i * 3] = Math.cos(theta) * rSlice * dist;
+      starPositions[i * 3 + 1] = y * dist;
+      starPositions[i * 3 + 2] = Math.sin(theta) * rSlice * dist;
+      const isWarm = i % 7 === 0;
+      const tint = 0.55 + ((i * 13) % 45) / 100;
+      starColors[i * 3] = isWarm ? tint : tint * 0.78;
+      starColors[i * 3 + 1] = isWarm ? tint * 0.88 : tint * 0.94;
+      starColors[i * 3 + 2] = isWarm ? tint * 0.65 : tint;
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+    const starMat = new THREE.PointsMaterial({
+      size: 1.05,
+      sizeAttenuation: true,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false,
+    });
+    const starPoints = new THREE.Points(starGeo, starMat);
+    starPoints.name = 'orbital-starfield';
+    this.scene.add(starPoints);
+
+    // 11c. Subtle Inclined Orbital Horizon Track
+    const orbitSegments = 128;
+    const orbitPts: number[] = [];
+    const orbitRadius = ATMOSPHERE_RADIUS + 5.6;
+    for (let i = 0; i < orbitSegments; i++) {
+      const a0 = (i / orbitSegments) * Math.PI * 2;
+      orbitPts.push(Math.cos(a0) * orbitRadius, 0, Math.sin(a0) * orbitRadius);
+    }
+    const orbitGeo = new THREE.BufferGeometry();
+    orbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(orbitPts, 3));
+    const orbitMat = new THREE.LineBasicMaterial({
+      color: COLOR_BRO_CYAN,
+      transparent: true,
+      opacity: 0.14,
+      depthWrite: false,
+    });
+    const orbitLoop = new THREE.LineLoop(orbitGeo, orbitMat);
+    orbitLoop.rotation.z = THREE.MathUtils.degToRad(23.44);
+    orbitLoop.rotation.x = THREE.MathUtils.degToRad(-12);
+    orbitLoop.name = 'orbital-horizon-ring';
+    this.scene.add(orbitLoop);
+
     // 12. Motion preference, observers & event listeners
     this.initReducedMotion();
     this.bindEvents();

@@ -88,10 +88,10 @@ export default function AllyEscalationDrawer() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-3.5 py-2 rounded border border-bro-cyan/40 bg-bro-steel/70 hover:border-bro-cyan hover:bg-bro-cyan/10 text-bro-cyan font-mono text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-black hover:bg-bro-cyan text-xs font-semibold tracking-tight transition-all cursor-pointer shadow-sm"
       >
-        <span className="h-2 w-2 rounded-full bg-bro-cyan" />
-        <span>Request an Ally</span>
+        <span className="h-2 w-2 rounded-full bg-emerald-600" />
+        <span>Request Ally</span>
       </button>
 
       {open && (
@@ -101,8 +101,8 @@ export default function AllyEscalationDrawer() {
           aria-modal="true"
           aria-labelledby="ally-drawer-title"
         >
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <aside className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-bro-obsidian border-l border-white/10 p-6 flex flex-col justify-between z-10 overflow-y-auto shadow-2xl">
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-md" onClick={() => setOpen(false)} />
+          <aside className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#090d18]/95 backdrop-blur-2xl border-l border-white/15 p-6 flex flex-col justify-between z-10 overflow-y-auto shadow-2xl">
             <div className="space-y-6">
               <div className="flex items-start justify-between border-b border-white/10 pb-4">
                 <div className="space-y-1">

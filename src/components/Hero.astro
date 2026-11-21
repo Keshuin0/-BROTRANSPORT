@@ -1,90 +1,119 @@
 ---
-import BroLogo from './brand/BroLogo.astro';
 import CommandGlobe from './globe/CommandGlobe';
 ---
 
-<section class="relative overflow-hidden border-b border-white/10 py-14 lg:py-20 px-4 sm:px-6">
-  <div class="absolute top-0 left-1/4 w-[28rem] h-[28rem] bg-bro-gold/5 rounded-full blur-[130px] pointer-events-none" aria-hidden="true"></div>
-  <div class="absolute bottom-0 right-1/4 w-[28rem] h-[28rem] bg-bro-cyan/5 rounded-full blur-[130px] pointer-events-none" aria-hidden="true"></div>
+<section class="relative overflow-hidden border-b border-white/[0.08] pt-24 pb-12 lg:pt-28 lg:pb-16 min-h-[760px] lg:min-h-[840px] flex flex-col justify-between">
+  <!-- Right / Full-Bleed Atmospheric 3D Orbital Command Canvas -->
+  <div class="lg:absolute lg:inset-y-12 lg:right-[-2%] lg:w-[64%] xl:w-[60%] z-10 order-2 lg:order-none px-3 sm:px-6 lg:px-0 mt-6 lg:mt-0">
+    <CommandGlobe client:load variant="hero" />
+  </div>
 
-  <div class="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-    <!-- Left Column: Brand Authority & Dual-Portal Entry -->
-    <div class="lg:col-span-6 space-y-7">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-bro-cyan/30 bg-bro-steel/70 font-mono text-[10px] uppercase tracking-widest text-bro-cyan">
-        <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan"></span>
-        <span>NORTH AMERICA TRANSBORDER LOGISTICS OS · SCAC BROP</span>
+  <!-- Soft Editorial Readability Scrim (keeps left typography razor-sharp over WebGL limb) -->
+  <div
+    class="hidden lg:block absolute inset-y-0 left-0 w-[56%] bg-gradient-to-r from-[#020308] via-[#020308]/90 to-transparent pointer-events-none z-10"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Left Editorial Command Stage -->
+  <div class="relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 pt-6 lg:pt-14 order-1 lg:order-none pointer-events-none">
+    <div class="max-w-xl space-y-7 pointer-events-auto">
+      <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full liquid-glass-pill text-xs font-medium text-slate-200">
+        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+        <span>North America Transborder Operating System</span>
+        <span class="text-slate-500">·</span>
+        <span class="font-mono text-bro-cyan">SCAC BROP</span>
       </div>
 
-      <BroLogo showSlogan />
-
-      <div class="space-y-3">
-        <h1 class="text-4xl sm:text-5xl xl:text-6xl font-display font-black uppercase tracking-tight leading-[1.02] text-white">
-          BOLD. RELIABLE. <br />
-          <span class="text-bro-cyan glow-text-cyan">ORCHESTRATED.</span>
+      <div class="space-y-4">
+        <h1 class="text-4xl sm:text-6xl xl:text-[4.25rem] font-display font-bold tracking-[-0.035em] leading-[1.02] text-white">
+          Bold. Reliable. <br />
+          <span class="bg-gradient-to-r from-white via-cyan-200 to-bro-cyan bg-clip-text text-transparent">
+            Orchestrated.
+          </span>
         </h1>
-        <p class="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed">
-          Atlantic Canada to North America commercial Dry Van, Cold-Chain Reefer, and Open-Deck Flatbed freight—powered by live CBP/CBSA border intelligence, AI document processing, ECDSA cryptographic eBOL custody, and automated cross-border billing.
+        <p class="text-base sm:text-lg text-slate-300/95 leading-relaxed max-w-lg">
+          Commercial Dry Van, Cold-Chain Reefer, and Open-Deck Flatbed logistics connecting Atlantic Canada and continental North America—on live CBP/CBSA border intelligence and cryptographic chain-of-custody.
         </p>
       </div>
 
-      <!-- Dual-Portal Action Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-w-xl">
+      <!-- Focused Primary Action Bar (2 Strong Choices — Apple HIG Clarity) -->
+      <div class="flex flex-wrap items-center gap-3 pt-1">
         <a
           href="/quote"
           data-astro-prefetch
-          class="flex items-center justify-between p-4 rounded-lg border border-bro-cyan/35 bg-bro-steel/60 hover:bg-bro-steel hover:border-bro-cyan transition-all group"
+          class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white text-black hover:bg-bro-cyan font-semibold text-sm tracking-tight shadow-[0_10px_30px_-8px_rgba(255,255,255,0.35)] transition-all"
         >
-          <div>
-            <div class="font-mono text-xs font-bold text-white group-hover:text-bro-cyan uppercase">01 // Instant Rate Engine</div>
-            <p class="text-[11px] text-slate-400 mt-0.5">Highway-routed CAD/USD + CO₂e</p>
-          </div>
-          <span class="font-mono text-bro-cyan font-bold group-hover:translate-x-1 transition-transform">→</span>
+          <span>Get Instant Lane Rate</span>
+          <span aria-hidden="true">→</span>
         </a>
 
         <a
-          href="/portal/driver"
+          href="/customs"
           data-astro-prefetch
-          class="flex items-center justify-between p-4 rounded-lg border border-bro-gold/35 bg-bro-steel/60 hover:bg-bro-steel hover:border-bro-gold transition-all group"
+          class="inline-flex items-center gap-2 px-5 py-3.5 rounded-full liquid-glass-pill text-white hover:border-white/30 text-sm font-medium transition-all"
         >
-          <div>
-            <div class="font-mono text-xs font-bold text-white group-hover:text-bro-gold uppercase">02 // Driver Offline PWA</div>
-            <p class="text-[11px] text-slate-400 mt-0.5">Scan docs, DVIR, eBOL & settlements</p>
-          </div>
-          <span class="font-mono text-bro-gold font-bold group-hover:translate-x-1 transition-transform">→</span>
-        </a>
-
-        <a
-          href="/portal/shipper"
-          data-astro-prefetch
-          class="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-bro-steel/40 hover:bg-bro-steel hover:border-bro-cyan/60 transition-all group"
-        >
-          <div>
-            <div class="font-mono text-xs font-bold text-slate-100 group-hover:text-bro-cyan uppercase">03 // Shipper Portal</div>
-            <p class="text-[11px] text-slate-400 mt-0.5">Live tracking, FSMA temp & invoices</p>
-          </div>
-          <span class="font-mono text-slate-400 group-hover:text-bro-cyan group-hover:translate-x-1 transition-transform">→</span>
-        </a>
-
-        <a
-          href="/ops"
-          data-astro-prefetch
-          class="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-bro-steel/40 hover:bg-bro-steel hover:border-bro-gold/60 transition-all group"
-        >
-          <div>
-            <div class="font-mono text-xs font-bold text-slate-100 group-hover:text-bro-gold uppercase">04 // Ops Command Tower</div>
-            <p class="text-[11px] text-slate-400 mt-0.5">Dispatch, AI OCR, Customs & IFTA</p>
-          </div>
-          <span class="font-mono text-slate-400 group-hover:text-bro-gold group-hover:translate-x-1 transition-transform">→</span>
+          <span>Border &amp; CARM Pre-Flight</span>
         </a>
       </div>
-    </div>
 
-    <!-- Right Column: Next-Gen Vector & Instanced 3D Command Globe -->
-    <div class="lg:col-span-6 w-full">
-      <div class="p-1 rounded-lg bg-gradient-to-br from-bro-cyan/40 via-white/10 to-bro-gold/40 shadow-2xl">
-        <div class="rounded-[7px] bg-bro-obsidian overflow-hidden">
-          <CommandGlobe client:load />
+      <!-- Clean Split-Path Portal Access Bar -->
+      <div class="pt-3 space-y-2.5">
+        <div class="text-xs font-medium text-slate-400">Direct Portal Access</div>
+        <div class="flex flex-wrap items-center gap-2">
+          <a
+            href="/portal/shipper"
+            data-astro-prefetch
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl surface-ceramic text-xs font-medium text-slate-200 hover:text-white hover:border-bro-cyan/40 transition-colors"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-bro-cyan"></span>
+            <span>Shipper Portal</span>
+          </a>
+          <a
+            href="/portal/driver"
+            data-astro-prefetch
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl surface-ceramic text-xs font-medium text-slate-200 hover:text-white hover:border-bro-gold/40 transition-colors"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-bro-gold"></span>
+            <span>Driver Offline PWA</span>
+          </a>
+          <a
+            href="/ops"
+            data-astro-prefetch
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl surface-ceramic text-xs font-medium text-slate-200 hover:text-white hover:border-white/30 transition-colors"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+            <span>Employee Ops Tower</span>
+          </a>
+          <a
+            href="/verify"
+            data-astro-prefetch
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl surface-ceramic text-xs font-medium text-slate-200 hover:text-white hover:border-emerald-400/40 transition-colors"
+          >
+            <span>Verify eBOL</span>
+          </a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiet Bottom Capability Architecture Strip -->
+  <div class="relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 pt-10 lg:pt-16 order-3 lg:order-none pointer-events-none">
+    <div class="max-w-3xl grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 px-5 rounded-2xl liquid-glass pointer-events-auto">
+      <div>
+        <div class="text-[11px] text-slate-400">Crossings Synced</div>
+        <div class="mt-0.5 font-mono text-sm font-semibold text-white tabular-nums">13 US / CA Ports</div>
+      </div>
+      <div>
+        <div class="text-[11px] text-slate-400">Cold-Chain Control</div>
+        <div class="mt-0.5 font-mono text-sm font-semibold text-bro-cyan tabular-nums">-28°C to +25°C</div>
+      </div>
+      <div>
+        <div class="text-[11px] text-slate-400">Digital Custody</div>
+        <div class="mt-0.5 font-mono text-sm font-semibold text-white">ECDSA P-256</div>
+      </div>
+      <div>
+        <div class="text-[11px] text-slate-400">Customs Protocol</div>
+        <div class="mt-0.5 font-mono text-sm font-semibold text-bro-gold">ACE · ACI CARM R2</div>
       </div>
     </div>
   </div>

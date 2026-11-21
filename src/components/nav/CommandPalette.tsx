@@ -124,11 +124,11 @@ export default function CommandPalette() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open Command Palette (Cmd+K)"
-        className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/10 bg-bro-steel/60 hover:border-bro-cyan/50 text-slate-400 hover:text-white font-mono text-[11px] transition-colors cursor-pointer"
+        className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/30 text-slate-300 hover:text-white text-xs transition-all cursor-pointer"
       >
         <Search className="w-3.5 h-3.5 text-bro-cyan" />
-        <span>Command</span>
-        <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-bro-obsidian border border-white/10 text-[10px] text-slate-300">
+        <span className="font-medium">Search</span>
+        <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px] font-mono text-slate-200">
           <Command className="w-2.5 h-2.5" />K
         </kbd>
       </button>
@@ -140,8 +140,8 @@ export default function CommandPalette() {
           aria-modal="true"
           aria-label="Freight Command Palette"
         >
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative z-10 w-full max-w-xl bg-bro-obsidian border border-bro-cyan/30 rounded-lg shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-md" onClick={() => setOpen(false)} />
+          <div className="relative z-10 w-full max-w-xl liquid-glass rounded-2xl overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
               <Search className="w-4 h-4 text-bro-cyan shrink-0" />
               <input

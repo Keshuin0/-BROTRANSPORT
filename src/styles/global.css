@@ -1,20 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bro-obsidian: #030307;
-  --color-bro-steel: #0e111f;
+  --color-bro-obsidian: #020308;
+  --color-bro-steel: #0c101d;
   --color-bro-cyan: #00f0ff;
   --color-bro-gold: #ffaa00;
   --color-bro-crimson: #ff0055;
-  --color-bro-ice: #e2f1f8;
+  --color-bro-ice: #eef4fb;
 
-  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  --shadow-neon-glow: 0 0 18px rgba(0, 240, 255, 0.28);
-  --shadow-neon-gold: 0 0 18px rgba(255, 170, 0, 0.24);
-  --shadow-neon-alert: 0 0 18px rgba(255, 0, 85, 0.30);
+  --shadow-neon-glow: 0 0 24px rgba(0, 240, 255, 0.22);
+  --shadow-neon-gold: 0 0 24px rgba(255, 170, 0, 0.22);
+  --shadow-neon-alert: 0 0 24px rgba(255, 0, 85, 0.28);
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
 }
 
 @font-face {
@@ -23,6 +31,14 @@
   font-weight: 100 900;
   font-display: swap;
   src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
 }
 
 @layer base {
@@ -36,7 +52,13 @@
     color: var(--color-bro-ice);
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
   }
 
   .tabular-nums {
@@ -44,59 +66,80 @@
   }
 }
 
-@utility bg-cyber-grid {
-  background-size: 44px 44px;
+/* Deep spatial atmospheric illumination (zero wireframe grid noise) */
+@utility bg-spatial-cosmos {
+  background-color: #020308;
   background-image:
-    linear-gradient(to right, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    radial-gradient(ellipse 75% 55% at 72% 8%, rgba(0, 240, 255, 0.085), transparent 65%),
+    radial-gradient(ellipse 60% 45% at 18% 92%, rgba(255, 170, 0, 0.055), transparent 65%),
+    radial-gradient(circle at 50% 0%, rgba(16, 29, 64, 0.35), transparent 70%);
+}
+
+/*
+ * Apple HIG / Liquid Glass Floating Chrome Layer
+ * Reserve STRICTLY for floating navigation bars, pills, controls & HUD overlays above content.
+ * Features directional top-edge specular refraction highlight & deep saturation blur.
+ */
+@utility liquid-glass {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 28, 48, 0.68) 0%,
+    rgba(10, 14, 26, 0.78) 100%
+  );
+  backdrop-filter: blur(26px) saturate(190%);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 50px -14px rgba(0, 0, 0, 0.85);
+}
+
+@utility liquid-glass-pill {
+  background: linear-gradient(
+    180deg,
+    rgba(28, 36, 62, 0.62) 0%,
+    rgba(14, 19, 34, 0.74) 100%
+  );
+  backdrop-filter: blur(20px) saturate(175%);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 10px 24px -8px rgba(0, 0, 0, 0.65);
+}
+
+/* Machined Ceramic Content Surfaces (high legibility contrast per Apple Materials HIG) */
+@utility surface-ceramic {
+  background: linear-gradient(
+    180deg,
+    rgba(16, 22, 38, 0.86) 0%,
+    rgba(9, 13, 24, 0.94) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 18px 40px -16px rgba(0, 0, 0, 0.72);
 }
 
 @utility glass-panel {
-  background: rgba(14, 17, 31, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 15, 28, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 @utility glass-gold {
-  background: rgba(14, 17, 31, 0.78);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 170, 0, 0.25);
+  background: linear-gradient(180deg, rgba(24, 20, 16, 0.84), rgba(12, 14, 24, 0.92));
+  border: 1px solid rgba(255, 170, 0, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 210, 120, 0.14);
 }
 
 @utility glow-text-cyan {
-  text-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+  text-shadow: 0 0 22px rgba(0, 240, 255, 0.28);
 }
 
 @utility glow-text-gold {
-  text-shadow: 0 0 12px rgba(255, 170, 0, 0.35);
-}
-
-@utility cyber-corners {
-  position: relative;
-  &::after {
-    content: '';
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    width: 10px;
-    height: 10px;
-    border-top: 2px solid #00f0ff;
-    border-left: 2px solid #00f0ff;
-    pointer-events: none;
-  }
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    right: -1px;
-    width: 10px;
-    height: 10px;
-    border-bottom: 2px solid #ffaa00;
-    border-right: 2px solid #ffaa00;
-    pointer-events: none;
-  }
+  text-shadow: 0 0 22px rgba(255, 170, 0, 0.28);
 }
 
 /* Precision scrollbars */
@@ -105,17 +148,29 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #030307;
+  background: #020308;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.22);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 240, 255, 0.45);
 }
 
-/* Strict WCAG 2.1 Reduced Motion compliance */
+/* Accessibility: Reduced Transparency (Apple HIG compliance) */
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass,
+  .liquid-glass-pill,
+  .surface-ceramic {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #0c101d !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+  }
+}
+
+/* Accessibility: Reduced Motion compliance */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -39,9 +39,9 @@ export default function MobileNavDrawer({ currentPath, userRole }: MobileNavDraw
         onClick={() => setOpen(true)}
         aria-label="Open navigation menu"
         aria-expanded={open}
-        className="md:hidden inline-flex items-center justify-center p-2 rounded border border-white/10 bg-bro-steel/70 text-slate-200 hover:border-bro-cyan hover:text-bro-cyan transition-colors cursor-pointer"
+        className="md:hidden inline-flex items-center justify-center p-2 rounded-full border border-white/15 bg-white/[0.06] text-slate-100 hover:border-white/30 transition-colors cursor-pointer"
       >
-        <Menu className="w-5 h-5" />
+        <Menu className="w-4 h-4" />
       </button>
 
       {open && (
@@ -52,10 +52,10 @@ export default function MobileNavDrawer({ currentPath, userRole }: MobileNavDraw
           aria-label="Mobile Navigation"
         >
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setOpen(false)}
           />
-          <aside className="fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-bro-obsidian border-l border-white/10 p-6 flex flex-col justify-between z-10 overflow-y-auto">
+          <aside className="fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-[#090d18]/95 backdrop-blur-2xl border-l border-white/15 p-6 flex flex-col justify-between z-10 overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <span className="font-mono text-xs uppercase tracking-widest text-bro-cyan font-bold">

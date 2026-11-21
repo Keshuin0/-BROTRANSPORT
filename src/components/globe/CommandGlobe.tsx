@@ -26,6 +26,7 @@ import { GlobeEngine } from './GlobeEngine';
 
 export interface CommandGlobeProps {
   className?: string;
+  variant?: 'hero' | 'card';
 }
 
 type FeedStatus = 'loading' | 'live' | 'standby';
@@ -108,25 +109,25 @@ function getWaitStatusStyles(status: WaitSeverityStatus): {
       return {
         badgeClass: 'border-bro-cyan/40 bg-bro-cyan/10 text-bro-cyan',
         valueClass: 'text-bro-cyan',
-        label: 'CLEAR FLOW',
+        label: 'Clear Flow',
       };
     case 'moderate':
       return {
         badgeClass: 'border-bro-gold/40 bg-bro-gold/10 text-bro-gold',
         valueClass: 'text-bro-gold',
-        label: 'MODERATE QUEUE',
+        label: 'Moderate Queue',
       };
     case 'congested':
       return {
         badgeClass: 'border-bro-crimson/40 bg-bro-crimson/10 text-bro-crimson',
         valueClass: 'text-bro-crimson',
-        label: 'HEAVY DELAY',
+        label: 'Heavy Delay',
       };
     default:
       return {
         badgeClass: 'border-slate-700 bg-slate-900/70 text-slate-300',
         valueClass: 'text-slate-200',
-        label: 'STANDBY',
+        label: 'Standby',
       };
   }
 }
@@ -137,7 +138,8 @@ function formatCoords(lat: number, lon: number): string {
   return `${Math.abs(lat).toFixed(4)}°${latDir}, ${Math.abs(lon).toFixed(4)}°${lonDir}`;
 }
 
-export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
+export default function CommandGlobe({ className = '', variant = 'card' }: CommandGlobeProps) {
+  const isHero = variant === 'hero';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<GlobeEngine | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -244,7 +246,11 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
 
   return (
     <div
-      className={`relative w-full h-[440px] md:h-[540px] rounded-lg border border-slate-800 bg-bro-obsidian overflow-hidden shadow-2xl select-none ${className}`}
+      className={`relative w-full select-none overflow-hidden ${
+        isHero
+          ? 'h-[430px] sm:h-[520px] lg:h-[680px] bg-transparent'
+          : 'h-[440px] md:h-[540px] rounded-2xl surface-ceramic'
+      } ${className}`}
       aria-label="Interactive 3D North American Freight Corridor and Border Command Globe"
     >
       {/* WebGL Canvas Host */}
@@ -255,7 +261,7 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
 
       {/* Graceful WebGL Context-Lost / Unavailable Fallback */}
       {webglFallback && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-bro-obsidian/95 p-6 text-center">
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-bro-obsidian/90 p-6 text-center">
           <Compass className="w-8 h-8 text-bro-cyan mb-3" aria-hidden="true" />
           <p className="font-mono text-xs uppercase tracking-widest text-bro-cyan font-semibold">
             3D Geospatial Viewport Standby
@@ -267,7 +273,7 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
           </p>
           <a
             href="/quote"
-            className="mt-4 inline-flex items-center gap-2 rounded border border-bro-cyan/50 bg-bro-cyan/10 px-4 py-2 font-mono text-xs font-semibold uppercase tracking-wider text-bro-cyan hover:bg-bro-cyan/20 transition-colors"
+            className="mt-4 inline-flex items-center gap-2 rounded-full liquid-glass-pill px-5 py-2.5 text-xs font-semibold text-white hover:border-bro-cyan transition-colors"
           >
             Open Live Rate Engine
             <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -275,9 +281,11 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
         </div>
       )}
 
-      {/* Top-Left Camera Preset Bar */}
+      {/* Top Floating Liquid Glass Camera Segmented Control */}
       <div
-        className="absolute top-3 left-3 z-20 flex flex-wrap items-center gap-1.5"
+        className={`absolute top-3 z-20 inline-flex flex-wrap items-center gap-1 rounded-full liquid-glass p-1 ${
+          isHero ? 'right-3 lg:right-6' : 'left-3'
+        }`}
         role="group"
         aria-label="Camera corridor presets"
       >
@@ -289,11 +297,11 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
               type="button"
               onClick={() => handleSelectPreset(preset)}
               aria-pressed={isActive}
-              className={`px-2.5 py-1.5 rounded border font-mono text-[10px] uppercase tracking-wider transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan cursor-pointer ${
                 isActive
-                  ? 'border-bro-cyan/60 bg-bro-cyan/15 text-bro-cyan font-semibold'
-                  : 'border-slate-800 bg-bro-obsidian/80 text-slate-300 hover:border-slate-600 hover:text-bro-ice'
-              } backdrop-blur-md`}
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+              }`}
             >
               {preset.label}
             </button>
@@ -301,68 +309,63 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
         })}
       </div>
 
-      {/* Subtle Hover Readout Chip (when hovering an unselected node) */}
+      {/* Subtle Hover Readout Pill (Liquid Glass floating control) */}
       {hoveredNode && hoveredNode.id !== selectedNode?.id && (
-        <div className="pointer-events-none absolute bottom-4 right-4 z-20 hidden sm:flex items-center gap-2 rounded border border-slate-700/80 bg-bro-obsidian/85 backdrop-blur-md px-3 py-1.5 font-mono text-[10px] text-bro-ice">
-          <MapPin className="w-3 h-3 text-bro-cyan shrink-0" aria-hidden="true" />
-          <span className="font-semibold">
+        <div className="pointer-events-none absolute bottom-16 right-4 lg:bottom-6 lg:right-6 z-20 hidden sm:inline-flex items-center gap-2 rounded-full liquid-glass-pill px-3.5 py-1.5 text-xs text-white">
+          <MapPin className="w-3.5 h-3.5 text-bro-cyan shrink-0" aria-hidden="true" />
+          <span className="font-medium">
             {hoveredNode.kind === 'border_port' ? hoveredNode.crossingName : hoveredNode.name}
           </span>
           <span className="text-slate-400">· Click to inspect</span>
         </div>
       )}
 
-      {/* Bottom-Left Diagnostic HUD & Wait-Time Legend */}
-      <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded border border-slate-800/90 bg-bro-obsidian/80 backdrop-blur-md px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-slate-400 flex flex-col gap-1.5">
+      {/* Bottom Floating Liquid Glass Telemetry & Wait-Time Legend Pill */}
+      <div
+        className={`pointer-events-none absolute bottom-3 z-10 rounded-2xl liquid-glass px-4 py-2.5 text-[11px] text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1.5 ${
+          isHero ? 'right-3 lg:right-6' : 'left-3'
+        }`}
+      >
         <div className="flex items-center gap-2">
           <span
             className={`h-2 w-2 rounded-full ${
-              feedStatus === 'live' ? 'bg-bro-cyan' : 'bg-bro-gold'
+              feedStatus === 'live' ? 'bg-emerald-400' : 'bg-bro-gold'
             }`}
             aria-hidden="true"
           />
-          <span className="text-bro-ice font-semibold">GEOSPATIAL COMMAND GLOBE</span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[9px]">
-          <span>
-            CORRIDORS: <span className="text-slate-200">{CORRIDOR_ROUTES.length}</span>
-          </span>
-          <span>
-            HUBS: <span className="text-slate-200">{HUB_LOCATIONS.length}</span>
-          </span>
-          <span>
-            PORTS: <span className="text-slate-200">{BORDER_PORTS.length}</span>
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Radio className="w-2.5 h-2.5 text-bro-cyan" aria-hidden="true" />
-            <span className={feedStatus === 'live' ? 'text-bro-cyan' : 'text-bro-gold'}>
-              {feedStatus === 'live'
-                ? 'CBSA/CBP LIVE'
-                : feedStatus === 'loading'
-                  ? 'SYNCING...'
-                  : 'TELEMETRY STANDBY'}
-            </span>
+          <span className="text-white font-semibold tracking-tight">
+            {feedStatus === 'live'
+              ? 'CBP / CBSA Live Sync'
+              : feedStatus === 'loading'
+                ? 'Syncing Crossings...'
+                : 'Orbital Standby'}
           </span>
         </div>
 
-        <div className="flex items-center gap-3 border-t border-slate-800/80 pt-1 text-[9px] text-slate-400">
+        <span className="text-slate-500 hidden sm:inline">|</span>
+
+        <div className="flex items-center gap-3 font-mono text-[10px] tabular-nums text-slate-300">
+          <span>{CORRIDOR_ROUTES.length} Lanes</span>
+          <span>{BORDER_PORTS.length} Crossings</span>
+        </div>
+
+        <div className="flex items-center gap-2.5 font-mono text-[10px] text-slate-300">
           <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rotate-45 bg-bro-cyan" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-bro-cyan" aria-hidden="true" />
             &lt;15m
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rotate-45 bg-bro-gold" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-bro-gold" aria-hidden="true" />
             15–45m
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rotate-45 bg-bro-crimson" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-bro-crimson" aria-hidden="true" />
             &gt;45m
           </span>
         </div>
       </div>
 
-      {/* Floating Telemetry Card for Selected Hub or Border Port */}
+      {/* Floating Liquid Glass Telemetry Sheet for Selected Hub or Border Port */}
       {selectedNode && (
         <aside
           role="dialog"
@@ -372,23 +375,26 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
               ? `Border crossing telemetry for ${selectedNode.crossingName}`
               : `Logistics hub telemetry for ${selectedNode.name}`
           }
-          className="absolute top-14 right-3 sm:top-3 sm:right-3 z-20 w-[calc(100%-1.5rem)] sm:w-80 rounded-lg border border-slate-700/90 bg-bro-obsidian/92 backdrop-blur-md p-4 text-left shadow-2xl"
+          className="absolute top-16 right-3 lg:top-16 lg:right-6 z-20 w-[calc(100%-1.5rem)] sm:w-80 rounded-2xl liquid-glass p-4 text-left"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="font-mono text-[10px] uppercase tracking-widest text-bro-cyan font-semibold">
-                {selectedNode.kind === 'border_port'
-                  ? `BORDER CROSSING // CBP #${selectedNode.cbpCode}`
-                  : selectedNode.isHQ
-                    ? 'COMMAND HQ // ATLANTIC GATEWAY'
-                    : `LOGISTICS HUB // ${selectedNode.country}`}
+              <div className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-bro-cyan font-semibold">
+                <Radio className="w-3 h-3" aria-hidden="true" />
+                <span>
+                  {selectedNode.kind === 'border_port'
+                    ? `Port #${selectedNode.cbpCode}`
+                    : selectedNode.isHQ
+                      ? 'HQ · Atlantic Gateway'
+                      : `Hub · ${selectedNode.country}`}
+                </span>
               </div>
-              <h3 className="mt-1 text-sm font-bold text-bro-ice leading-snug truncate">
+              <h3 className="mt-1 text-base font-display font-semibold text-white leading-snug truncate">
                 {selectedNode.kind === 'border_port'
                   ? selectedNode.crossingName
                   : selectedNode.name}
               </h3>
-              <p className="text-xs text-slate-400 truncate">
+              <p className="text-xs text-slate-300 truncate">
                 {selectedNode.kind === 'border_port'
                   ? `CBSA: ${selectedNode.cbsaName}`
                   : `${selectedNode.city}, ${selectedNode.region} · ${selectedNode.country}`}
@@ -400,7 +406,7 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
               type="button"
               onClick={handleDismissCard}
               aria-label="Close telemetry card"
-              className="rounded border border-slate-800 bg-bro-steel/70 p-1 text-slate-400 hover:border-slate-600 hover:text-bro-ice transition-colors focus-visible:outline-2 focus-visible:outline-bro-cyan cursor-pointer shrink-0"
+              className="rounded-full bg-white/10 p-1.5 text-slate-300 hover:bg-white/20 hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-bro-cyan cursor-pointer shrink-0"
             >
               <X className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
@@ -412,15 +418,16 @@ export default function CommandGlobe({ className = '' }: CommandGlobeProps) {
             <HubDetails node={selectedNode} />
           )}
 
-          <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-            <span className="font-mono text-[10px] text-slate-400">
+          <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+            <span className="font-mono text-[10px] text-slate-400 tabular-nums">
               {formatCoords(selectedNode.lat, selectedNode.lon)}
             </span>
             <a
               href={quoteHref}
-              className="inline-flex items-center gap-1.5 rounded border border-bro-gold/50 bg-bro-gold/15 px-3 py-1.5 font-mono text-[11px] font-semibold text-bro-gold hover:bg-bro-gold/25 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-gold"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white text-black px-3.5 py-1.5 text-xs font-semibold hover:bg-bro-cyan transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan"
             >
-              Quote This Lane →
+              Quote Lane
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
             </a>
           </div>
         </aside>

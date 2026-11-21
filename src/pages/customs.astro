@@ -8,15 +8,13 @@ import TransborderPipeline from '../components/TransborderPipeline';
   title="Cross-Border Customs & CARM Compliance | #BRO Transport Corp."
   description="Automated CBP ACE PAPS and CBSA ACI PARS eManifest validation, CARM Release 2 IOR bond verification, FDA 2-hour Prior Notice, and scannable Code-128B barcodes."
 >
-  <section class="py-12 px-4 sm:px-6 border-b border-white/10 bg-bro-steel/20">
+  <section class="pt-28 pb-12 px-4 sm:px-6 border-b border-white/[0.08]">
     <div class="max-w-6xl mx-auto space-y-3">
-      <span class="font-mono text-[10px] uppercase tracking-widest text-bro-cyan font-bold">
-        // TRANSBORDER_COMPLIANCE_ENGINE
-      </span>
-      <h1 class="text-3xl sm:text-4xl font-display font-black uppercase tracking-tight text-white">
-        2026 Cross-Border Customs &amp; Border Intelligence
+      <div class="text-xs font-medium text-bro-cyan">Cross-Border Regulatory Architecture</div>
+      <h1 class="text-3xl sm:text-5xl font-display font-bold tracking-tight text-white">
+        Cross-Border Customs &amp; Border Intelligence
       </h1>
-      <p class="text-sm text-slate-300 max-w-2xl">
+      <p class="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
         Deterministic pre-flight auditing for U.S.-bound CBP ACE PAPS and Canada-bound CBSA ACI PARS—complete with ISO 3779 VIN check digits, CARM Release 2 Importer of Record verification, and FDA 2-hour Prior Notice gating.
       </p>
     </div>
@@ -26,10 +24,8 @@ import TransborderPipeline from '../components/TransborderPipeline';
     <BorderWaitStrip client:load />
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="rounded-lg border border-white/10 bg-bro-steel/40 p-6 space-y-4">
-        <div class="font-mono text-[10px] uppercase tracking-widest text-bro-cyan font-bold">
-          SOUTHBOUND // CANADA → UNITED STATES
-        </div>
+      <div class="rounded-3xl surface-ceramic p-6 sm:p-7 space-y-4">
+        <div class="text-xs font-medium text-bro-cyan">Southbound · Canada to United States</div>
         <h2 class="text-xl font-display font-bold text-white">CBP PAPS / ACE eManifest</h2>
         <p class="text-xs text-slate-300 leading-relaxed">
           For shipments moving from Canada into the United States, #BRO coordinates the{' '}
@@ -37,18 +33,16 @@ import TransborderPipeline from '../components/TransborderPipeline';
           <code class="text-bro-cyan font-mono">SCAC: BROP</code>) prefixed to a unique Shipment Control Number (SCN). Food and Atlantic seafood shipments automatically enforce the mandatory{' '}
           <strong class="text-white">FDA 2-Hour Prior Notice</strong> window.
         </p>
-        <div class="rounded bg-bro-obsidian/80 border border-white/10 p-4 font-mono text-[11px] text-slate-300 space-y-2">
-          <div class="flex justify-between"><span class="text-slate-400">Agency:</span><span class="text-white">U.S. Customs &amp; Border Protection (CBP)</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Identifier:</span><span class="text-bro-cyan">BROP + SCN (Code-128B Barcode)</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Pre-Arrival Floor:</span><span class="text-white">1 hr Standard / 2 hr FDA Food</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Tariff Audit:</span><span class="text-bro-gold">CUSMA Origin &amp; 2026 HTS Surtax Check</span></div>
+        <div class="rounded-2xl bg-[#070b15] border border-white/[0.07] p-4 font-mono text-[11px] text-slate-300 space-y-2">
+          <div class="flex justify-between"><span class="text-slate-400">Agency</span><span class="text-white">U.S. Customs &amp; Border Protection (CBP)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Identifier</span><span class="text-bro-cyan">BROP + SCN (Code-128B Barcode)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Pre-Arrival Floor</span><span class="text-white">1 hr Standard / 2 hr FDA Food</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Tariff Audit</span><span class="text-bro-gold">CUSMA Origin &amp; 2026 HTS Surtax Check</span></div>
         </div>
       </div>
 
-      <div class="rounded-lg border border-white/10 bg-bro-steel/40 p-6 space-y-4">
-        <div class="font-mono text-[10px] uppercase tracking-widest text-bro-gold font-bold">
-          NORTHBOUND // UNITED STATES → CANADA
-        </div>
+      <div class="rounded-3xl surface-ceramic p-6 sm:p-7 space-y-4">
+        <div class="text-xs font-medium text-bro-gold">Northbound · United States to Canada</div>
         <h2 class="text-xl font-display font-bold text-white">CBSA PARS / ACI &amp; CARM Release 2</h2>
         <p class="text-xs text-slate-300 leading-relaxed">
           For northbound loads entering Canada, #BRO transmits{' '}
@@ -56,11 +50,11 @@ import TransborderPipeline from '../components/TransborderPipeline';
           <strong class="text-white">ACI</strong>) eManifests at least 1 hour before arrival, enforces{' '}
           <strong class="text-white">CBSA CARM Release 2 Importer of Record RPP bond readiness</strong> prior to dispatch, and ingests HMAC-authenticated RNS release webhooks live.
         </p>
-        <div class="rounded bg-bro-obsidian/80 border border-white/10 p-4 font-mono text-[11px] text-slate-300 space-y-2">
-          <div class="flex justify-between"><span class="text-slate-400">Agency:</span><span class="text-white">Canada Border Services Agency (CBSA)</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Identifier:</span><span class="text-bro-gold">Carrier Code + Cargo Control Number (CCN)</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">CARM Release 2:</span><span class="text-emerald-400">CRA BN RM Account + RPP Security Gated</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Release Sync:</span><span class="text-bro-cyan">Timing-Safe HMAC-SHA256 RNS Webhook</span></div>
+        <div class="rounded-2xl bg-[#070b15] border border-white/[0.07] p-4 font-mono text-[11px] text-slate-300 space-y-2">
+          <div class="flex justify-between"><span class="text-slate-400">Agency</span><span class="text-white">Canada Border Services Agency (CBSA)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Identifier</span><span class="text-bro-gold">Carrier Code + Cargo Control Number (CCN)</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">CARM Release 2</span><span class="text-emerald-400">CRA BN RM Account + RPP Security Gated</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Release Sync</span><span class="text-bro-cyan">Timing-Safe HMAC-SHA256 RNS Webhook</span></div>
         </div>
       </div>
     </div>

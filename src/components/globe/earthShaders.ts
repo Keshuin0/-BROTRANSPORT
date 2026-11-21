@@ -87,10 +87,10 @@ const EARTH_CORE_FRAGMENT_SHADER = /* glsl */ `
     float specular = pow(ndh, 42.0) * smoothstep(0.0, 0.28, sunDot) * 0.30;
     baseColor += uSpecularColor * specular;
 
-    // Gentle orbital Fresnel edge contour tying the core into the outer atmosphere
+    // Subtle orbital Fresnel edge contour tying the core into the outer atmosphere
     float ndv = clamp(dot(N, V), 0.0, 1.0);
-    float innerFresnel = pow(1.0 - ndv, 3.4);
-    float rimLightWeight = 0.22 + 0.34 * smoothstep(-0.3, 0.45, sunDot);
+    float innerFresnel = pow(1.0 - ndv, 3.0);
+    float rimLightWeight = 0.36 + 0.42 * smoothstep(-0.35, 0.45, sunDot);
     baseColor += uRimColor * innerFresnel * rimLightWeight;
 
     gl_FragColor = vec4(baseColor, 1.0);
@@ -130,15 +130,15 @@ const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
     // On a BackSide sphere (r = 52.4) wrapping the planet core (r = 50.0):
     // -dot(N, V) is ~0.30 at the planetary limb and smoothly reaches 0.0 at outer edge.
     float viewDot = clamp(-dot(N, V), 0.0, 1.0);
-    float limb = smoothstep(0.0, 0.36, viewDot);
-    float glow = pow(limb, 2.35) * 0.78;
+    float limb = smoothstep(0.0, 0.38, viewDot);
+    float glow = pow(limb, 2.1) * 0.92;
 
     // Modulate orbital cyan rim with warm gold scatter near the solar terminator
     float sunDot = dot(N, L);
     float terminatorWarmth = smoothstep(-0.32, 0.22, sunDot) * (1.0 - smoothstep(0.22, 0.85, sunDot));
-    float dayBoost = 0.58 + 0.42 * smoothstep(-0.4, 0.35, sunDot);
+    float dayBoost = 0.68 + 0.32 * smoothstep(-0.4, 0.35, sunDot);
 
-    vec3 rimColor = mix(uCyanColor, uGoldColor, terminatorWarmth * 0.42);
+    vec3 rimColor = mix(uCyanColor, uGoldColor, terminatorWarmth * 0.48);
     gl_FragColor = vec4(rimColor * glow * dayBoost, glow * dayBoost);
   }
 `;
@@ -178,10 +178,10 @@ export function createEarthCoreMaterial(
   return new THREE.ShaderMaterial({
     uniforms: {
       uSunDir: { value: sunDirection.clone().normalize() },
-      uNightColor: { value: new THREE.Color('#03040a') },
-      uDayColor: { value: new THREE.Color('#10203a') },
-      uTwilightColor: { value: new THREE.Color('#0f4562') },
-      uSpecularColor: { value: new THREE.Color('#5bc0f8') },
+      uNightColor: { value: new THREE.Color('#071226') },
+      uDayColor: { value: new THREE.Color('#143563') },
+      uTwilightColor: { value: new THREE.Color('#13658c') },
+      uSpecularColor: { value: new THREE.Color('#6ed3ff') },
       uRimColor: { value: new THREE.Color('#00f0ff') },
     },
     vertexShader: EARTH_CORE_VERTEX_SHADER,
