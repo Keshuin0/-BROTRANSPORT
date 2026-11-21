@@ -23,7 +23,7 @@ const HARDWARE_PHOTOS: Record<'dry_van' | 'reefer' | 'flatbed', { src: string; a
 };
 ---
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div data-reveal-group class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   {sorted.map((entry) => {
     const d = entry.data;
     const photo = HARDWARE_PHOTOS[d.equipmentType];
@@ -42,14 +42,17 @@ const HARDWARE_PHOTOS: Record<'dry_van' | 'reefer' | 'flatbed', { src: string; a
         : 'hover:border-sky-400/50';
 
     return (
-      <article class={`rounded-3xl surface-ceramic overflow-hidden flex flex-col justify-between transition-all group ${hoverBorder}`}>
+      <article class={`rounded-3xl surface-ceramic overflow-hidden flex flex-col justify-between transition-colors group ${hoverBorder}`}>
         <div>
           <!-- Bespoke Photorealistic Commercial Equipment Header -->
           <div class="relative h-52 overflow-hidden bg-[#050811] border-b border-white/[0.07]">
             <img
               src={photo.src}
               alt={photo.alt}
-              class="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-500"
+              width={1280}
+              height={714}
+              decoding="async"
+              class="w-full h-full object-cover object-center motion-safe:group-hover:scale-[1.03] transition-transform duration-500"
               loading="lazy"
             />
             <div
@@ -57,10 +60,10 @@ const HARDWARE_PHOTOS: Record<'dry_van' | 'reefer' | 'flatbed', { src: string; a
               aria-hidden="true"
             />
             <div class="absolute top-3.5 left-4 right-4 flex items-center justify-between gap-2">
-              <span class={`inline-flex items-center px-3 py-1 rounded-full border text-[11px] font-medium uppercase tracking-wide backdrop-blur-md ${accentBadge}`}>
+              <span class={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium uppercase tracking-wide backdrop-blur-md ${accentBadge}`}>
                 {d.equipmentType.replace('_', ' ')} Division
               </span>
-              <span class="px-2.5 py-1 rounded-full liquid-glass-pill font-mono text-[10px] text-white tabular-nums">
+              <span class="px-2.5 py-1 rounded-full liquid-glass-pill font-mono text-[11px] text-white tabular-nums">
                 53'0" Commercial
               </span>
             </div>
@@ -71,25 +74,25 @@ const HARDWARE_PHOTOS: Record<'dry_van' | 'reefer' | 'flatbed', { src: string; a
 
             <div class="grid grid-cols-2 gap-3">
               <div class="p-3 rounded-2xl bg-[#060912] border border-white/[0.07]">
-                <div class="text-[11px] text-slate-400">Max Payload</div>
+                <div class="text-xs text-slate-300">Max Payload</div>
                 <div class="font-mono text-sm font-semibold text-white tabular-nums mt-0.5">
                   {d.capacityLbs.toLocaleString()} lbs
                 </div>
               </div>
               <div class="p-3 rounded-2xl bg-[#060912] border border-white/[0.07]">
-                <div class="text-[11px] text-slate-400">{d.tempRange ? 'Thermal Band' : 'Metric Capacity'}</div>
-                <div class={`font-mono text-sm font-semibold mt-0.5 ${accentText}`}>
+                <div class="text-xs text-slate-300">{d.tempRange ? 'Thermal Band' : 'Metric Capacity'}</div>
+                <div class={`font-mono text-sm font-semibold tabular-nums mt-0.5 ${accentText}`}>
                   {d.tempRange ?? `${d.capacityTonnage} MT`}
                 </div>
               </div>
             </div>
 
-            <p class="text-sm text-slate-300/90 leading-relaxed">{entry.body}</p>
+            <p class="text-sm text-slate-300 leading-relaxed">{entry.body}</p>
 
             <ul class="space-y-2 text-xs text-slate-300 border-t border-white/[0.08] pt-4">
               {d.equipmentSpecs.map((spec) => (
                 <li class="flex items-start gap-2.5">
-                  <span class={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${isFlatbed ? 'bg-bro-gold' : 'bg-bro-cyan'}`}></span>
+                  <span class={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${isFlatbed ? 'bg-bro-gold' : 'bg-bro-cyan'}`} aria-hidden="true"></span>
                   <span>{spec}</span>
                 </li>
               ))}
@@ -101,11 +104,7 @@ const HARDWARE_PHOTOS: Record<'dry_van' | 'reefer' | 'flatbed', { src: string; a
           <a
             href={`/quote?equipment=${d.equipmentType}`}
             data-astro-prefetch
-            class={`block w-full text-center py-3 rounded-full font-semibold text-sm tracking-tight transition-all ${
-              isFlatbed
-                ? 'bg-bro-gold text-black hover:bg-amber-400'
-                : 'bg-white text-black hover:bg-bro-cyan'
-            }`}
+            class="min-h-[44px] flex items-center justify-center w-full text-center py-3 rounded-full bg-white text-black hover:bg-bro-cyan font-semibold text-sm tracking-tight transition-colors"
           >
             Quote {d.equipmentType.replace('_', ' ')} Lane →
           </a>

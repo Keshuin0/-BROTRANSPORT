@@ -489,7 +489,12 @@ export const BORDER_PORTS: readonly BorderPortNode[] = NORTH_AMERICAN_PORTS.map(
  * Equator + 90°W Americas (lat=0, lon=-90) -> (0, 0, +radius)
  * North Pole (lat=90, lon=*) -> (0, +radius, 0)
  */
-export function latLonToVector3(lat: number, lon: number, radius = GLOBE_RADIUS): THREE.Vector3 {
+export function latLonToVector3(
+  lat: number,
+  lon: number,
+  radius = GLOBE_RADIUS,
+  out = new THREE.Vector3(),
+): THREE.Vector3 {
   const phi = ((90 - lat) * Math.PI) / 180;
   const theta = ((lon + 180) * Math.PI) / 180;
   const sinPhi = Math.sin(phi);
@@ -498,7 +503,7 @@ export function latLonToVector3(lat: number, lon: number, radius = GLOBE_RADIUS)
   const y = radius * Math.cos(phi);
   const z = radius * sinPhi * Math.sin(theta);
 
-  return new THREE.Vector3(x, y, z);
+  return out.set(x, y, z);
 }
 
 /**
@@ -524,25 +529,54 @@ export function getWaitTimeSeverity(waitMinutes: number | null | undefined): {
   return { colorHex: COLOR_BRO_CRIMSON, status: 'congested' };
 }
 
+const BORDER_PORT_LANE_MAP: Readonly<Record<string, { origin: string; dest: string }>> = {
+  '0115': { origin: 'Halifax', dest: 'Boston' },
+  '0106': { origin: 'Charlottetown', dest: 'Boston' },
+  '0712': { origin: 'Montreal', dest: 'Newark' },
+  '0212': { origin: 'Montreal', dest: 'Boston' },
+  '0708': { origin: 'Toronto', dest: 'Newark' },
+  '0901': { origin: 'Toronto', dest: 'Newark' },
+  '0906': { origin: 'Toronto', dest: 'Newark' },
+  '3801': { origin: 'Toronto', dest: 'Detroit' },
+  '3807': { origin: 'Toronto', dest: 'Detroit' },
+  '3802': { origin: 'Toronto', dest: 'Chicago' },
+  '3401': { origin: 'Calgary', dest: 'Chicago' },
+  '3004': { origin: 'Vancouver', dest: 'Seattle' },
+  '2304': { origin: 'Dallas', dest: 'Laredo' },
+};
+
+const HUB_QUOTE_CITY_OVERRIDES: Readonly<Partial<Record<HubId, string>>> = {
+  NEW_YORK: 'Newark',
+};
+
 /**
- * Builds a 1-click `/quote` URL pre-populated with origin/destination parameters
- * for either a logistics hub or a commercial border crossing.
+ * Builds a 1-click `/quote` URL pre-populated with equipment, origin, and dest
+ * city slugs matching `LiveQuoteEngine`, preserving port/hub/node context.
  */
 export function buildQuoteUrlForNode(node: GlobeNode): string {
   const params = new URLSearchParams();
   if (node.kind === 'border_port') {
-    params.set('origin', node.caCityProv);
-    params.set('destination', node.usCityState);
+    const lane = BORDER_PORT_LANE_MAP[node.cbpCode];
+    const originCity = lane?.origin ?? node.caCityProv.split(',')[0].trim();
+    const destCity = lane?.dest ?? node.usCityState.split(',')[0].trim();
+    params.set('equipment', 'reefer');
+    params.set('origin', originCity);
+    params.set('dest', destCity);
     params.set('port', node.cbpCode);
+    params.set('node', node.id);
   } else {
+    const equipment = node.divisions.includes('reefer') ? 'reefer' : node.divisions[0];
+    const hubCity = HUB_QUOTE_CITY_OVERRIDES[node.id] ?? node.city;
+    params.set('equipment', equipment);
     if (node.isHQ) {
-      params.set('origin', `${node.city}, ${node.region}`);
-      params.set('destination', 'Toronto, ON');
+      params.set('origin', hubCity);
+      params.set('dest', 'Boston');
     } else {
-      params.set('origin', 'Charlottetown, PE');
-      params.set('destination', `${node.city}, ${node.region}`);
+      params.set('origin', 'Charlottetown');
+      params.set('dest', hubCity);
     }
     params.set('hub', node.id);
+    params.set('node', node.id);
   }
   return `/quote?${params.toString()}`;
 }

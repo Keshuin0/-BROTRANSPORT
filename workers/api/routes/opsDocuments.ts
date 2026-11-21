@@ -77,7 +77,17 @@ opsDocumentRoutes.post('/ops/documents/:id/decision', async (c) => {
   }
 
   const now = Date.now();
-  const existingOcr = doc.ocrJson ? (JSON.parse(doc.ocrJson) as Record<string, unknown>) : {};
+  let existingOcr: Record<string, unknown> = {};
+  if (doc.ocrJson) {
+    try {
+      const parsedOcr: unknown = JSON.parse(doc.ocrJson);
+      if (parsedOcr && typeof parsedOcr === 'object' && !Array.isArray(parsedOcr)) {
+        existingOcr = parsedOcr as Record<string, unknown>;
+      }
+    } catch {
+      existingOcr = {};
+    }
+  }
   const merged = { ...existingOcr, ...(parsed.data.correctedFields || {}) };
   const nextStatus = parsed.data.decision === 'approve' ? 'verified' : 'rejected';
 

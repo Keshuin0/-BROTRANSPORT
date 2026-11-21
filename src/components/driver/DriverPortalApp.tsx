@@ -600,38 +600,61 @@ export default function DriverPortalApp() {
     { id: 'pay', label: 'Pay & Settlements', icon: DollarSign, badge: settlements.length },
   ];
 
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, currentId: DriverTab) => {
+    const idx = tabs.findIndex((t) => t.id === currentId);
+    if (idx === -1) return;
+
+    let nextIdx: number | null = null;
+    if (e.key === 'ArrowRight') nextIdx = (idx + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') nextIdx = 0;
+    else if (e.key === 'End') nextIdx = tabs.length - 1;
+
+    if (nextIdx !== null) {
+      e.preventDefault();
+      const targetTab = tabs[nextIdx];
+      setActiveTab(targetTab.id);
+      document.getElementById(`driver-tab-${targetTab.id}`)?.focus();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Bar: Driver Status + Offline Sync Drawer */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-lg bg-bro-steel/70 border border-bro-gold/30 backdrop-blur-xl">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-bro-gold">
-            <Truck className="w-4 h-4" />
-            <span>{driver ? driver.fullName : 'Driver Command Console'}</span>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl surface-ceramic border-bro-gold/25">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-bro-gold/15 border border-bro-gold/40 text-bro-gold font-semibold">
+              <Truck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <span>{driver ? driver.fullName : 'Driver Command Console'}</span>
+            </span>
             {driver && (
-              <span className="px-2 py-0.5 rounded bg-bro-obsidian/80 border border-white/10 text-bro-cyan">
+              <span className="px-3 py-1 rounded-full bg-[#060912] border border-white/15 text-bro-cyan font-medium">
                 {EQUIPMENT_LABELS[driver.equipmentDivision]}
               </span>
             )}
             {driver?.fastCardNumber && (
-              <span className="px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/40 text-emerald-300">
+              <span className="px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-medium">
                 FAST #{driver.fastCardNumber}
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400">
-            Offline-first commercial cab workspace · GPS EDI 214 check-ins, OCR scanning, DVIR & ECDSA eBOL.
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
+            Driver Command &amp; Cab Workspace
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300">
+            Offline-first commercial cab workspace · GPS EDI 214 check-ins, OCR scanning, DVIR &amp; ECDSA eBOL.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-center">
+        <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-center shrink-0">
           <button
             type="button"
             disabled={refreshing}
             onClick={() => void fetchDashboard(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/15 bg-bro-obsidian/70 hover:border-bro-cyan text-slate-200 font-mono text-[11px] uppercase cursor-pointer disabled:opacity-50"
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-[#060912] hover:border-bro-cyan text-slate-200 text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 shrink-0 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
             <span>Refresh</span>
           </button>
           <OfflineSyncDrawer />
@@ -642,12 +665,12 @@ export default function DriverPortalApp() {
       {hasUrgentCredentialAlert && (
         <div
           role="alert"
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg bg-amber-950/60 border border-bro-gold text-amber-100"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl bg-amber-950/60 border border-bro-gold text-amber-100"
         >
-          <div className="flex items-start gap-2.5 text-xs font-mono">
-            <AlertTriangle className="w-4 h-4 text-bro-gold shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 text-xs sm:text-sm">
+            <AlertTriangle className="w-4 h-4 text-bro-gold shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <span className="font-bold uppercase text-bro-gold">Compliance Watchdog Alert: </span>
+              <span className="font-semibold text-bro-gold">Compliance Watchdog Alert: </span>
               {medDays !== null && medDays <= 30 && (
                 <span>
                   DOT / NSC Medical Certificate{' '}
@@ -667,7 +690,7 @@ export default function DriverPortalApp() {
           <button
             type="button"
             onClick={() => setActiveTab('docs')}
-            className="px-3 py-1.5 rounded bg-bro-gold text-black font-mono text-[11px] font-bold uppercase shrink-0 cursor-pointer"
+            className="min-h-[44px] px-4 py-2 rounded-full bg-bro-gold hover:bg-amber-300 text-black text-xs font-semibold shrink-0 cursor-pointer transition-colors"
           >
             Upload Renewal Scan
           </button>
@@ -677,18 +700,18 @@ export default function DriverPortalApp() {
       {loadError && (
         <div
           role="alert"
-          className="flex items-start gap-2.5 p-4 rounded-lg bg-rose-950/70 border border-rose-500/50 text-rose-200 font-mono text-xs"
+          className="flex items-start gap-2.5 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-medium"
         >
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
           <span>{loadError}</span>
         </div>
       )}
 
-      {/* 5 Mobile-Friendly Tabs */}
+      {/* 5 Mobile-Friendly Wrapping Tabs */}
       <div
         role="tablist"
         aria-label="Driver Portal Sections"
-        className="flex overflow-x-auto gap-1.5 p-1.5 rounded-lg bg-bro-steel/70 border border-white/10"
+        className="flex flex-wrap sm:inline-flex items-center gap-1.5 p-1.5 rounded-2xl sm:rounded-full surface-ceramic w-full sm:w-auto"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -696,22 +719,26 @@ export default function DriverPortalApp() {
           return (
             <button
               key={tab.id}
+              id={`driver-tab-${tab.id}`}
               type="button"
               role="tab"
               aria-selected={selected}
+              aria-controls={`driver-panel-${tab.id}`}
+              tabIndex={selected ? 0 : -1}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-3 py-3 rounded font-mono text-xs font-bold uppercase tracking-wide transition-colors cursor-pointer whitespace-nowrap ${
+              onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
+              className={`flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                 selected
-                  ? 'bg-bro-gold text-black'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  ? 'bg-bro-gold text-black shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>{tab.label}</span>
               {tab.badge !== undefined && tab.badge > 0 && (
                 <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] tabular-nums ${
-                    selected ? 'bg-black/20 text-black' : 'bg-white/10 text-slate-200'
+                  className={`px-2 py-0.5 rounded-full text-xs tabular-nums ${
+                    selected ? 'bg-black/15 text-black' : 'bg-white/10 text-slate-200'
                   }`}
                 >
                   {tab.badge}
@@ -723,30 +750,36 @@ export default function DriverPortalApp() {
       </div>
 
       {loading ? (
-        <div className="p-12 rounded-lg bg-bro-steel/50 border border-white/10 flex flex-col items-center justify-center gap-3 font-mono text-xs text-slate-400">
-          <Loader2 className="w-6 h-6 text-bro-gold animate-spin" />
+        <div className="p-12 rounded-2xl surface-ceramic flex flex-col items-center justify-center gap-3 text-xs text-slate-300">
+          <Loader2 className="w-6 h-6 text-bro-gold animate-spin" aria-hidden="true" />
           <span>Synchronizing Driver Dispatch Manifest...</span>
         </div>
       ) : (
         <>
           {/* TAB 1: ACTIVE TRIP */}
           {activeTab === 'trip' && (
-            <div className="space-y-5">
+            <div
+              role="tabpanel"
+              id="driver-panel-trip"
+              aria-labelledby="driver-tab-trip"
+              tabIndex={0}
+              className="space-y-5 outline-none"
+            >
               {stopError && (
                 <div
                   role="alert"
-                  className="flex items-start gap-2 p-3.5 rounded bg-rose-950/70 border border-rose-500/50 text-rose-200 font-mono text-xs"
+                  className="flex items-start gap-2 p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-medium"
                 >
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
                   <span>{stopError}</span>
                 </div>
               )}
 
               {assignedLoads.length === 0 ? (
-                <div className="p-8 rounded-lg bg-bro-steel/50 border border-white/10 text-center space-y-2">
-                  <Truck className="w-8 h-8 text-slate-500 mx-auto" />
-                  <div className="font-mono text-xs uppercase text-slate-300">No Active Loads Assigned</div>
-                  <p className="text-xs text-slate-400">
+                <div className="p-8 rounded-2xl surface-ceramic text-center space-y-2.5">
+                  <Truck className="w-8 h-8 text-slate-400 mx-auto" aria-hidden="true" />
+                  <div className="font-display text-base font-semibold text-white">No Active Loads Assigned</div>
+                  <p className="text-xs sm:text-sm text-slate-300">
                     Dispatch will push your next commercial trip sheet here automatically.
                   </p>
                 </div>
@@ -756,58 +789,58 @@ export default function DriverPortalApp() {
                   return (
                     <section
                       key={load.id}
-                      className="rounded-lg bg-bro-steel/60 border border-white/10 overflow-hidden"
+                      className="rounded-2xl surface-ceramic overflow-hidden"
                     >
-                      <div className="p-4 sm:p-5 bg-bro-obsidian/70 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
-                        <div className="space-y-1">
+                      <div className="p-5 bg-[#060912] border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+                        <div className="space-y-1.5">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-sm font-bold text-white">{load.loadNumber}</span>
-                            <span className="px-2 py-0.5 rounded bg-bro-cyan/15 border border-bro-cyan/40 font-mono text-[10px] font-bold uppercase text-bro-cyan">
+                            <span className="font-mono text-base font-bold text-white">{load.loadNumber}</span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-bro-cyan/15 border border-bro-cyan/40 text-xs font-semibold text-bro-cyan uppercase">
                               {load.status.replace(/_/g, ' ')}
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 font-mono text-[10px] text-slate-300">
+                            <span className="px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/15 text-xs text-slate-200">
                               {DIRECTION_LABELS[load.direction]}
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-bro-gold/10 border border-bro-gold/30 font-mono text-[10px] text-bro-gold">
+                            <span className="px-2.5 py-0.5 rounded-full bg-bro-gold/15 border border-bro-gold/35 text-xs font-medium text-bro-gold">
                               {EQUIPMENT_LABELS[load.equipmentType]}
                             </span>
                           </div>
                           <div className="text-sm text-slate-200 font-medium">{load.commodity}</div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 font-mono text-xs tabular-nums">
-                          <div className="px-2.5 py-1.5 rounded bg-bro-steel/80 border border-white/10 text-slate-300">
+                        <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs tabular-nums">
+                          <div className="px-3 py-1.5 rounded-full bg-[#0b1120] border border-white/15 text-slate-200">
                             {load.weightLbs.toLocaleString()} lbs · {load.loadedMiles} mi
                           </div>
                           {load.tempSetpointC !== null && (
-                            <div className="px-2.5 py-1.5 rounded bg-cyan-950/60 border border-bro-cyan/40 text-bro-cyan font-bold">
+                            <div className="px-3 py-1.5 rounded-full bg-cyan-950/60 border border-bro-cyan/40 text-bro-cyan font-semibold">
                               Setpoint {load.tempSetpointC.toFixed(1)}°C
                             </div>
                           )}
                           {load.detentionMinutes > 0 && (
-                            <div className="px-2.5 py-1.5 rounded bg-amber-950/60 border border-bro-gold/50 text-bro-gold">
+                            <div className="px-3 py-1.5 rounded-full bg-amber-950/60 border border-bro-gold/50 text-bro-gold font-semibold">
                               Detention: {load.detentionMinutes} min
                             </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="p-4 sm:p-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-mono text-[11px] uppercase tracking-wider text-slate-400">
-                            Itinerary & 1-Tap GPS Check-In (Auto EDI 214)
-                          </h3>
+                      <div className="p-5 space-y-3.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h2 className="font-display text-sm font-semibold text-slate-200">
+                            Itinerary &amp; 1-Tap GPS Check-In (Auto EDI 214)
+                          </h2>
                           <a
                             href={`/verify/${encodeURIComponent(load.id)}`}
-                            className="inline-flex items-center gap-1 font-mono text-[11px] text-bro-cyan hover:underline"
+                            className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-bro-cyan hover:underline"
                           >
                             <span>View eBOL Chain</span>
-                            <ExternalLink className="w-3 h-3" />
+                            <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                           </a>
                         </div>
 
                         {stops.length === 0 ? (
-                          <p className="font-mono text-xs text-slate-400">No stops recorded on this dispatch yet.</p>
+                          <p className="text-xs text-slate-300">No stops recorded on this dispatch yet.</p>
                         ) : (
                           <div className="space-y-3">
                             {stops.map((stop) => {
@@ -817,50 +850,52 @@ export default function DriverPortalApp() {
                               return (
                                 <div
                                   key={stop.id}
-                                  className="p-4 rounded-lg bg-bro-obsidian/80 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                                  className="p-4 sm:p-5 rounded-2xl bg-[#060912] border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                                 >
                                   <div className="space-y-1.5">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-[10px] font-bold uppercase text-white">
+                                      <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-semibold uppercase text-white">
                                         STOP {stop.seq} · {stop.stopType.replace(/_/g, ' ')}
                                       </span>
                                       {stop.arrivedAt && (
-                                        <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 font-mono text-[10px] text-emerald-300">
+                                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-xs text-emerald-300">
                                           Arrived {formatDateTime(stop.arrivedAt)}
                                         </span>
                                       )}
                                       {stop.departedAt && (
-                                        <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-bro-cyan/30 font-mono text-[10px] text-bro-cyan">
+                                        <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-bro-cyan/35 text-xs text-bro-cyan">
                                           Departed {formatDateTime(stop.departedAt)}
                                         </span>
                                       )}
                                     </div>
-                                    <div className="font-display font-bold text-sm text-white">
+                                    <div className="font-display font-bold text-base text-white">
                                       {stop.facilityName}
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
-                                      <span className="inline-flex items-center gap-1">
-                                        <MapPin className="w-3.5 h-3.5 text-bro-gold" />
-                                        {stop.address}
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300">
+                                      <span className="inline-flex items-center gap-1.5">
+                                        <MapPin className="w-3.5 h-3.5 text-bro-gold shrink-0" aria-hidden="true" />
+                                        <span>{stop.address}</span>
                                       </span>
-                                      <span className="inline-flex items-center gap-1 font-mono text-[11px]">
-                                        <Clock className="w-3.5 h-3.5 text-slate-500" />
-                                        Appt: {formatDateTime(stop.apptStart)} – {formatDateTime(stop.apptEnd)}
+                                      <span className="inline-flex items-center gap-1.5 font-mono text-xs text-slate-300">
+                                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" aria-hidden="true" />
+                                        <span>
+                                          Appt: {formatDateTime(stop.apptStart)} – {formatDateTime(stop.apptEnd)}
+                                        </span>
                                       </span>
                                     </div>
 
                                     {fb && (
                                       <div className="pt-1 flex flex-wrap items-center gap-2">
                                         {fb.queuedOffline ? (
-                                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-950/70 border border-bro-gold text-bro-gold font-mono text-[10px] font-bold uppercase">
-                                            <WifiOff className="w-3 h-3" />
+                                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/70 border border-bro-gold text-bro-gold text-xs font-semibold">
+                                            <WifiOff className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                                             <span>
                                               {fb.event.toUpperCase()} Queued Offline — Will Transmit EDI 214 on Signal
                                             </span>
                                           </span>
                                         ) : (
-                                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-950/70 border border-emerald-400/50 text-emerald-300 font-mono text-[10px] font-bold uppercase">
-                                            <Radio className="w-3 h-3" />
+                                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-400/50 text-emerald-300 text-xs font-semibold">
+                                            <Radio className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                                             <span>
                                               {fb.edi214Issued ? 'EDI 214 Confirmed' : 'Check-In Confirmed'} · Status:{' '}
                                               {(fb.loadStatus ?? load.status).replace(/_/g, ' ')}
@@ -876,12 +911,12 @@ export default function DriverPortalApp() {
                                       type="button"
                                       disabled={busyArrive || Boolean(stop.arrivedAt)}
                                       onClick={() => void handleStopCheckin(load, stop, 'arrived')}
-                                      className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded bg-bro-gold hover:bg-amber-400 text-black font-mono text-xs font-bold uppercase disabled:opacity-40 transition-colors cursor-pointer"
+                                      className="flex-1 lg:flex-none min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-bro-gold hover:bg-amber-300 text-black text-xs font-semibold disabled:opacity-40 transition-colors cursor-pointer"
                                     >
                                       {busyArrive ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
                                       ) : (
-                                        <MapPin className="w-3.5 h-3.5" />
+                                        <MapPin className="w-4 h-4 shrink-0" aria-hidden="true" />
                                       )}
                                       <span>{stop.arrivedAt ? 'Arrived ✓' : 'Arrived'}</span>
                                     </button>
@@ -889,12 +924,12 @@ export default function DriverPortalApp() {
                                       type="button"
                                       disabled={busyDepart || Boolean(stop.departedAt)}
                                       onClick={() => void handleStopCheckin(load, stop, 'departed')}
-                                      className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded bg-bro-cyan hover:bg-cyan-300 text-black font-mono text-xs font-bold uppercase disabled:opacity-40 transition-colors cursor-pointer"
+                                      className="flex-1 lg:flex-none min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-bro-cyan hover:bg-cyan-300 text-black text-xs font-semibold disabled:opacity-40 transition-colors cursor-pointer"
                                     >
                                       {busyDepart ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
                                       ) : (
-                                        <Navigation className="w-3.5 h-3.5" />
+                                        <Navigation className="w-4 h-4 shrink-0" aria-hidden="true" />
                                       )}
                                       <span>{stop.departedAt ? 'Departed ✓' : 'Departed'}</span>
                                     </button>
@@ -914,7 +949,13 @@ export default function DriverPortalApp() {
 
           {/* TAB 2: SCAN & UPLOAD DOCS */}
           {activeTab === 'docs' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div
+              role="tabpanel"
+              id="driver-panel-docs"
+              aria-labelledby="driver-tab-docs"
+              tabIndex={0}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6 outline-none"
+            >
               <div className="lg:col-span-6">
                 <MobileDocScanner
                   loads={assignedLoads}
@@ -923,30 +964,30 @@ export default function DriverPortalApp() {
                 />
               </div>
 
-              <div className="lg:col-span-6 rounded-lg bg-bro-steel/60 border border-white/10 p-5 sm:p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-bro-gold" />
-                    <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
-                      Uploaded Documents & Live OCR Pipeline ({recentDocs.length})
-                    </h3>
+              <div className="lg:col-span-6 rounded-2xl surface-ceramic p-5 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <FileText className="w-5 h-5 text-bro-gold shrink-0" aria-hidden="true" />
+                    <h2 className="font-display text-base font-bold text-white tracking-tight">
+                      Uploaded Documents &amp; Live OCR Pipeline ({recentDocs.length})
+                    </h2>
                   </div>
                 </div>
 
                 {recentDocs.length === 0 ? (
-                  <div className="p-8 rounded bg-bro-obsidian/60 border border-white/10 text-center font-mono text-xs text-slate-400">
+                  <div className="p-8 rounded-2xl bg-[#060912] border border-white/10 text-center text-xs text-slate-300 leading-relaxed">
                     No driver scans uploaded yet. Capture a BOL, POD, fuel receipt, or credential scan on the left.
                   </div>
                 ) : (
-                  <div className="space-y-2.5 max-h-[540px] overflow-y-auto pr-1">
+                  <div className="space-y-3 max-h-[540px] overflow-y-auto pr-1">
                     {recentDocs.map((doc) => (
                       <div
                         key={doc.id}
-                        className="p-3.5 rounded-lg bg-bro-obsidian/80 border border-white/10 space-y-2"
+                        className="p-4 rounded-2xl bg-[#060912] border border-white/10 space-y-2"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-[10px] font-bold uppercase text-white">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-semibold uppercase text-white shrink-0">
                               {doc.docType}
                             </span>
                             <span className="font-mono text-xs text-slate-200 truncate max-w-[200px]">
@@ -954,13 +995,13 @@ export default function DriverPortalApp() {
                             </span>
                           </div>
                           <span
-                            className={`px-2 py-0.5 rounded border font-mono text-[10px] font-bold uppercase ${ocrStatusBadgeStyle(doc.ocrStatus)}`}
+                            className={`px-2.5 py-0.5 rounded-full border text-xs font-semibold uppercase ${ocrStatusBadgeStyle(doc.ocrStatus)}`}
                           >
                             {doc.ocrStatus.replace(/_/g, ' ')}
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] text-slate-400 tabular-nums">
+                        <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-slate-300 tabular-nums">
                           <span>
                             {(doc.sizeBytes / 1024).toFixed(1)} KB · SHA-256: {doc.sha256Hex.slice(0, 14)}…
                           </span>
@@ -973,7 +1014,7 @@ export default function DriverPortalApp() {
                         </div>
 
                         {doc.reviewNotes && (
-                          <div className="p-2 rounded bg-bro-steel/70 border border-white/10 text-[11px] font-mono text-slate-300">
+                          <div className="p-2.5 rounded-xl bg-[#0b1120] border border-white/10 text-xs text-slate-200">
                             Reviewer: {doc.reviewNotes}
                           </div>
                         )}
@@ -987,35 +1028,49 @@ export default function DriverPortalApp() {
 
           {/* TAB 3: DVIR SAFETY */}
           {activeTab === 'dvir' && (
-            <DvirInspectionForm
-              fleetUnits={fleetUnits}
-              defaultTractorId={assignedLoads[0]?.tractorId ?? undefined}
-              defaultTrailerId={assignedLoads[0]?.trailerId ?? undefined}
-              defaultDriverName={driver?.fullName ?? ''}
-              onSubmitted={() => void fetchDashboard(true)}
-            />
+            <div
+              role="tabpanel"
+              id="driver-panel-dvir"
+              aria-labelledby="driver-tab-dvir"
+              tabIndex={0}
+              className="outline-none"
+            >
+              <DvirInspectionForm
+                fleetUnits={fleetUnits}
+                defaultTractorId={assignedLoads[0]?.tractorId ?? undefined}
+                defaultTrailerId={assignedLoads[0]?.trailerId ?? undefined}
+                defaultDriverName={driver?.fullName ?? ''}
+                onSubmitted={() => void fetchDashboard(true)}
+              />
+            </div>
           )}
 
           {/* TAB 4: eBOL CRYPTOGRAPHIC SIGNING */}
           {activeTab === 'ebol' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div
+              role="tabpanel"
+              id="driver-panel-ebol"
+              aria-labelledby="driver-tab-ebol"
+              tabIndex={0}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6 outline-none"
+            >
               <form
                 onSubmit={handleSignEbolPickup}
-                className="lg:col-span-7 rounded-lg bg-bro-steel/60 border border-white/10 p-5 sm:p-6 space-y-5"
+                className="lg:col-span-7 rounded-2xl surface-ceramic p-5 sm:p-6 space-y-5"
               >
-                <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 text-bro-cyan" />
-                    <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <KeyRound className="w-5 h-5 text-bro-cyan shrink-0" aria-hidden="true" />
+                    <h2 className="font-display text-base font-bold text-white tracking-tight">
                       ECDSA P-256 eBOL Carrier Pickup Signature
-                    </h3>
+                    </h2>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-bro-cyan/10 border border-bro-cyan/30 font-mono text-[10px] text-bro-cyan">
+                  <span className="px-3 py-1 rounded-full bg-bro-cyan/15 border border-bro-cyan/35 font-mono text-xs font-medium text-bro-cyan">
                     STAGE: CARRIER_PICKUP
                   </span>
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                   Generates a hardware-backed browser Web Crypto <code className="text-bro-cyan">ECDSA P-256</code> key
                   pair, hashes the canonical custody payload with <code className="text-bro-cyan">SHA-256</code>, chains
                   onto the load&apos;s previous block hash, and submits a verifiable custody block to{' '}
@@ -1024,7 +1079,7 @@ export default function DriverPortalApp() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label htmlFor="ebol-load" className="block font-mono text-[11px] uppercase text-slate-300">
+                    <label htmlFor="ebol-load" className="block text-xs font-medium text-slate-300">
                       Assigned Load *
                     </label>
                     <select
@@ -1032,7 +1087,7 @@ export default function DriverPortalApp() {
                       required
                       value={ebolLoadId}
                       onChange={(e) => setEbolLoadId(e.target.value)}
-                      className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-cyan"
+                      className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-cyan"
                     >
                       <option value="">Select assigned load...</option>
                       {assignedLoads.map((l) => (
@@ -1044,7 +1099,7 @@ export default function DriverPortalApp() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label htmlFor="ebol-signer" className="block font-mono text-[11px] uppercase text-slate-300">
+                    <label htmlFor="ebol-signer" className="block text-xs font-medium text-slate-300">
                       Driver Signer Name *
                     </label>
                     <input
@@ -1055,12 +1110,12 @@ export default function DriverPortalApp() {
                       value={ebolSignerName}
                       onChange={(e) => setEbolSignerName(e.target.value)}
                       placeholder="e.g. Liam Gallant"
-                      className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-cyan"
+                      className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label htmlFor="ebol-seal" className="block font-mono text-[11px] uppercase text-slate-300">
+                    <label htmlFor="ebol-seal" className="block text-xs font-medium text-slate-300">
                       Trailer Seal Number
                     </label>
                     <input
@@ -1069,12 +1124,12 @@ export default function DriverPortalApp() {
                       value={ebolSealNumber}
                       onChange={(e) => setEbolSealNumber(e.target.value.toUpperCase())}
                       placeholder="e.g. SEAL-BROP-44291"
-                      className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-cyan"
+                      className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label htmlFor="ebol-pieces" className="block font-mono text-[11px] uppercase text-slate-300">
+                    <label htmlFor="ebol-pieces" className="block text-xs font-medium text-slate-300">
                       Pieces / Pallets Counted
                     </label>
                     <input
@@ -1084,30 +1139,30 @@ export default function DriverPortalApp() {
                       max={9999}
                       value={ebolPieces}
                       onChange={(e) => setEbolPieces(e.target.value)}
-                      className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-cyan tabular-nums"
+                      className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-cyan tabular-nums"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="ebol-notes" className="block font-mono text-[11px] uppercase text-slate-300">
-                    Pickup Custody & Condition Notes
+                  <label htmlFor="ebol-notes" className="block text-xs font-medium text-slate-300">
+                    Pickup Custody &amp; Condition Notes
                   </label>
                   <textarea
                     id="ebol-notes"
                     rows={2}
                     value={ebolNotes}
                     onChange={(e) => setEbolNotes(e.target.value)}
-                    className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2 text-sm text-white outline-none focus:border-bro-cyan"
+                    className="w-full min-h-[72px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-cyan"
                   />
                 </div>
 
                 {ebolError && (
                   <div
                     role="alert"
-                    className="flex items-start gap-2 p-3.5 rounded bg-rose-950/70 border border-rose-500/50 text-rose-200 font-mono text-xs"
+                    className="flex items-start gap-2 p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-medium"
                   >
-                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
                     <span>{ebolError}</span>
                   </div>
                 )}
@@ -1116,46 +1171,46 @@ export default function DriverPortalApp() {
                   <div
                     role="status"
                     aria-live="polite"
-                    className={`p-4 rounded border space-y-2 font-mono text-xs ${
+                    className={`p-4 rounded-2xl border space-y-2 text-xs ${
                       ebolSuccess.queuedOffline
                         ? 'bg-amber-950/60 border-bro-gold text-amber-100'
                         : 'bg-emerald-950/60 border-emerald-500/50 text-emerald-100'
                     }`}
                   >
-                    <div className="flex items-center gap-2 font-bold uppercase">
+                    <div className="flex items-center gap-2 font-semibold">
                       {ebolSuccess.queuedOffline ? (
                         <>
-                          <WifiOff className="w-4 h-4 text-bro-gold" />
+                          <WifiOff className="w-4 h-4 text-bro-gold shrink-0" aria-hidden="true" />
                           <span>ECDSA Pickup Signature Queued Offline</span>
                         </>
                       ) : (
                         <>
-                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                          <span>Block #{ebolSuccess.seq} Verified & Appended to eBOL Ledger</span>
+                          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
+                          <span>Block #{ebolSuccess.seq} Verified &amp; Appended to eBOL Ledger</span>
                         </>
                       )}
                     </div>
-                    <div className="text-[11px] break-all space-y-1 text-slate-200">
+                    <div className="font-mono text-xs break-all space-y-1 text-slate-200">
                       <div>Block SHA-256: {ebolSuccess.blockHash}</div>
                       <div>Key Thumbprint: {ebolSuccess.thumbprint}</div>
                       <div>ECDSA Sig: {ebolSuccess.signaturePreview}…</div>
                     </div>
-                    <div className="pt-2 flex flex-wrap gap-2">
+                    <div className="pt-2 flex flex-wrap gap-2.5">
                       <a
                         href={`/verify/${encodeURIComponent(ebolSuccess.loadId)}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-bro-cyan text-black font-bold uppercase text-[11px]"
+                        className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bro-cyan hover:bg-cyan-300 text-black font-semibold text-xs transition-colors"
                       >
                         <span>Open Public eBOL Verifier</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
+                        <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       </a>
                       {!ebolSuccess.queuedOffline && (
                         <a
                           href={`/api/ebol/${encodeURIComponent(ebolSuccess.loadId)}/certificate.pdf`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-white/20 text-white hover:border-bro-gold text-[11px]"
+                          className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-[#060912] text-white hover:border-bro-gold font-semibold text-xs transition-colors"
                         >
-                          <Download className="w-3.5 h-3.5" />
+                          <Download className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                           <span>Certificate PDF</span>
                         </a>
                       )}
@@ -1166,16 +1221,16 @@ export default function DriverPortalApp() {
                 <button
                   type="submit"
                   disabled={ebolSigning || !ebolLoadId}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded bg-bro-cyan hover:bg-cyan-300 text-black font-mono text-xs font-bold uppercase tracking-wider disabled:opacity-40 transition-colors cursor-pointer"
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-bro-cyan hover:bg-cyan-300 text-black text-sm font-semibold disabled:opacity-40 transition-colors cursor-pointer"
                 >
                   {ebolSigning ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
                       <span>Signing ECDSA P-256 Custody Block...</span>
                     </>
                   ) : (
                     <>
-                      <KeyRound className="w-4 h-4" />
+                      <KeyRound className="w-4 h-4 shrink-0" aria-hidden="true" />
                       <span>Sign CARRIER_PICKUP Block (ECDSA P-256)</span>
                     </>
                   )}
@@ -1183,29 +1238,29 @@ export default function DriverPortalApp() {
               </form>
 
               {/* Current Chain Inspector */}
-              <div className="lg:col-span-5 rounded-lg bg-bro-steel/60 border border-white/10 p-5 sm:p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <span className="font-mono text-xs font-bold uppercase text-white">
+              <div className="lg:col-span-5 rounded-2xl surface-ceramic p-5 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+                  <h2 className="font-display text-base font-bold text-white tracking-tight">
                     Custody Chain ({ebolChain.length} Blocks)
-                  </span>
+                  </h2>
                   {ebolLoadId && (
                     <a
                       href={`/verify/${encodeURIComponent(ebolLoadId)}`}
-                      className="inline-flex items-center gap-1 font-mono text-[11px] text-bro-cyan hover:underline"
+                      className="min-h-[44px] inline-flex items-center gap-1.5 font-mono text-xs text-bro-cyan hover:underline"
                     >
                       <span>/verify/{ebolLoadId}</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     </a>
                   )}
                 </div>
 
                 {ebolChainLoading ? (
-                  <div className="py-8 flex items-center justify-center gap-2 font-mono text-xs text-slate-400">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                  <div className="py-8 flex items-center justify-center gap-2 text-xs text-slate-300">
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                     <span>Reading custody blocks...</span>
                   </div>
                 ) : ebolChain.length === 0 ? (
-                  <div className="p-6 rounded bg-bro-obsidian/60 border border-white/10 font-mono text-xs text-slate-400">
+                  <div className="p-6 rounded-2xl bg-[#060912] border border-white/10 text-xs text-slate-300 leading-relaxed">
                     No blocks signed yet for this load. Signing CARRIER_PICKUP will anchor Block #1 to the deterministic
                     load genesis hash.
                   </div>
@@ -1214,21 +1269,21 @@ export default function DriverPortalApp() {
                     {ebolChain.map((blk) => (
                       <div
                         key={blk.id}
-                        className="p-3.5 rounded bg-bro-obsidian/80 border border-emerald-500/30 space-y-1.5 font-mono text-xs"
+                        className="p-4 rounded-2xl bg-[#060912] border border-emerald-500/35 space-y-1.5 font-mono text-xs"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <span className="text-emerald-300 font-bold">
                             #{blk.seq} · {blk.stage}
                           </span>
-                          <span className="text-[10px] text-slate-400">{formatDateTime(blk.signedAt)}</span>
+                          <span className="text-xs text-slate-300">{formatDateTime(blk.signedAt)}</span>
                         </div>
-                        <div className="text-white text-xs">
+                        <div className="font-sans text-white text-sm font-medium">
                           {blk.actorName} ({blk.actorRole})
                         </div>
-                        <div className="text-[10px] text-slate-400 break-all">
+                        <div className="text-xs text-slate-300 break-all">
                           Hash: {blk.blockHash.slice(0, 28)}…
                         </div>
-                        <div className="text-[10px] text-slate-500 tabular-nums">
+                        <div className="text-xs text-slate-400 tabular-nums">
                           GPS: {blk.gpsLat.toFixed(4)}, {blk.gpsLon.toFixed(4)}
                         </div>
                       </div>
@@ -1241,81 +1296,87 @@ export default function DriverPortalApp() {
 
           {/* TAB 5: PAY & SETTLEMENTS + CDL/MEDICAL EXPIRY ALERTS */}
           {activeTab === 'pay' && (
-            <div className="space-y-6">
+            <div
+              role="tabpanel"
+              id="driver-panel-pay"
+              aria-labelledby="driver-tab-pay"
+              tabIndex={0}
+              className="space-y-6 outline-none"
+            >
               {/* Compliance Credentials & Pay Model Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div
-                  className={`p-4 rounded-lg border space-y-1.5 ${
+                  className={`p-5 rounded-2xl border space-y-2 ${
                     cdlDays !== null && cdlDays <= 30
                       ? 'bg-rose-950/50 border-rose-500/60'
-                      : 'bg-bro-steel/60 border-white/10'
+                      : 'surface-ceramic'
                   }`}
                 >
-                  <div className="flex items-center justify-between font-mono text-[10px] uppercase text-slate-400">
-                    <span>Commercial Driver License</span>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-300 font-medium">Commercial Driver License</span>
                     <span
-                      className={`font-bold ${
+                      className={`px-2.5 py-0.5 rounded-full font-semibold ${
                         cdlDays === null
-                          ? 'text-slate-400'
+                          ? 'bg-white/10 text-slate-300'
                           : cdlDays <= 30
-                            ? 'text-rose-300'
+                            ? 'bg-rose-950 text-rose-200 border border-rose-500/40'
                             : cdlDays <= 60
-                              ? 'text-bro-gold'
-                              : 'text-emerald-400'
+                              ? 'bg-amber-950 text-bro-gold border border-bro-gold/40'
+                              : 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
                       }`}
                     >
                       {cdlDays === null
-                        ? 'UNVERIFIED'
+                        ? 'Unverified'
                         : cdlDays < 0
-                          ? `EXPIRED (${Math.abs(cdlDays)}d)`
-                          : `${cdlDays} DAYS LEFT`}
+                          ? `Expired (${Math.abs(cdlDays)}d)`
+                          : `${cdlDays} days left`}
                     </span>
                   </div>
                   <div className="font-mono text-sm font-bold text-white">
                     {driver?.licenseClass || 'Class 1 / AZ'} · {driver?.licenseNumber || 'On file'}
                   </div>
-                  <div className="font-mono text-[11px] text-slate-300">
+                  <div className="text-xs text-slate-300">
                     Expires: {formatDate(driver?.licenseExpiry ?? null)}
                   </div>
                 </div>
 
                 <div
-                  className={`p-4 rounded-lg border space-y-1.5 ${
+                  className={`p-5 rounded-2xl border space-y-2 ${
                     medDays !== null && medDays <= 30
                       ? 'bg-amber-950/60 border-bro-gold'
-                      : 'bg-bro-steel/60 border-white/10'
+                      : 'surface-ceramic'
                   }`}
                 >
-                  <div className="flex items-center justify-between font-mono text-[10px] uppercase text-slate-400">
-                    <span>DOT / NSC Medical Card</span>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-300 font-medium">DOT / NSC Medical Card</span>
                     <span
-                      className={`font-bold ${
+                      className={`px-2.5 py-0.5 rounded-full font-semibold ${
                         medDays === null
-                          ? 'text-slate-400'
+                          ? 'bg-white/10 text-slate-300'
                           : medDays < 0
-                            ? 'text-rose-300'
+                            ? 'bg-rose-950 text-rose-200 border border-rose-500/40'
                             : medDays <= 30
-                              ? 'text-bro-gold'
-                              : 'text-emerald-400'
+                              ? 'bg-amber-950 text-bro-gold border border-bro-gold/40'
+                              : 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
                       }`}
                     >
                       {medDays === null
-                        ? 'UNVERIFIED'
+                        ? 'Unverified'
                         : medDays < 0
-                          ? `EXPIRED (${Math.abs(medDays)}d)`
-                          : `${medDays} DAYS LEFT`}
+                          ? `Expired (${Math.abs(medDays)}d)`
+                          : `${medDays} days left`}
                     </span>
                   </div>
-                  <div className="font-mono text-sm font-bold text-white">
+                  <div className="font-display text-sm font-bold text-white">
                     {medDays !== null && medDays <= 30 ? 'Renewal Action Required' : 'Medical Cleared'}
                   </div>
-                  <div className="font-mono text-[11px] text-slate-300">
+                  <div className="text-xs text-slate-300">
                     Expires: {formatDate(driver?.medicalCardExpiry ?? null)}
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-bro-steel/60 border border-white/10 space-y-1.5">
-                  <div className="font-mono text-[10px] uppercase text-slate-400">Active Pay Structure</div>
+                <div className="p-5 rounded-2xl surface-ceramic space-y-2">
+                  <div className="text-xs text-slate-300 font-medium">Active Pay Structure</div>
                   <div className="font-mono text-sm font-bold text-bro-cyan tabular-nums">
                     {driver
                       ? driver.payModel === 'cpm'
@@ -1323,23 +1384,25 @@ export default function DriverPortalApp() {
                         : `${(driver.payRateValue / 100).toFixed(2)}% of Load Gross`
                       : '—'}
                   </div>
-                  <div className="font-mono text-[11px] text-slate-400">
+                  <div className="text-xs text-slate-300">
                     Direct deposit · Settlement PDF archived to Vault
                   </div>
                 </div>
               </div>
 
               {/* Settlements Table */}
-              <div className="rounded-lg bg-bro-steel/60 border border-white/10 overflow-hidden">
-                <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase text-white">
-                    <DollarSign className="w-4 h-4 text-bro-gold" />
-                    <span>Driver Settlement Statements ({settlements.length})</span>
+              <div className="rounded-2xl surface-ceramic overflow-hidden">
+                <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <DollarSign className="w-5 h-5 text-bro-gold shrink-0" aria-hidden="true" />
+                    <h2 className="font-display text-base font-bold text-white tracking-tight">
+                      Driver Settlement Statements ({settlements.length})
+                    </h2>
                   </div>
                 </div>
 
                 {settlements.length === 0 ? (
-                  <div className="p-8 text-center font-mono text-xs text-slate-400">
+                  <div className="p-8 text-center text-xs sm:text-sm text-slate-300">
                     No finalized driver settlements yet. Completed loads will appear on your bi-weekly pay statement.
                   </div>
                 ) : (
@@ -1347,60 +1410,66 @@ export default function DriverPortalApp() {
                     {settlements.map((s) => (
                       <div
                         key={s.id}
-                        className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-white/[0.02]"
+                        className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-white/[0.02]"
                       >
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-sm font-bold text-white">{s.settlementNumber}</span>
                             <span
-                              className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase border ${
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase border ${
                                 s.status === 'paid'
                                   ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300'
                                   : s.status === 'finalized'
                                     ? 'bg-cyan-500/20 border-bro-cyan/50 text-bro-cyan'
-                                    : 'bg-slate-800 border-white/15 text-slate-300'
+                                    : 'bg-[#060912] border-white/15 text-slate-300'
                               }`}
                             >
                               {s.status}
                             </span>
                           </div>
-                          <div className="font-mono text-xs text-slate-400">
+                          <div className="text-xs text-slate-300">
                             Period: {formatDate(s.periodStart)} – {formatDate(s.periodEnd)}
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs tabular-nums">
                           <div>
-                            <div className="text-[10px] text-slate-400 uppercase">Gross</div>
+                            <div className="text-xs text-slate-400">Gross</div>
                             <div className="text-slate-200">{formatMoneyCents(s.grossPayCents, s.currency)}</div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-slate-400 uppercase">Reimb.</div>
+                            <div className="text-xs text-slate-400">Reimb.</div>
                             <div className="text-emerald-300">
                               +{formatMoneyCents(s.reimbursementsCents, s.currency)}
                             </div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-slate-400 uppercase">Deduct.</div>
+                            <div className="text-xs text-slate-400">Deduct.</div>
                             <div className="text-rose-300">
                               -{formatMoneyCents(s.deductionsCents, s.currency)}
                             </div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-slate-400 uppercase">Net Pay</div>
+                            <div className="text-xs text-slate-400">Net Pay</div>
                             <div className="text-bro-gold font-bold">{formatMoneyCents(s.netPayCents, s.currency)}</div>
                           </div>
                         </div>
 
-                        <a
-                          href={`/api/settlements/${encodeURIComponent(s.id)}/pdf`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded border border-bro-cyan/40 bg-bro-cyan/10 hover:bg-bro-cyan hover:text-black text-bro-cyan font-mono text-xs font-bold uppercase transition-colors shrink-0"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Download PDF</span>
-                        </a>
+                        {s.id ? (
+                          <a
+                            href={`/api/settlements/${encodeURIComponent(s.id)}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-bro-cyan/40 bg-bro-cyan/10 hover:bg-bro-cyan hover:text-black text-bro-cyan text-xs font-semibold transition-colors shrink-0"
+                          >
+                            <Download className="w-4 h-4 shrink-0" aria-hidden="true" />
+                            <span>Download PDF</span>
+                          </a>
+                        ) : (
+                          <span className="min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 rounded-full border border-white/15 bg-[#060912] text-slate-300 text-xs font-medium shrink-0">
+                            PDF Pending Finalization
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -8,6 +8,7 @@ import {
   Loader2,
   Lock,
   Wrench,
+  RotateCcw,
 } from 'lucide-react';
 import { DvirSubmitSchema, type DvirSubmitInput } from '@bro/contracts';
 import { enqueueOfflineSubmission } from '../../lib/offlineDb';
@@ -220,38 +221,52 @@ export default function DvirInspectionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-lg bg-bro-steel/60 border border-white/10 p-5 sm:p-6 space-y-6"
+      className="rounded-2xl surface-ceramic p-5 sm:p-6 space-y-6"
     >
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase text-bro-gold">
-            <ClipboardCheck className="w-4 h-4" />
-            <span>12-Point FMCSA / NSC Schedule 1 DVIR</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-bro-gold">
+            <ClipboardCheck className="w-5 h-5 shrink-0" aria-hidden="true" />
+            <h2 className="font-display text-lg font-bold text-white tracking-tight">
+              12-Point FMCSA / NSC Schedule 1 DVIR
+            </h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-300">
             Mandatory commercial vehicle safety inspection before dispatch and after trip completion.
           </p>
         </div>
 
-        <div className="flex items-center gap-1 p-1 rounded bg-bro-obsidian/80 border border-white/10 font-mono text-[11px]">
+        <div
+          role="group"
+          aria-label="Inspection Type"
+          className="inline-flex items-center gap-1.5 p-1.5 rounded-full bg-[#060912] border border-white/10 self-start sm:self-center"
+        >
           <button
             type="button"
+            aria-pressed={inspectionType === 'pre_trip'}
             onClick={() => setInspectionType('pre_trip')}
-            className={`px-3 py-1.5 rounded uppercase font-bold cursor-pointer transition-colors ${
-              inspectionType === 'pre_trip' ? 'bg-bro-cyan text-black' : 'text-slate-400 hover:text-white'
+            className={`min-h-[44px] min-w-[44px] px-4 py-2 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors ${
+              inspectionType === 'pre_trip'
+                ? 'bg-bro-cyan text-black'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
-            Pre-Trip
+            <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Pre-Trip</span>
           </button>
           <button
             type="button"
+            aria-pressed={inspectionType === 'post_trip'}
             onClick={() => setInspectionType('post_trip')}
-            className={`px-3 py-1.5 rounded uppercase font-bold cursor-pointer transition-colors ${
-              inspectionType === 'post_trip' ? 'bg-bro-gold text-black' : 'text-slate-400 hover:text-white'
+            className={`min-h-[44px] min-w-[44px] px-4 py-2 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors ${
+              inspectionType === 'post_trip'
+                ? 'bg-bro-gold text-black'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
-            Post-Trip
+            <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Post-Trip</span>
           </button>
         </div>
       </div>
@@ -259,7 +274,7 @@ export default function DvirInspectionForm({
       {/* Equipment & Odometer */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <label htmlFor="dvir-tractor" className="block font-mono text-[11px] uppercase text-slate-300">
+          <label htmlFor="dvir-tractor" className="block text-xs font-medium text-slate-300">
             Tractor Unit *
           </label>
           {tractors.length > 0 ? (
@@ -268,7 +283,7 @@ export default function DvirInspectionForm({
               required
               value={tractorId}
               onChange={(e) => setTractorId(e.target.value)}
-              className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
             >
               <option value="">Select Tractor...</option>
               {tractors.map((u) => (
@@ -286,13 +301,13 @@ export default function DvirInspectionForm({
               value={tractorId}
               onChange={(e) => setTractorId(e.target.value)}
               placeholder="e.g. eq_trc_101"
-              className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-gold"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-slate-400 outline-none focus:border-bro-gold"
             />
           )}
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="dvir-trailer" className="block font-mono text-[11px] uppercase text-slate-300">
+          <label htmlFor="dvir-trailer" className="block text-xs font-medium text-slate-300">
             Trailer Unit (Optional)
           </label>
           {trailers.length > 0 ? (
@@ -300,7 +315,7 @@ export default function DvirInspectionForm({
               id="dvir-trailer"
               value={trailerId}
               onChange={(e) => setTrailerId(e.target.value)}
-              className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
             >
               <option value="">Bobtail / No Trailer</option>
               {trailers.map((u) => (
@@ -317,13 +332,13 @@ export default function DvirInspectionForm({
               value={trailerId}
               onChange={(e) => setTrailerId(e.target.value)}
               placeholder="Optional trailer ID"
-              className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-gold"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-slate-400 outline-none focus:border-bro-gold"
             />
           )}
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="dvir-odometer" className="block font-mono text-[11px] uppercase text-slate-300">
+          <label htmlFor="dvir-odometer" className="block text-xs font-medium text-slate-300">
             Odometer (km) *
           </label>
           <input
@@ -336,77 +351,79 @@ export default function DvirInspectionForm({
             value={odometerKm}
             onChange={(e) => setOdometerKm(e.target.value)}
             placeholder="e.g. 248510"
-            className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-gold tabular-nums"
+            className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-slate-400 outline-none focus:border-bro-gold tabular-nums"
           />
         </div>
       </div>
 
       {/* 12-Point Checklist */}
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="font-mono text-xs uppercase text-slate-300">
-            Inspection Points ({12 - defectCount}/12 Pass ·{' '}
-            <span className={defectCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm font-medium text-slate-200 tabular-nums">
+            Inspection Points: <span className="text-white font-semibold">{12 - defectCount}/12 Pass</span> ·{' '}
+            <span className={defectCount > 0 ? 'text-rose-300 font-semibold' : 'text-emerald-300 font-semibold'}>
               {defectCount} Defect{defectCount === 1 ? '' : 's'}
             </span>
-            )
           </div>
           <button
             type="button"
             onClick={markAllPass}
-            className="px-2.5 py-1 rounded border border-emerald-500/30 bg-emerald-950/40 text-emerald-300 font-mono text-[10px] uppercase hover:bg-emerald-950/70 cursor-pointer"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-emerald-500/40 bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-200 text-xs font-semibold cursor-pointer transition-colors"
           >
-            Reset All to Pass
+            <RotateCcw className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+            <span>Reset All to Pass</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {CHECKLIST_DEFINITIONS.map((def, index) => {
             const entry = checklist[index];
             const isDefect = entry.status === 'defect';
             return (
               <div
                 key={def.key}
-                className={`p-3.5 rounded-lg border space-y-2.5 transition-colors ${
+                className={`p-4 rounded-2xl border space-y-3 transition-colors ${
                   isDefect
-                    ? 'bg-rose-950/40 border-rose-500/50'
-                    : 'bg-bro-obsidian/70 border-white/10'
+                    ? 'bg-rose-950/40 border-rose-500/60'
+                    : 'bg-[#060912] border-white/10'
                 }`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-xs font-semibold text-white">
-                      <span className="font-mono text-[10px] text-slate-400 mr-1.5 tabular-nums">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-semibold text-white">
+                      <span className="font-mono text-xs text-slate-400 mr-1.5 tabular-nums">
                         {String(index + 1).padStart(2, '0')}.
                       </span>
                       {def.label}
                     </div>
-                    <div className="font-mono text-[10px] text-slate-400">{def.regulation}</div>
+                    <div className="text-xs text-slate-400">{def.regulation}</div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
                       aria-pressed={!isDefect}
                       onClick={() => setItemStatus(def.key, 'pass')}
-                      className={`px-2.5 py-1.5 rounded font-mono text-[10px] font-bold uppercase cursor-pointer transition-colors ${
+                      className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold cursor-pointer transition-colors border ${
                         !isDefect
-                          ? 'bg-emerald-500/20 border border-emerald-400 text-emerald-300'
-                          : 'bg-bro-steel/60 border border-white/10 text-slate-400 hover:text-white'
+                          ? 'bg-emerald-700 hover:bg-emerald-600 border-emerald-400 text-white'
+                          : 'bg-[#0b1120] border-white/15 text-slate-300 hover:text-white hover:border-white/30'
                       }`}
                     >
-                      Pass
+                      <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      <span>Pass</span>
                     </button>
                     <button
                       type="button"
                       aria-pressed={isDefect}
                       onClick={() => setItemStatus(def.key, 'defect')}
-                      className={`px-2.5 py-1.5 rounded font-mono text-[10px] font-bold uppercase cursor-pointer transition-colors ${
+                      className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold cursor-pointer transition-colors border ${
                         isDefect
-                          ? 'bg-rose-500/30 border border-rose-400 text-rose-100'
-                          : 'bg-bro-steel/60 border border-white/10 text-slate-400 hover:text-rose-200'
+                          ? 'bg-rose-700 hover:bg-rose-600 border-rose-400 text-white'
+                          : 'bg-[#0b1120] border-white/15 text-slate-300 hover:text-rose-200 hover:border-rose-400/50'
                       }`}
                     >
-                      Defect
+                      <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      <span>Defect</span>
                     </button>
                   </div>
                 </div>
@@ -419,7 +436,7 @@ export default function DvirInspectionForm({
                     onChange={(e) => setItemNotes(def.key, e.target.value)}
                     placeholder={`Describe ${def.label.toLowerCase()} defect details...`}
                     aria-label={`${def.label} defect notes`}
-                    className="w-full bg-bro-obsidian/90 border border-rose-500/40 rounded px-2.5 py-1.5 text-xs text-rose-100 placeholder:text-rose-300/50 outline-none focus:border-rose-400"
+                    className="w-full min-h-[44px] bg-[#0b1120] border border-rose-500/50 rounded-xl px-3.5 py-2 text-xs text-rose-100 placeholder:text-rose-300/70 outline-none focus:border-rose-400"
                   />
                 )}
               </div>
@@ -430,73 +447,78 @@ export default function DvirInspectionForm({
 
       {/* Safe to Operate Toggle & Mandatory OUT OF SERVICE Lock Warning */}
       <div
-        className={`p-4 rounded-lg border-2 space-y-3 ${
+        className={`p-4 sm:p-5 rounded-2xl border-2 space-y-3.5 ${
           safeToOperate
-            ? 'bg-bro-obsidian/80 border-emerald-500/40'
-            : 'bg-rose-950/70 border-bro-crimson'
+            ? 'bg-[#060912] border-emerald-500/40'
+            : 'bg-rose-950/70 border-rose-500'
         }`}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase text-white">
+            <div className="flex items-center gap-2 font-display text-sm font-bold text-white">
               {safeToOperate ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
               ) : (
-                <Lock className="w-4 h-4 text-bro-crimson" />
+                <Lock className="w-4 h-4 text-rose-300 shrink-0" aria-hidden="true" />
               )}
               <span>Vehicle Safety Certification</span>
             </div>
             <p className="text-xs text-slate-300">
-              Certify whether the inspected tractor & trailer are mechanically safe to operate on public highways.
+              Certify whether the inspected tractor &amp; trailer are mechanically safe to operate on public highways.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
               type="button"
               aria-pressed={safeToOperate}
               onClick={() => setSafeToOperate(true)}
-              className={`px-3.5 py-2 rounded font-mono text-xs font-bold uppercase cursor-pointer border transition-colors ${
+              className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold cursor-pointer border transition-colors ${
                 safeToOperate
-                  ? 'bg-emerald-500 text-black border-emerald-400'
-                  : 'bg-bro-obsidian/80 text-slate-300 border-white/15 hover:border-emerald-400'
+                  ? 'bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-400'
+                  : 'bg-[#0b1120] text-slate-300 border-white/15 hover:border-emerald-400'
               }`}
             >
-              Safe to Operate
+              <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Safe to Operate</span>
             </button>
             <button
               type="button"
               aria-pressed={!safeToOperate}
               onClick={() => setSafeToOperate(false)}
-              className={`px-3.5 py-2 rounded font-mono text-xs font-bold uppercase cursor-pointer border transition-colors ${
+              className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold cursor-pointer border transition-colors ${
                 !safeToOperate
-                  ? 'bg-bro-crimson text-white border-rose-400'
-                  : 'bg-bro-obsidian/80 text-rose-300 border-rose-500/40 hover:border-bro-crimson'
+                  ? 'bg-rose-700 hover:bg-rose-600 text-white border-rose-400'
+                  : 'bg-[#0b1120] text-rose-200 border-rose-500/40 hover:border-rose-400'
               }`}
             >
-              Unsafe (Lock OOS)
+              <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Unsafe (Lock OOS)</span>
             </button>
           </div>
         </div>
 
         <div
-          className={`flex items-start gap-2.5 p-3 rounded font-mono text-xs ${
+          className={`flex items-start gap-2.5 p-3.5 rounded-xl text-xs ${
             safeToOperate
               ? 'bg-amber-950/40 border border-bro-gold/40 text-amber-200'
-              : 'bg-black/40 border border-rose-500 text-rose-100 font-bold'
+              : 'bg-black/40 border border-rose-500 text-rose-100 font-semibold'
           }`}
         >
-          <ShieldAlert className={`w-4 h-4 shrink-0 mt-0.5 ${safeToOperate ? 'text-bro-gold' : 'text-bro-crimson'}`} />
+          <ShieldAlert
+            className={`w-4 h-4 shrink-0 mt-0.5 ${safeToOperate ? 'text-bro-gold' : 'text-rose-300'}`}
+            aria-hidden="true"
+          />
           <span>
             WARNING: Marking this unit UNSAFE immediately locks the tractor (and attached trailer) OUT OF SERVICE in
-            Dispatch & Telematics until a certified mechanic logs repairs and clears the unit.
+            Dispatch &amp; Telematics until a certified mechanic logs repairs and clears the unit.
           </span>
         </div>
       </div>
 
       {/* Driver Legal Signature */}
       <div className="space-y-1.5">
-        <label htmlFor="dvir-signature" className="block font-mono text-[11px] uppercase text-slate-300">
+        <label htmlFor="dvir-signature" className="block text-xs font-medium text-slate-300">
           Driver Electronic Signature (Type Full Legal Name) *
         </label>
         <input
@@ -507,16 +529,16 @@ export default function DvirInspectionForm({
           value={driverSignatureName}
           onChange={(e) => setDriverSignatureName(e.target.value)}
           placeholder="e.g. Liam Gallant"
-          className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-3 text-sm font-mono text-white outline-none focus:border-bro-gold"
+          className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-slate-400 outline-none focus:border-bro-gold"
         />
       </div>
 
       {errorMsg && (
         <div
           role="alert"
-          className="flex items-start gap-2 p-3.5 rounded bg-rose-950/70 border border-rose-500/50 text-rose-200 font-mono text-xs"
+          className="flex items-start gap-2 p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-medium"
         >
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -525,26 +547,26 @@ export default function DvirInspectionForm({
         <div
           role="status"
           aria-live="polite"
-          className={`p-4 rounded border space-y-1.5 font-mono text-xs ${
+          className={`p-4 rounded-2xl border space-y-1.5 text-xs ${
             resultBanner.equipmentLockedOutOfService
-              ? 'bg-rose-950/70 border-bro-crimson text-rose-100'
+              ? 'bg-rose-950/70 border-rose-500 text-rose-100'
               : 'bg-emerald-950/60 border-emerald-500/50 text-emerald-100'
           }`}
         >
-          <div className="flex items-center gap-2 font-bold uppercase">
+          <div className="flex items-center gap-2 font-semibold">
             {resultBanner.equipmentLockedOutOfService ? (
               <>
-                <Wrench className="w-4 h-4 text-bro-crimson" />
+                <Wrench className="w-4 h-4 text-rose-300 shrink-0" aria-hidden="true" />
                 <span>DVIR Logged — Unit Locked OUT OF SERVICE</span>
               </>
             ) : (
               <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>DVIR Certified & Logged ({inspectionType === 'pre_trip' ? 'Pre-Trip' : 'Post-Trip'})</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
+                <span>DVIR Certified &amp; Logged ({inspectionType === 'pre_trip' ? 'Pre-Trip' : 'Post-Trip'})</span>
               </>
             )}
           </div>
-          <div className="text-[11px]">
+          <div className="text-xs font-mono text-slate-200">
             Record ID: {resultBanner.dvirId} · Defects Recorded: {resultBanner.defectsFound ? 'Yes' : 'None'}
           </div>
         </div>
@@ -554,13 +576,13 @@ export default function DvirInspectionForm({
         <div
           role="status"
           aria-live="polite"
-          className="p-3.5 rounded bg-amber-950/60 border border-bro-gold text-amber-100 font-mono text-xs space-y-1"
+          className="p-4 rounded-2xl bg-amber-950/60 border border-bro-gold text-amber-100 text-xs space-y-1"
         >
-          <div className="flex items-center gap-2 font-bold text-bro-gold uppercase">
-            <WifiOff className="w-4 h-4" />
+          <div className="flex items-center gap-2 font-semibold text-bro-gold">
+            <WifiOff className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>DVIR Saved to Offline Sync Vault</span>
           </div>
-          <p className="text-[11px]">
+          <p className="text-xs text-amber-100/90">
             Inspection signed locally while offline and queued for automatic upload upon signal recovery.
           </p>
         </div>
@@ -569,20 +591,20 @@ export default function DvirInspectionForm({
       <button
         type="submit"
         disabled={submitting}
-        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded font-mono text-xs font-bold uppercase tracking-wider disabled:opacity-50 transition-colors cursor-pointer ${
+        className={`w-full min-h-[48px] flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors cursor-pointer ${
           safeToOperate
-            ? 'bg-bro-gold hover:bg-amber-400 text-black'
-            : 'bg-bro-crimson hover:bg-rose-600 text-white'
+            ? 'bg-bro-gold hover:bg-amber-300 text-black'
+            : 'bg-rose-700 hover:bg-rose-600 text-white'
         }`}
       >
         {submitting ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Signing & Recording DVIR...</span>
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
+            <span>Signing &amp; Recording DVIR...</span>
           </>
         ) : (
           <>
-            <ClipboardCheck className="w-4 h-4" />
+            <ClipboardCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>
               {safeToOperate ? 'Sign & Certify DVIR (Safe to Operate)' : 'Sign DVIR & Lock Equipment OUT OF SERVICE'}
             </span>

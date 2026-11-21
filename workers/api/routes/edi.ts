@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { createDb, ediMessages, loads, loadStops, invoices } from '@bro/db';
 import {
   generateEdi210,
@@ -14,6 +15,16 @@ import { emitHubEvent } from '../../agents/hubEvents.js';
 import { verifyWebhookHmac } from '../security.js';
 
 export const ediRoutes = new Hono<ApiEnv>();
+
+const Edi990ActionSchema = z.object({
+  action: z.enum(['A', 'D']).default('A'),
+});
+
+const Edi214StatusSchema = z.object({
+  statusCode: z.enum(['X3', 'AF', 'X1', 'D1', 'AG']).default('AF'),
+  city: z.string().trim().min(1).max(30).default('CHARLOTTETOWN'),
+  stateProv: z.string().trim().min(2).max(2).toUpperCase().default('PE'),
+});
 
 /** Inbound ANSI X12 204 Motor Carrier Load Tender (Ops or HMAC partner gateway). */
 ediRoutes.post('/edi/inbound', async (c) => {
@@ -133,8 +144,11 @@ ediRoutes.post('/ops/edi/990/:loadId', async (c) => {
   const user = c.get('user');
   if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
   const loadId = c.req.param('loadId');
-  const body = (await c.req.json().catch(() => ({}))) as { action?: 'A' | 'D' };
-  const action = body.action === 'D' ? 'D' : 'A';
+  const parsedBody = Edi990ActionSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsedBody.success) {
+    return c.json({ error: parsedBody.error.issues[0]?.message || 'Invalid EDI 990 action.' }, 400);
+  }
+  const action = parsedBody.data.action;
 
   const db = createDb(c.env.DB);
   const rows = await db.select().from(loads).where(eq(loads.id, loadId)).limit(1);
@@ -211,7 +225,11 @@ ediRoutes.post('/ops/edi/214/:loadId', async (c) => {
   const user = c.get('user');
   if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
   const loadId = c.req.param('loadId');
-  const body = (await c.req.json().catch(() => ({}))) as { statusCode?: 'X3' | 'AF' | 'X1' | 'D1' | 'AG'; city?: string; stateProv?: string };
+  const parsedBody = Edi214StatusSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsedBody.success) {
+    return c.json({ error: parsedBody.error.issues[0]?.message || 'Invalid EDI 214 status payload.' }, 400);
+  }
+  const body = parsedBody.data;
   const db = createDb(c.env.DB);
   const loadRows = await db.select().from(loads).where(eq(loads.id, loadId)).limit(1);
   const load = loadRows[0];
@@ -221,9 +239,9 @@ ediRoutes.post('/ops/edi/214/:loadId', async (c) => {
   const rawX12 = generateEdi214({
     scac: c.env.SCAC_CODE || 'BROP',
     shipmentId: load.loadNumber,
-    statusCode: body.statusCode || 'AF',
-    city: body.city || 'CHARLOTTETOWN',
-    stateProv: body.stateProv || 'PE',
+    statusCode: body.statusCode,
+    city: body.city,
+    stateProv: body.stateProv,
     receiverId: load.shipperOrgId,
     controlNumber: String(now).slice(-9),
     nowMs: now,

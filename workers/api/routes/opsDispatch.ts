@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { desc, eq, lt } from 'drizzle-orm';
+import { z } from 'zod';
 import {
   createDb,
   loads,
@@ -28,6 +29,30 @@ import { emitHubEvent } from '../../agents/hubEvents.js';
 import { verifyWebhookHmac } from '../security.js';
 
 export const opsDispatchRoutes = new Hono<ApiEnv>();
+
+const AssignLoadSchema = z.object({
+  assignedDriverId: z.string().trim().min(1).optional(),
+  tractorId: z.string().trim().min(1).optional(),
+  trailerId: z.string().trim().min(1).optional(),
+});
+
+const UpdateLoadStatusSchema = z.object({
+  status: LoadStatusSchema,
+});
+
+const TelematicsWebhookSchema = z.object({
+  equipmentId: z.string().trim().min(1, { error: 'equipmentId is required.' }),
+  loadId: z.string().trim().min(1).optional(),
+  lat: z.number().min(-90).max(90),
+  lon: z.number().min(-180).max(180),
+  operatingHours: z.number().nonnegative().optional(),
+  reeferTempC: z.number().optional(),
+  setpointC: z.number().optional(),
+  doorClosed: z.boolean().optional(),
+  axleWeightKg: z.number().nonnegative().optional(),
+  tpmsPsi: z.number().nonnegative().optional(),
+  vibrationHz: z.number().nonnegative().optional(),
+});
 
 opsDispatchRoutes.get('/ops/overview', async (c) => {
   const user = c.get('user');
@@ -133,12 +158,15 @@ opsDispatchRoutes.patch('/ops/loads/:id/assign', async (c) => {
   if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
 
   const loadId = c.req.param('id');
-  const body = (await c.req.json().catch(() => ({}))) as {
-    assignedDriverId?: string;
-    tractorId?: string;
-    trailerId?: string;
-  };
+  const parsedBody = AssignLoadSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsedBody.success) {
+    return c.json({ error: parsedBody.error.issues[0]?.message || 'Invalid assignment payload.' }, 400);
+  }
+  const body = parsedBody.data;
   const db = createDb(c.env.DB);
+  const existingLoad = await db.select({ id: loads.id }).from(loads).where(eq(loads.id, loadId)).limit(1);
+  if (!existingLoad[0]) return c.json({ error: 'Load not found.' }, 404);
+
   const now = Date.now();
 
   // Safety check: refuse assigning equipment currently locked OUT OF SERVICE!
@@ -180,8 +208,7 @@ opsDispatchRoutes.patch('/ops/loads/:id/status', async (c) => {
   if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
 
   const loadId = c.req.param('id');
-  const body = (await c.req.json().catch(() => ({}))) as { status?: string };
-  const nextParsed = LoadStatusSchema.safeParse(body.status);
+  const nextParsed = UpdateLoadStatusSchema.safeParse(await c.req.json().catch(() => ({})));
   if (!nextParsed.success) return c.json({ error: 'Invalid load status.' }, 400);
 
   const db = createDb(c.env.DB);
@@ -189,17 +216,17 @@ opsDispatchRoutes.patch('/ops/loads/:id/status', async (c) => {
   const load = rows[0];
   if (!load) return c.json({ error: 'Load not found.' }, 404);
 
-  if (!canTransitionLoadStatus(load.status as LoadStatus, nextParsed.data)) {
-    return c.json({ error: `Illegal state transition from ${load.status} to ${nextParsed.data}.` }, 409);
+  if (!canTransitionLoadStatus(load.status as LoadStatus, nextParsed.data.status)) {
+    return c.json({ error: `Illegal state transition from ${load.status} to ${nextParsed.data.status}.` }, 409);
   }
 
   const now = Date.now();
-  await db.update(loads).set({ status: nextParsed.data, updatedAt: now }).where(eq(loads.id, loadId));
+  await db.update(loads).set({ status: nextParsed.data.status, updatedAt: now }).where(eq(loads.id, loadId));
 
   const x12 = generateEdi214({
     scac: c.env.SCAC_CODE || 'BROP',
     shipmentId: load.loadNumber,
-    statusCode: nextParsed.data === 'DELIVERED' ? 'D1' : 'AF',
+    statusCode: nextParsed.data.status === 'DELIVERED' ? 'D1' : 'AF',
     city: 'CORRIDOR',
     stateProv: 'PE',
     receiverId: load.shipperOrgId,
@@ -213,7 +240,7 @@ opsDispatchRoutes.patch('/ops/loads/:id/status', async (c) => {
     direction: 'outbound',
     controlNumber: String(now).slice(-9),
     rawX12: x12,
-    parsedJson: JSON.stringify({ status: nextParsed.data }),
+    parsedJson: JSON.stringify({ status: nextParsed.data.status }),
     status: 'sent',
     createdAt: now,
   });
@@ -221,10 +248,10 @@ opsDispatchRoutes.patch('/ops/loads/:id/status', async (c) => {
   await emitHubEvent(c.env, {
     type: 'LOAD_STATUS_CHANGED',
     channel: 'ops:all',
-    payload: { loadId, loadNumber: load.loadNumber, status: nextParsed.data },
+    payload: { loadId, loadNumber: load.loadNumber, status: nextParsed.data.status },
   });
 
-  return c.json({ success: true, loadId, status: nextParsed.data });
+  return c.json({ success: true, loadId, status: nextParsed.data.status });
 });
 
 opsDispatchRoutes.get('/ops/fleet', async (c) => {
@@ -289,19 +316,18 @@ opsDispatchRoutes.post('/telematics/webhook', async (c) => {
   });
   if (!check.ok) return c.json({ error: check.error }, check.status);
 
-  const payload = JSON.parse(rawBody) as {
-    equipmentId: string;
-    loadId?: string;
-    lat: number;
-    lon: number;
-    operatingHours?: number;
-    reeferTempC?: number;
-    setpointC?: number;
-    doorClosed?: boolean;
-    axleWeightKg?: number;
-    tpmsPsi?: number;
-    vibrationHz?: number;
-  };
+  let rawParsed: unknown;
+  try {
+    rawParsed = JSON.parse(rawBody);
+  } catch {
+    return c.json({ error: 'Malformed JSON telematics payload.' }, 400);
+  }
+
+  const parsedPayload = TelematicsWebhookSchema.safeParse(rawParsed);
+  if (!parsedPayload.success) {
+    return c.json({ error: parsedPayload.error.issues[0]?.message || 'Invalid telematics payload.' }, 400);
+  }
+  const payload = parsedPayload.data;
 
   const tempDev =
     payload.reeferTempC !== undefined && payload.setpointC !== undefined

@@ -414,20 +414,20 @@ export default function CarrierApplyForm() {
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6">
       {/* Header Bar with Offline Sync Drawer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-lg bg-bro-steel/70 border border-bro-gold/30 backdrop-blur-xl">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-bro-gold">
-            <ShieldCheck className="w-4 h-4" />
-            <span>FMCSA CARRIER & COMMERCIAL DRIVER INTAKE</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl surface-ceramic border-bro-gold/25">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bro-gold/10 border border-bro-gold/30 text-xs font-medium text-bro-gold">
+            <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>FMCSA Carrier &amp; Commercial Driver Intake</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-display font-bold text-white tracking-tight">
             Partner Capacity Onboarding
           </h2>
-          <p className="text-xs text-slate-400">
-            Live US DOT FMCSA authority & double-brokering verification. Offline border dead-zone resilient.
+          <p className="text-xs sm:text-sm text-slate-300">
+            Live US DOT FMCSA authority &amp; double-brokering verification. Offline border dead-zone resilient.
           </p>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-center">
+        <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
           <OfflineSyncDrawer />
         </div>
       </div>
@@ -436,12 +436,12 @@ export default function CarrierApplyForm() {
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="rounded-lg bg-bro-steel/60 border border-white/10 p-5 sm:p-8 backdrop-blur-xl shadow-2xl space-y-6"
+        className="rounded-2xl surface-ceramic p-5 sm:p-8 space-y-6"
       >
         {/* Draft Status Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-white/10 font-mono text-[11px]">
-          <div className="flex items-center gap-2 text-slate-400">
-            <Save className="w-3.5 h-3.5 text-bro-cyan" />
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10 text-xs">
+          <div className="flex items-center gap-2 text-slate-300">
+            <Save className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
             <span>
               {draftSavedAt
                 ? `Local draft saved ${new Date(draftSavedAt).toLocaleTimeString()}`
@@ -451,18 +451,18 @@ export default function CarrierApplyForm() {
           <button
             type="button"
             onClick={handleClearDraft}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-white/10 text-slate-400 hover:text-rose-300 hover:border-rose-500/40 transition-colors cursor-pointer"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/15 bg-[#060912] text-xs font-medium text-slate-300 hover:text-rose-200 hover:border-rose-500/50 transition-colors cursor-pointer"
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             <span>Clear Draft</span>
           </button>
         </div>
 
         {/* USDOT Live Verification Block */}
-        <div className="p-4 rounded-lg bg-bro-obsidian/80 border border-bro-cyan/25 space-y-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#060912] border border-bro-cyan/30 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1 space-y-1.5">
-              <label htmlFor="apply-usdot" className="block font-mono text-[11px] uppercase text-slate-300">
+              <label htmlFor="apply-usdot" className="block text-xs font-medium text-slate-300">
                 USDOT # (Optional for Company Drivers, Required for Partner Carriers)
               </label>
               <input
@@ -473,15 +473,15 @@ export default function CarrierApplyForm() {
                 value={form.usdotNumber}
                 onChange={(e) => updateField('usdotNumber', e.target.value.replace(/[^\d]/g, ''))}
                 placeholder="e.g. 3849201 (4–8 digit USDOT)"
-                className="w-full bg-bro-steel/70 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-cyan tabular-nums"
+                className="w-full min-h-[44px] bg-[#0b1120] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan tabular-nums"
               />
               {fieldErrors.usdotNumber && (
-                <p className="text-xs font-mono text-rose-400">{fieldErrors.usdotNumber}</p>
+                <p className="text-xs font-medium text-rose-300">{fieldErrors.usdotNumber}</p>
               )}
             </div>
 
-            <div className="w-full sm:w-40 space-y-1.5">
-              <label htmlFor="apply-mc" className="block font-mono text-[11px] uppercase text-slate-300">
+            <div className="w-full sm:w-44 space-y-1.5">
+              <label htmlFor="apply-mc" className="block text-xs font-medium text-slate-300">
                 MC # (Optional)
               </label>
               <input
@@ -491,7 +491,7 @@ export default function CarrierApplyForm() {
                 value={form.mcNumber}
                 onChange={(e) => updateField('mcNumber', e.target.value.toUpperCase())}
                 placeholder="MC1482910"
-                className="w-full bg-bro-steel/70 border border-white/15 rounded px-3 py-2.5 text-sm font-mono text-white outline-none focus:border-bro-cyan"
+                className="w-full min-h-[44px] bg-[#0b1120] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder:text-slate-400 outline-none focus:border-bro-cyan"
               />
             </div>
 
@@ -499,9 +499,13 @@ export default function CarrierApplyForm() {
               type="button"
               disabled={verifyingDot || form.usdotNumber.trim().length < 4}
               onClick={() => void handleVerifyDot()}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-bro-cyan hover:bg-cyan-300 text-black font-mono text-xs font-bold uppercase tracking-wider disabled:opacity-40 transition-colors cursor-pointer shrink-0"
+              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-bro-cyan hover:bg-cyan-300 text-black text-xs font-semibold disabled:opacity-40 transition-colors cursor-pointer shrink-0"
             >
-              {verifyingDot ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              {verifyingDot ? (
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
+              ) : (
+                <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
+              )}
               <span>{verifyingDot ? 'Querying...' : 'Verify USDOT'}</span>
             </button>
           </div>
@@ -509,16 +513,16 @@ export default function CarrierApplyForm() {
           {fmcsaError && (
             <div
               role="alert"
-              className="flex items-start gap-2 p-3 rounded bg-rose-950/60 border border-rose-500/40 text-rose-200 font-mono text-xs"
+              className="flex items-start gap-2 p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-medium"
             >
-              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
               <span>{fmcsaError}</span>
             </div>
           )}
 
           {fmcsaResult && (
             <div
-              className={`p-4 rounded border space-y-3 ${
+              className={`p-4 sm:p-5 rounded-2xl border space-y-3.5 ${
                 !fmcsaResult.verified || fraudBadge === 'REJECT'
                   ? 'bg-rose-950/40 border-rose-500/50'
                   : fraudBadge === 'REVIEW'
@@ -526,34 +530,34 @@ export default function CarrierApplyForm() {
                     : 'bg-emerald-950/30 border-emerald-500/40'
               }`}
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2.5">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                <div className="flex flex-wrap items-center gap-2">
                   {fraudBadge === 'PASS' ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
                   ) : (
-                    <ShieldAlert className="w-4 h-4 text-rose-400" />
+                    <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" aria-hidden="true" />
                   )}
-                  <span className="font-mono text-xs font-bold uppercase text-white">
+                  <span className="font-display text-sm font-bold text-white">
                     FMCSA Record — DOT #{fmcsaResult.dotNumber}
                   </span>
                   {fmcsaResult.cached && (
-                    <span className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-slate-300">
-                      CACHED 24H
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-slate-200">
+                      Cached 24h
                     </span>
                   )}
                 </div>
 
                 {fraudBadge && (
                   <span
-                    className={`px-2.5 py-1 rounded font-mono text-[11px] font-bold uppercase tracking-wider border ${
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${
                       fraudBadge === 'PASS'
-                        ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                        ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200'
                         : fraudBadge === 'REVIEW'
-                          ? 'bg-amber-500/20 border-bro-gold text-bro-gold'
-                          : 'bg-rose-500/20 border-bro-crimson text-rose-200'
+                          ? 'bg-amber-500/20 border-bro-gold text-amber-200'
+                          : 'bg-rose-500/20 border-rose-400 text-rose-200'
                     }`}
                   >
-                    FRAUD RISK: {fraudBadge}
+                    Fraud Risk: {fraudBadge}
                   </span>
                 )}
               </div>
@@ -561,9 +565,9 @@ export default function CarrierApplyForm() {
               {fmcsaResult.record ? (
                 <>
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div>
+                    <div className="space-y-0.5">
                       <div className="font-display font-bold text-white text-sm">{fmcsaResult.record.legalName}</div>
-                      <div className="font-mono text-[11px] text-slate-400">
+                      <div className="text-xs text-slate-300">
                         {[fmcsaResult.record.phyCity, fmcsaResult.record.phyState, fmcsaResult.record.phyCountry]
                           .filter(Boolean)
                           .join(', ') || 'Registered Carrier'}
@@ -571,39 +575,39 @@ export default function CarrierApplyForm() {
                       </div>
                     </div>
                     <span
-                      className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase ${
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border ${
                         fmcsaResult.record.allowedToOperate
-                          ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                          : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                          ? 'bg-emerald-500/15 text-emerald-200 border-emerald-500/40'
+                          : 'bg-rose-500/20 text-rose-200 border-rose-500/50'
                       }`}
                     >
-                      {fmcsaResult.record.allowedToOperate ? 'ALLOWED TO OPERATE' : 'NOT AUTHORIZED'}
+                      {fmcsaResult.record.allowedToOperate ? 'Allowed to Operate' : 'Not Authorized'}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                    <div className="p-2.5 rounded bg-bro-obsidian/70 border border-white/10">
-                      <div className="font-mono text-[10px] uppercase text-slate-400">Authority</div>
-                      <div className="font-mono text-xs text-white mt-0.5">
+                    <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10">
+                      <div className="text-xs text-slate-400">Authority</div>
+                      <div className="font-mono text-xs text-white mt-0.5 font-medium">
                         Com: {formatAuthorityCode(fmcsaResult.record.commonAuthorityStatus)} · Ctr:{' '}
                         {formatAuthorityCode(fmcsaResult.record.contractAuthorityStatus)}
                       </div>
                     </div>
-                    <div className="p-2.5 rounded bg-bro-obsidian/70 border border-white/10">
-                      <div className="font-mono text-[10px] uppercase text-slate-400">Safety Rating</div>
-                      <div className="font-mono text-xs font-bold text-white mt-0.5">
+                    <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10">
+                      <div className="text-xs text-slate-400">Safety Rating</div>
+                      <div className="font-mono text-xs font-semibold text-white mt-0.5">
                         {formatSafetyRating(fmcsaResult.record.safetyRating)}
                       </div>
                     </div>
-                    <div className="p-2.5 rounded bg-bro-obsidian/70 border border-white/10">
-                      <div className="font-mono text-[10px] uppercase text-slate-400">Power Units</div>
-                      <div className="font-mono text-xs font-bold text-white tabular-nums mt-0.5">
+                    <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10">
+                      <div className="text-xs text-slate-400">Power Units</div>
+                      <div className="font-mono text-xs font-semibold text-white tabular-nums mt-0.5">
                         {fmcsaResult.record.totalPowerUnits} trucks · {fmcsaResult.record.totalDrivers} drivers
                       </div>
                     </div>
-                    <div className="p-2.5 rounded bg-bro-obsidian/70 border border-white/10">
-                      <div className="font-mono text-[10px] uppercase text-slate-400">BIPD Insurance</div>
-                      <div className="font-mono text-xs font-bold text-white tabular-nums mt-0.5">
+                    <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10">
+                      <div className="text-xs text-slate-400">BIPD Insurance</div>
+                      <div className="font-mono text-xs font-semibold text-white tabular-nums mt-0.5">
                         {formatUsdCents(fmcsaResult.record.bipdInsuranceOnFileCents)}
                       </div>
                     </div>
@@ -611,16 +615,16 @@ export default function CarrierApplyForm() {
 
                   {fmcsaResult.fraudAssessment && fmcsaResult.fraudAssessment.findings.length > 0 && (
                     <div className="space-y-1.5 pt-1">
-                      <div className="font-mono text-[10px] uppercase text-rose-300 font-bold">
+                      <div className="text-xs text-rose-200 font-semibold">
                         Audit Findings ({fmcsaResult.fraudAssessment.findings.length}):
                       </div>
-                      <ul className="space-y-1">
+                      <ul className="space-y-1.5">
                         {fmcsaResult.fraudAssessment.findings.map((finding, idx) => (
                           <li
                             key={`${finding.code}-${idx}`}
-                            className="flex items-start gap-2 text-xs font-mono text-rose-200 bg-rose-950/50 border border-rose-500/30 rounded px-2.5 py-1.5"
+                            className="flex items-start gap-2 text-xs text-rose-100 bg-rose-950/60 border border-rose-500/40 rounded-xl px-3 py-2"
                           >
-                            <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
+                            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
                             <span>{finding.detail || finding.message || finding.code}</span>
                           </li>
                         ))}
@@ -629,7 +633,7 @@ export default function CarrierApplyForm() {
                   )}
                 </>
               ) : (
-                <p className="font-mono text-xs text-amber-200">
+                <p className="text-xs text-amber-200">
                   {fmcsaResult.error || `No FMCSA carrier profile returned (${fmcsaResult.reason}).`}
                 </p>
               )}
@@ -640,7 +644,7 @@ export default function CarrierApplyForm() {
         {/* Applicant Identity & Contact */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label htmlFor="apply-legal-name" className="block font-mono text-[11px] uppercase text-slate-300">
+            <label htmlFor="apply-legal-name" className="block text-xs font-medium text-slate-300">
               Legal Name *
             </label>
             <input
@@ -650,33 +654,36 @@ export default function CarrierApplyForm() {
               value={form.driverName}
               onChange={(e) => updateField('driverName', e.target.value)}
               placeholder="e.g. Liam Gallant"
-              className="w-full bg-bro-obsidian/80 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-bro-gold"
             />
-            {fieldErrors.driverName && <p className="text-xs font-mono text-rose-400">{fieldErrors.driverName}</p>}
+            {fieldErrors.driverName && <p className="text-xs font-medium text-rose-300">{fieldErrors.driverName}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="apply-company" className="block font-mono text-[11px] uppercase text-slate-300">
+            <label htmlFor="apply-company" className="block text-xs font-medium text-slate-300">
               Carrier Company (Optional)
             </label>
             <div className="relative">
-              <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+              <Building2
+                className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                aria-hidden="true"
+              />
               <input
                 id="apply-company"
                 type="text"
                 value={form.carrierCompanyName}
                 onChange={(e) => updateField('carrierCompanyName', e.target.value)}
                 placeholder="e.g. Maritime Corridor Carriers Ltd."
-                className="w-full bg-bro-obsidian/80 border border-white/15 rounded pl-9 pr-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+                className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-bro-gold"
               />
             </div>
             {fieldErrors.carrierCompanyName && (
-              <p className="text-xs font-mono text-rose-400">{fieldErrors.carrierCompanyName}</p>
+              <p className="text-xs font-medium text-rose-300">{fieldErrors.carrierCompanyName}</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="apply-email" className="block font-mono text-[11px] uppercase text-slate-300">
+            <label htmlFor="apply-email" className="block text-xs font-medium text-slate-300">
               Email Address *
             </label>
             <input
@@ -687,13 +694,13 @@ export default function CarrierApplyForm() {
               value={form.driverEmail}
               onChange={(e) => updateField('driverEmail', e.target.value)}
               placeholder="driver@carrier.com"
-              className="w-full bg-bro-obsidian/80 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-bro-gold"
             />
-            {fieldErrors.driverEmail && <p className="text-xs font-mono text-rose-400">{fieldErrors.driverEmail}</p>}
+            {fieldErrors.driverEmail && <p className="text-xs font-medium text-rose-300">{fieldErrors.driverEmail}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="apply-phone" className="block font-mono text-[11px] uppercase text-slate-300">
+            <label htmlFor="apply-phone" className="block text-xs font-medium text-slate-300">
               Phone (10-Digit) *
             </label>
             <input
@@ -704,15 +711,15 @@ export default function CarrierApplyForm() {
               value={form.driverPhone}
               onChange={(e) => updateField('driverPhone', e.target.value)}
               placeholder="902-555-0174"
-              className="w-full bg-bro-obsidian/80 border border-white/15 rounded px-3 py-2.5 text-sm text-white font-mono outline-none focus:border-bro-gold tabular-nums"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 font-mono outline-none focus:border-bro-gold tabular-nums"
             />
-            {fieldErrors.driverPhone && <p className="text-xs font-mono text-rose-400">{fieldErrors.driverPhone}</p>}
+            {fieldErrors.driverPhone && <p className="text-xs font-medium text-rose-300">{fieldErrors.driverPhone}</p>}
           </div>
         </div>
 
         {/* Commercial Equipment Division */}
-        <fieldset className="space-y-2">
-          <legend className="font-mono text-[11px] uppercase text-slate-300">
+        <fieldset className="space-y-2.5">
+          <legend className="text-xs font-medium text-slate-300">
             Commercial Equipment Division *
           </legend>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -725,17 +732,17 @@ export default function CarrierApplyForm() {
                   type="button"
                   aria-pressed={selected}
                   onClick={() => updateField('equipmentType', eq.value)}
-                  className={`p-3.5 rounded-lg border text-left transition-colors cursor-pointer space-y-1 ${
+                  className={`min-h-[44px] p-4 rounded-2xl border text-left transition-colors cursor-pointer space-y-1.5 ${
                     selected
                       ? 'bg-bro-gold/15 border-bro-gold text-white'
-                      : 'bg-bro-obsidian/70 border-white/10 text-slate-300 hover:border-white/25'
+                      : 'bg-[#060912] border-white/10 text-slate-300 hover:border-white/30 hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-mono text-xs font-bold">
-                    <Icon className={`w-4 h-4 ${selected ? 'text-bro-gold' : 'text-slate-400'}`} />
+                  <div className="flex items-center gap-2 font-display text-sm font-semibold">
+                    <Icon className={`w-4 h-4 shrink-0 ${selected ? 'text-bro-gold' : 'text-slate-400'}`} aria-hidden="true" />
                     <span>{eq.label}</span>
                   </div>
-                  <p className="text-[11px] text-slate-400">{eq.detail}</p>
+                  <p className="text-xs text-slate-300 leading-relaxed">{eq.detail}</p>
                 </button>
               );
             })}
@@ -744,7 +751,7 @@ export default function CarrierApplyForm() {
 
         {/* Preferred Lanes */}
         <div className="space-y-1.5">
-          <label htmlFor="apply-lanes" className="block font-mono text-[11px] uppercase text-slate-300">
+          <label htmlFor="apply-lanes" className="block text-xs font-medium text-slate-300">
             Preferred Commercial Lanes *
           </label>
           <input
@@ -754,65 +761,79 @@ export default function CarrierApplyForm() {
             value={form.preferredLanes}
             onChange={(e) => updateField('preferredLanes', e.target.value)}
             placeholder="e.g. PEI -> Boston, Moncton -> Montreal, Halifax -> Toronto"
-            className="w-full bg-bro-obsidian/80 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+            className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-bro-gold"
           />
           {fieldErrors.preferredLanes && (
-            <p className="text-xs font-mono text-rose-400">{fieldErrors.preferredLanes}</p>
+            <p className="text-xs font-medium text-rose-300">{fieldErrors.preferredLanes}</p>
           )}
         </div>
 
         {/* Compliance Declarations */}
-        <div className="space-y-2.5 pt-3 border-t border-white/10">
-          <div className="font-mono text-[11px] uppercase text-slate-400">
-            Mandatory Qualification & Cross-Border Declarations
+        <div className="space-y-3 pt-4 border-t border-white/10">
+          <div className="text-xs font-semibold text-slate-300">
+            Mandatory Qualification &amp; Cross-Border Declarations
           </div>
 
-          <label className="flex items-start gap-3 p-3.5 rounded bg-bro-obsidian/60 border border-white/10 hover:border-bro-gold/40 cursor-pointer">
+          <label
+            htmlFor="apply-class1"
+            className="min-h-[44px] flex items-start gap-3.5 p-4 rounded-2xl bg-[#060912] border border-white/10 hover:border-bro-gold/40 cursor-pointer transition-colors"
+          >
             <input
+              id="apply-class1"
               type="checkbox"
               checked={form.hasClass1OrAz}
               onChange={(e) => updateField('hasClass1OrAz', e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-amber-400 rounded cursor-pointer"
+              className="mt-0.5 h-5 w-5 accent-amber-400 rounded cursor-pointer shrink-0"
             />
-            <div className="text-xs">
-              <span className="text-white font-semibold">Valid Class 1 / AZ Commercial Driver License *</span>
-              <p className="text-slate-400 mt-0.5">
+            <div className="text-xs space-y-1">
+              <span className="text-white font-semibold block">
+                Valid Class 1 / AZ Commercial Driver License *
+              </span>
+              <p className="text-slate-300 leading-relaxed">
                 Active heavy combination tractor-trailer license in good standing across CA/US jurisdictions.
               </p>
               {fieldErrors.hasClass1OrAz && (
-                <p className="text-rose-400 font-mono mt-1">{fieldErrors.hasClass1OrAz}</p>
+                <p className="text-rose-300 font-medium">{fieldErrors.hasClass1OrAz}</p>
               )}
             </div>
           </label>
 
-          <label className="flex items-start gap-3 p-3.5 rounded bg-bro-obsidian/60 border border-white/10 hover:border-bro-gold/40 cursor-pointer">
+          <label
+            htmlFor="apply-abstract"
+            className="min-h-[44px] flex items-start gap-3.5 p-4 rounded-2xl bg-[#060912] border border-white/10 hover:border-bro-gold/40 cursor-pointer transition-colors"
+          >
             <input
+              id="apply-abstract"
               type="checkbox"
               checked={form.hasCleanAbstract}
               onChange={(e) => updateField('hasCleanAbstract', e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-amber-400 rounded cursor-pointer"
+              className="mt-0.5 h-5 w-5 accent-amber-400 rounded cursor-pointer shrink-0"
             />
-            <div className="text-xs">
-              <span className="text-white font-semibold">Clean 3-Year Commercial Driver Abstract *</span>
-              <p className="text-slate-400 mt-0.5">
+            <div className="text-xs space-y-1">
+              <span className="text-white font-semibold block">Clean 3-Year Commercial Driver Abstract *</span>
+              <p className="text-slate-300 leading-relaxed">
                 Zero major preventable accidents, DUI convictions, or unresolved FMCSA/NSC safety orders.
               </p>
               {fieldErrors.hasCleanAbstract && (
-                <p className="text-rose-400 font-mono mt-1">{fieldErrors.hasCleanAbstract}</p>
+                <p className="text-rose-300 font-medium">{fieldErrors.hasCleanAbstract}</p>
               )}
             </div>
           </label>
 
-          <label className="flex items-start gap-3 p-3.5 rounded bg-bro-obsidian/60 border border-white/10 hover:border-bro-cyan/40 cursor-pointer">
+          <label
+            htmlFor="apply-fast"
+            className="min-h-[44px] flex items-start gap-3.5 p-4 rounded-2xl bg-[#060912] border border-white/10 hover:border-bro-cyan/40 cursor-pointer transition-colors"
+          >
             <input
+              id="apply-fast"
               type="checkbox"
               checked={form.hasFastCard}
               onChange={(e) => updateField('hasFastCard', e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-cyan-400 rounded cursor-pointer"
+              className="mt-0.5 h-5 w-5 accent-cyan-400 rounded cursor-pointer shrink-0"
             />
-            <div className="text-xs">
-              <span className="text-white font-semibold">FAST Card Holder (Optional)</span>
-              <p className="text-slate-400 mt-0.5">
+            <div className="text-xs space-y-1">
+              <span className="text-white font-semibold block">FAST Card Holder (Optional)</span>
+              <p className="text-slate-300 leading-relaxed">
                 CBSA / CBP Free and Secure Trade trusted driver credential for expedited border lanes.
               </p>
             </div>
@@ -823,9 +844,9 @@ export default function CarrierApplyForm() {
         {powStatus && (
           <div
             aria-live="polite"
-            className="flex items-center gap-2.5 p-3.5 rounded bg-amber-950/60 border border-bro-gold/50 text-bro-gold font-mono text-xs"
+            className="flex items-center gap-2.5 p-3.5 rounded-xl bg-amber-950/60 border border-bro-gold/50 text-bro-gold text-xs font-medium"
           >
-            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
             <span>{powStatus}</span>
           </div>
         )}
@@ -833,11 +854,11 @@ export default function CarrierApplyForm() {
         {submitError && (
           <div
             role="alert"
-            className="flex items-start gap-2.5 p-4 rounded bg-rose-950/70 border border-bro-crimson text-rose-100 font-mono text-xs"
+            className="flex items-start gap-2.5 p-4 rounded-2xl bg-rose-950/70 border border-rose-500 text-rose-100 text-xs"
           >
-            <ShieldAlert className="w-4 h-4 text-bro-crimson shrink-0 mt-0.5" />
+            <ShieldAlert className="w-4 h-4 text-rose-300 shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <div className="font-bold uppercase text-rose-200 mb-0.5">Submission Rejected</div>
+              <div className="font-semibold text-rose-200 mb-0.5">Submission Rejected</div>
               <p>{submitError}</p>
             </div>
           </div>
@@ -847,26 +868,26 @@ export default function CarrierApplyForm() {
           <div
             role="status"
             aria-live="polite"
-            className="p-4 rounded bg-emerald-950/60 border border-emerald-500/50 text-emerald-100 space-y-2"
+            className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-100 space-y-2.5"
           >
-            <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase text-emerald-300">
-              <FileCheck className="w-4 h-4" />
-              <span>Application Verified & Archived</span>
+            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300">
+              <FileCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Application Verified &amp; Archived</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
-              <div className="p-2 rounded bg-black/30">
-                <span className="text-slate-400 block text-[10px]">INTAKE REFERENCE</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-mono text-xs">
+              <div className="p-3 rounded-xl bg-black/35 border border-white/10">
+                <span className="text-slate-300 block text-xs">Intake Reference</span>
                 <span className="text-white font-bold">{successInfo.intakeId}</span>
               </div>
               {successInfo.driverId && (
-                <div className="p-2 rounded bg-black/30">
-                  <span className="text-slate-400 block text-[10px]">DRIVER RECORD ID</span>
+                <div className="p-3 rounded-xl bg-black/35 border border-white/10">
+                  <span className="text-slate-300 block text-xs">Driver Record ID</span>
                   <span className="text-white font-bold">{successInfo.driverId}</span>
                 </div>
               )}
             </div>
-            <p className="text-xs text-emerald-200/90">
-              Our Safety & Compliance Desk has logged your packet. Once approved, you will receive Driver Portal access.
+            <p className="text-xs text-emerald-100 leading-relaxed">
+              Our Safety &amp; Compliance Desk has logged your packet. Once approved, you will receive Driver Portal access.
             </p>
           </div>
         )}
@@ -875,13 +896,13 @@ export default function CarrierApplyForm() {
           <div
             role="status"
             aria-live="polite"
-            className="p-4 rounded bg-amber-950/60 border border-bro-gold text-amber-100 space-y-1.5"
+            className="p-4 rounded-2xl bg-amber-950/60 border border-bro-gold text-amber-100 space-y-1.5"
           >
-            <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase text-bro-gold">
-              <WifiOff className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-bro-gold">
+              <WifiOff className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>Queued Offline with Cryptographic PoW</span>
             </div>
-            <p className="text-xs text-amber-100/90">
+            <p className="text-xs text-amber-100/90 leading-relaxed">
               Your application was sealed with a SHA-256 Hashcash proof ({offlineQueuedInfo.powPrefix}…) and stored in
               the Offline Sync Vault at {new Date(offlineQueuedInfo.queuedAt).toLocaleTimeString()}. It will sync
               automatically once signal returns.
@@ -892,17 +913,17 @@ export default function CarrierApplyForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded bg-bro-gold hover:bg-amber-400 text-black font-mono text-xs font-bold uppercase tracking-wider disabled:opacity-50 transition-colors cursor-pointer"
+          className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-bro-gold hover:bg-amber-300 text-black text-sm font-semibold disabled:opacity-50 transition-colors cursor-pointer"
         >
           {submitting ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
               <span>{powStatus ? 'Computing Offline PoW...' : 'Submitting Onboarding Packet...'}</span>
             </>
           ) : (
             <>
-              <ShieldCheck className="w-4 h-4" />
-              <span>Submit Carrier & Driver Application</span>
+              <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Submit Carrier &amp; Driver Application</span>
             </>
           )}
         </button>

@@ -93,23 +93,23 @@ function formatTimeAgo(ms: number): string {
 }
 
 function formatSlaRemaining(deadlineMs: number, status: EscalationRecord['status']): { label: string; breached: boolean } {
-  if (status === 'resolved') return { label: 'RESOLVED', breached: false };
+  if (status === 'resolved') return { label: 'Resolved', breached: false };
   const diffMin = Math.round((deadlineMs - Date.now()) / 60_000);
-  if (diffMin <= 0) return { label: `BREACHED (${Math.abs(diffMin)}m)`, breached: true };
+  if (diffMin <= 0) return { label: `Breached (${Math.abs(diffMin)}m)`, breached: true };
   return { label: `${diffMin}m left`, breached: false };
 }
 
 const STATUS_BADGE: Record<LoadStatus, string> = {
-  QUOTED: 'bg-slate-800 text-slate-300 border-slate-700',
-  BOOKED: 'bg-sky-950/70 text-sky-300 border-sky-500/30',
+  QUOTED: 'bg-slate-800 text-slate-200 border-slate-600',
+  BOOKED: 'bg-sky-950/70 text-sky-200 border-sky-400/40',
   DISPATCHED: 'bg-bro-cyan/15 text-bro-cyan border-bro-cyan/40',
-  AT_PICKUP: 'bg-indigo-950/70 text-indigo-300 border-indigo-500/30',
+  AT_PICKUP: 'bg-indigo-950/70 text-indigo-200 border-indigo-400/40',
   IN_TRANSIT: 'bg-bro-cyan/15 text-bro-cyan border-bro-cyan/40',
   AT_BORDER: 'bg-bro-gold/15 text-bro-gold border-bro-gold/40',
-  CLEARED: 'bg-emerald-950/70 text-emerald-300 border-emerald-500/30',
-  AT_DELIVERY: 'bg-teal-950/70 text-teal-300 border-teal-500/30',
-  DELIVERED: 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40',
-  INVOICED: 'bg-violet-950/70 text-violet-300 border-violet-500/30',
+  CLEARED: 'bg-emerald-950/70 text-emerald-200 border-emerald-400/40',
+  AT_DELIVERY: 'bg-teal-950/70 text-teal-200 border-teal-400/40',
+  DELIVERED: 'bg-emerald-950/70 text-emerald-200 border-emerald-400/40',
+  INVOICED: 'bg-violet-950/70 text-violet-200 border-violet-400/40',
   PAID: 'bg-emerald-950/80 text-emerald-200 border-emerald-400/50',
 };
 
@@ -211,6 +211,17 @@ export default function OpsOverviewApp() {
     };
   }, [fetchData]);
 
+  // Automatic 30s polling fallback when WebSocket connection is offline
+  useEffect(() => {
+    if (wsStatus !== 'offline') return;
+    const timer = window.setInterval(() => {
+      void fetchData();
+    }, 30_000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [wsStatus, fetchData]);
+
   const handleEscalationAction = async (id: string, nextStatus: 'acknowledged' | 'resolved') => {
     setBusyEscId(id);
     setBanner(null);
@@ -271,7 +282,8 @@ export default function OpsOverviewApp() {
       label: 'Active Loads',
       value: counts.activeLoads,
       href: '/ops/dispatch',
-      accent: 'text-bro-cyan border-bro-cyan/30',
+      accentText: 'text-bro-cyan',
+      accentBorder: 'border-bro-cyan/30',
       icon: Truck,
       sub: 'Non-settled freight in motion',
     },
@@ -279,7 +291,8 @@ export default function OpsOverviewApp() {
       label: 'At Border',
       value: counts.atBorder,
       href: '/ops/customs',
-      accent: 'text-bro-gold border-bro-gold/35',
+      accentText: 'text-bro-gold',
+      accentBorder: 'border-bro-gold/35',
       icon: Radio,
       sub: 'CBP ACE / CBSA ACI crossings',
     },
@@ -287,7 +300,8 @@ export default function OpsOverviewApp() {
       label: 'Pending AI OCR Docs',
       value: counts.pendingOcrDocs,
       href: '/ops/documents',
-      accent: counts.pendingOcrDocs > 0 ? 'text-bro-gold border-bro-gold/35' : 'text-emerald-400 border-emerald-500/30',
+      accentText: counts.pendingOcrDocs > 0 ? 'text-bro-gold' : 'text-emerald-300',
+      accentBorder: counts.pendingOcrDocs > 0 ? 'border-bro-gold/35' : 'border-emerald-400/30',
       icon: FileSearch,
       sub: 'Awaiting HITL verification',
     },
@@ -295,7 +309,8 @@ export default function OpsOverviewApp() {
       label: 'Pending Billing Approvals',
       value: counts.pendingBillingApprovals,
       href: '/ops/billing',
-      accent: counts.pendingBillingApprovals > 0 ? 'text-bro-gold border-bro-gold/35' : 'text-emerald-400 border-emerald-500/30',
+      accentText: counts.pendingBillingApprovals > 0 ? 'text-bro-gold' : 'text-emerald-300',
+      accentBorder: counts.pendingBillingApprovals > 0 ? 'border-bro-gold/35' : 'border-emerald-400/30',
       icon: Receipt,
       sub: 'Ready for factoring packet',
     },
@@ -303,7 +318,8 @@ export default function OpsOverviewApp() {
       label: 'Open Escalations',
       value: counts.openEscalations,
       href: '#escalations',
-      accent: counts.openEscalations > 0 ? 'text-bro-crimson border-bro-crimson/40' : 'text-emerald-400 border-emerald-500/30',
+      accentText: counts.openEscalations > 0 ? 'text-rose-200' : 'text-emerald-300',
+      accentBorder: counts.openEscalations > 0 ? 'border-rose-400/50' : 'border-emerald-400/30',
       icon: AlertTriangle,
       sub: 'Priority Ally SLA queue',
     },
@@ -311,45 +327,64 @@ export default function OpsOverviewApp() {
       label: 'Expiring Compliance <30d',
       value: counts.expiringCompliance,
       href: '/ops/fleet',
-      accent: counts.expiringCompliance > 0 ? 'text-bro-crimson border-bro-crimson/40' : 'text-emerald-400 border-emerald-500/30',
+      accentText: counts.expiringCompliance > 0 ? 'text-rose-200' : 'text-emerald-300',
+      accentBorder: counts.expiringCompliance > 0 ? 'border-rose-400/50' : 'border-emerald-400/30',
       icon: ShieldAlert,
       sub: 'Medical cards & NSC/DOT',
     },
   ];
 
+  const wsBadgeMeta =
+    wsStatus === 'connected'
+      ? {
+          label: 'OPSHUB LIVE',
+          srDescription: 'Real-time WebSocket stream connected on channel ops:all',
+          classes: 'bg-emerald-950/60 border-emerald-400/40 text-emerald-200',
+          icon: <Wifi className="w-4 h-4 shrink-0 text-emerald-300" aria-hidden="true" />,
+        }
+      : wsStatus === 'connecting'
+        ? {
+            label: 'SYNC CONNECTING',
+            srDescription: 'Connecting to OpsHub WebSocket stream',
+            classes: 'bg-bro-gold/15 border-bro-gold/40 text-bro-gold',
+            icon: <RefreshCw className="w-4 h-4 shrink-0 animate-spin" aria-hidden="true" />,
+          }
+        : {
+            label: 'POLLING SYNC',
+            srDescription: 'WebSocket offline; polling operations API every 30 seconds',
+            classes: 'bg-[#0b1120] border-white/15 text-slate-300',
+            icon: <WifiOff className="w-4 h-4 shrink-0 text-slate-300" aria-hidden="true" />,
+          };
+
   return (
     <div className="space-y-6">
       {/* Command Header Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-widest text-bro-cyan">
-            PORTAL 2 // LIVE TELEMETRY & DISPATCH ORCHESTRATION
+          <p className="text-xs font-medium uppercase tracking-wider text-bro-cyan">
+            Live Telemetry &amp; Dispatch Orchestration
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight mt-1">
             Operations Control Tower
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded border font-mono text-[11px] uppercase ${
-              wsStatus === 'connected'
-                ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300'
-                : wsStatus === 'connecting'
-                  ? 'bg-bro-gold/10 border-bro-gold/35 text-bro-gold'
-                  : 'bg-slate-900 border-slate-700 text-slate-400'
-            }`}
+            role="status"
+            aria-label={wsBadgeMeta.srDescription}
+            className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-full border text-xs font-semibold tracking-wide ${wsBadgeMeta.classes}`}
           >
-            {wsStatus === 'connected' ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-            <span>OpsHub WS: {wsStatus}</span>
+            {wsBadgeMeta.icon}
+            <span>{wsBadgeMeta.label}</span>
           </div>
           <button
             type="button"
             onClick={() => void fetchData(true)}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-bro-steel border border-white/15 hover:border-bro-cyan/50 text-xs font-mono text-bro-ice transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-[#0b1120] border border-white/15 hover:border-bro-cyan/50 text-xs font-semibold text-white transition-colors cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -358,10 +393,10 @@ export default function OpsOverviewApp() {
       {banner && (
         <div
           role={banner.kind === 'error' ? 'alert' : 'status'}
-          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border font-mono text-xs ${
+          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-xs font-medium ${
             banner.kind === 'error'
-              ? 'bg-rose-950/50 border-bro-crimson/40 text-rose-200'
-              : 'bg-emerald-950/50 border-emerald-500/40 text-emerald-200'
+              ? 'bg-rose-950/60 border-rose-400/50 text-rose-200'
+              : 'bg-emerald-950/60 border-emerald-400/40 text-emerald-200'
           }`}
         >
           <span>{banner.text}</span>
@@ -369,7 +404,7 @@ export default function OpsOverviewApp() {
             type="button"
             onClick={() => setBanner(null)}
             aria-label="Dismiss message"
-            className="text-slate-400 hover:text-white cursor-pointer"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -380,11 +415,11 @@ export default function OpsOverviewApp() {
       {activeToast && (
         <div
           role="status"
-          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg bg-bro-cyan/10 border border-bro-cyan/40 text-bro-ice"
+          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-bro-cyan/10 border border-bro-cyan/35 text-bro-ice"
         >
-          <div className="flex items-center gap-2.5 min-w-0 font-mono text-xs">
-            <Activity className="w-4 h-4 text-bro-cyan shrink-0" />
-            <span className="px-1.5 py-0.5 rounded bg-bro-cyan/20 text-bro-cyan text-[10px] font-bold">
+          <div className="flex items-center gap-2.5 min-w-0 text-xs">
+            <Activity className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
+            <span className="px-2.5 py-0.5 rounded-full bg-bro-cyan/20 text-bro-cyan font-mono text-xs font-bold shrink-0">
               {activeToast.type}
             </span>
             <span className="truncate text-slate-200">{activeToast.detail}</span>
@@ -393,7 +428,7 @@ export default function OpsOverviewApp() {
             type="button"
             onClick={() => setActiveToast(null)}
             aria-label="Dismiss live update"
-            className="text-slate-400 hover:text-white cursor-pointer shrink-0"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -408,20 +443,20 @@ export default function OpsOverviewApp() {
             <a
               key={card.label}
               href={card.href}
-              className={`glass-panel rounded-lg p-4 border transition-colors hover:bg-bro-steel/90 flex flex-col justify-between gap-3 ${card.accent}`}
+              className={`surface-ceramic rounded-2xl p-5 border transition-colors hover:bg-[#0f172a] flex flex-col justify-between gap-3 ${card.accentBorder}`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                <span className="text-xs font-medium text-slate-300">
                   {card.label}
                 </span>
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className={`w-4 h-4 shrink-0 ${card.accentText}`} aria-hidden="true" />
               </div>
-              <div className="text-3xl font-bold font-mono tabular-nums text-white">
+              <div className={`text-3xl font-display font-bold tabular-nums ${card.accentText}`}>
                 {loading ? '—' : card.value}
               </div>
-              <div className="flex items-center justify-between font-mono text-[10px] text-slate-400">
+              <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
                 <span className="truncate">{card.sub}</span>
-                <ArrowRight className="w-3 h-3 shrink-0 text-slate-500" />
+                <ArrowRight className="w-3.5 h-3.5 shrink-0 text-slate-300" aria-hidden="true" />
               </div>
             </a>
           );
@@ -429,45 +464,45 @@ export default function OpsOverviewApp() {
       </section>
 
       {/* Quick Dispatch Co-Pilot Command Bar */}
-      <section aria-label="Dispatch Co-Pilot Command" className="glass-panel rounded-lg p-4 sm:p-5 border border-bro-cyan/25">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-3">
+      <section aria-label="Dispatch Co-Pilot Command" className="surface-ceramic rounded-2xl p-5 sm:p-6 border border-bro-cyan/25 space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-bro-gold" />
-            <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+            <Sparkles className="w-4 h-4 text-bro-gold shrink-0" aria-hidden="true" />
+            <h2 className="font-display text-base font-bold text-white">
               Dispatch Co-Pilot Deterministic Router
             </h2>
           </div>
-          <span className="font-mono text-[10px] text-slate-400">
+          <span className="text-xs text-slate-400">
             Zero autonomous financial mutations · Routes intents cleanly to verified workflows
           </span>
         </div>
 
-        <form onSubmit={handleCopilotSubmit} className="flex flex-col sm:flex-row gap-2.5">
+        <form onSubmit={handleCopilotSubmit} className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             value={copilotInput}
             onChange={(e) => setCopilotInput(e.target.value)}
             placeholder='Enter dispatch command (e.g. "quote 38000 reefer PEI to Boston", "border Calais", "dot 3849201")'
             aria-label="Dispatch Co-Pilot command input"
-            className="flex-1 bg-bro-obsidian/90 border border-white/15 focus:border-bro-cyan rounded px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 outline-none"
+            className="flex-1 bg-[#0b1120] border border-white/15 focus:border-bro-cyan rounded-xl px-4 py-2.5 min-h-[44px] text-sm font-mono text-white placeholder:text-slate-400 outline-none"
           />
           <button
             type="submit"
             disabled={copilotBusy || !copilotInput.trim()}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded bg-bro-cyan text-bro-obsidian font-mono text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-bro-cyan text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 transition-colors cursor-pointer disabled:opacity-50"
           >
-            <Send className="w-3.5 h-3.5" />
-            {copilotBusy ? 'Routing...' : 'Execute'}
+            <Send className="w-4 h-4" aria-hidden="true" />
+            <span>{copilotBusy ? 'Routing...' : 'Execute'}</span>
           </button>
         </form>
 
-        <div className="flex flex-wrap gap-1.5 mt-2.5">
+        <div className="flex flex-wrap gap-2">
           {QUICK_COMMANDS.map((sample) => (
             <button
               key={sample}
               type="button"
               onClick={() => setCopilotInput(sample)}
-              className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/10 font-mono text-[10px] text-slate-300 transition-colors cursor-pointer"
+              className="px-3.5 py-2 min-h-[40px] rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-mono text-slate-300 hover:text-white transition-colors cursor-pointer"
             >
               {sample}
             </button>
@@ -475,26 +510,26 @@ export default function OpsOverviewApp() {
         </div>
 
         {copilotResult && (
-          <div className="mt-4 p-3.5 rounded-lg bg-bro-obsidian/80 border border-bro-gold/35 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 font-mono text-[11px]">
-                <span className="px-2 py-0.5 rounded bg-bro-gold/15 text-bro-gold font-bold">
+          <div className="p-4 rounded-xl bg-[#0b1120] border border-bro-gold/35 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="px-2.5 py-0.5 rounded-full bg-bro-gold/15 text-bro-gold font-mono font-bold">
                   {copilotResult.intent}
                 </span>
                 {copilotResult.requiresConfirmation && (
-                  <span className="px-2 py-0.5 rounded bg-amber-950/70 text-amber-300 border border-amber-500/30 text-[10px]">
-                    HITL CONFIRMATION REQUIRED
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-950/70 text-amber-200 border border-amber-400/40 text-xs font-medium">
+                    Human Confirmation Required
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-200">{copilotResult.summary}</p>
+              <p className="text-sm text-slate-200">{copilotResult.summary}</p>
             </div>
             <a
               href={copilotResult.suggestedRoute}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-gold text-bro-obsidian font-mono text-xs font-bold uppercase tracking-wider hover:bg-amber-400 transition-colors shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-bro-gold text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-amber-400 transition-colors shrink-0"
             >
-              Open {copilotResult.suggestedRoute}
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Open {copilotResult.suggestedRoute}</span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </a>
           </div>
         )}
@@ -506,25 +541,30 @@ export default function OpsOverviewApp() {
         <section
           id="escalations"
           aria-label="Live Ally Escalations"
-          className="xl:col-span-2 glass-panel rounded-lg border border-white/10 overflow-hidden"
+          className="xl:col-span-2 surface-ceramic rounded-2xl overflow-hidden"
         >
-          <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-bro-crimson" />
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+          <div className="p-4 sm:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-300 shrink-0" aria-hidden="true" />
+              <h2 className="font-display text-base font-bold text-white">
                 Live Ally Escalations Queue
               </h2>
             </div>
-            <div className="flex items-center gap-1 bg-bro-obsidian/70 p-1 rounded border border-white/10">
+            <div
+              role="group"
+              aria-label="Filter escalations by status"
+              className="flex flex-wrap items-center gap-1 bg-[#060912] p-1 rounded-full border border-white/10"
+            >
               {(['open', 'acknowledged', 'resolved', 'all'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
+                  aria-pressed={escFilter === tab}
                   onClick={() => setEscFilter(tab)}
-                  className={`px-2.5 py-1 rounded font-mono text-[10px] uppercase transition-colors cursor-pointer ${
+                  className={`px-3.5 py-1.5 min-h-[40px] rounded-full text-xs font-medium capitalize transition-colors cursor-pointer ${
                     escFilter === tab
-                      ? 'bg-bro-cyan/20 text-bro-cyan font-bold'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-white text-black font-semibold shadow-sm'
+                      : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   {tab}
@@ -536,19 +576,19 @@ export default function OpsOverviewApp() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                  <th className="px-4 py-2.5">Ref / Severity</th>
-                  <th className="px-4 py-2.5">Issue & Contact</th>
-                  <th className="px-4 py-2.5">SLA</th>
-                  <th className="px-4 py-2.5">Status</th>
-                  <th className="px-4 py-2.5 text-right">Actions</th>
+                <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                  <th className="px-4 py-3">Ref / Severity</th>
+                  <th className="px-4 py-3">Issue &amp; Contact</th>
+                  <th className="px-4 py-3">SLA</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-xs">
+              <tbody className="divide-y divide-white/[0.06] text-xs">
                 {filteredEscalations.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center font-mono text-slate-500">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
+                    <td colSpan={5} className="px-4 py-10 text-center text-slate-300">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-2" aria-hidden="true" />
                       No escalations matching filter &ldquo;{escFilter}&rdquo;.
                     </td>
                   </tr>
@@ -557,62 +597,62 @@ export default function OpsOverviewApp() {
                     const sla = formatSlaRemaining(esc.slaDeadline, esc.status);
                     const isBusy = busyEscId === esc.id;
                     return (
-                      <tr key={esc.id} className="hover:bg-white/5">
-                        <td className="px-4 py-3 align-top whitespace-nowrap">
-                          <div className="font-mono font-bold text-white">{esc.incidentRef}</div>
-                          <div className="mt-1 flex items-center gap-1.5">
+                      <tr key={esc.id} className="hover:bg-white/[0.03]">
+                        <td className="px-4 py-3.5 align-top whitespace-nowrap">
+                          <div className="font-mono font-bold text-white tabular-nums">{esc.incidentRef}</div>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                             <span
-                              className={`px-1.5 py-0.5 rounded font-mono text-[10px] uppercase font-bold ${
+                              className={`px-2.5 py-0.5 rounded-full text-xs uppercase font-semibold border ${
                                 esc.severity === 'critical'
-                                  ? 'bg-bro-crimson/20 text-bro-crimson border border-bro-crimson/40'
-                                  : 'bg-bro-gold/15 text-bro-gold border border-bro-gold/35'
+                                  ? 'bg-rose-950/70 text-rose-200 border-rose-400/50'
+                                  : 'bg-bro-gold/15 text-bro-gold border-bro-gold/35'
                               }`}
                             >
                               {esc.severity}
                             </span>
-                            <span className="font-mono text-[10px] text-slate-400">
+                            <span className="text-xs text-slate-400 capitalize">
                               {esc.category.replace(/_/g, ' ')}
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top max-w-md">
-                          <p className="text-slate-200 leading-snug">{esc.summary}</p>
-                          <div className="mt-1 font-mono text-[10px] text-slate-400">
+                        <td className="px-4 py-3.5 align-top max-w-md">
+                          <p className="text-sm text-slate-100 leading-snug">{esc.summary}</p>
+                          <div className="mt-1.5 text-xs text-slate-400">
                             {esc.contactName} · {esc.contactChannel}
                             {esc.loadReference ? ` · Load ${esc.loadReference}` : ''}
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top whitespace-nowrap">
+                        <td className="px-4 py-3.5 align-top whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center gap-1 font-mono text-[11px] tabular-nums ${
-                              sla.breached ? 'text-bro-crimson font-bold' : 'text-slate-300'
+                            className={`inline-flex items-center gap-1.5 text-xs tabular-nums ${
+                              sla.breached ? 'text-rose-300 font-bold' : 'text-slate-300'
                             }`}
                           >
-                            <Clock className="w-3 h-3" />
+                            <Clock className="w-3.5 h-3.5" aria-hidden="true" />
                             {sla.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3 align-top whitespace-nowrap">
+                        <td className="px-4 py-3.5 align-top whitespace-nowrap">
                           <span
-                            className={`px-2 py-0.5 rounded border font-mono text-[10px] uppercase ${
+                            className={`px-2.5 py-1 rounded-full border text-xs uppercase font-semibold ${
                               esc.status === 'open'
-                                ? 'bg-rose-950/60 border-bro-crimson/40 text-rose-200'
+                                ? 'bg-rose-950/60 border-rose-400/50 text-rose-200'
                                 : esc.status === 'acknowledged'
                                   ? 'bg-bro-gold/15 border-bro-gold/40 text-bro-gold'
-                                  : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                                  : 'bg-emerald-950/60 border-emerald-400/40 text-emerald-200'
                             }`}
                           >
                             {esc.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 align-top whitespace-nowrap text-right">
-                          <div className="inline-flex items-center gap-1.5">
+                        <td className="px-4 py-3.5 align-top whitespace-nowrap text-right">
+                          <div className="inline-flex flex-wrap items-center justify-end gap-2">
                             {esc.status === 'open' && (
                               <button
                                 type="button"
                                 disabled={isBusy}
                                 onClick={() => void handleEscalationAction(esc.id, 'acknowledged')}
-                                className="px-2.5 py-1 rounded bg-bro-gold/15 hover:bg-bro-gold/25 border border-bro-gold/40 font-mono text-[10px] uppercase text-bro-gold font-bold cursor-pointer disabled:opacity-50"
+                                className="px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl bg-bro-gold/15 hover:bg-bro-gold/25 border border-bro-gold/40 text-xs font-semibold text-bro-gold cursor-pointer disabled:opacity-50 transition-colors"
                               >
                                 Acknowledge
                               </button>
@@ -622,7 +662,7 @@ export default function OpsOverviewApp() {
                                 type="button"
                                 disabled={isBusy}
                                 onClick={() => void handleEscalationAction(esc.id, 'resolved')}
-                                className="px-2.5 py-1 rounded bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-500/40 font-mono text-[10px] uppercase text-emerald-300 font-bold cursor-pointer disabled:opacity-50"
+                                className="px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-400/45 text-xs font-semibold text-emerald-200 cursor-pointer disabled:opacity-50 transition-colors"
                               >
                                 Resolve
                               </button>
@@ -639,30 +679,34 @@ export default function OpsOverviewApp() {
         </section>
 
         {/* Real-Time OpsHub Event Feed */}
-        <section aria-label="Live OpsHub Telemetry Stream" className="glass-panel rounded-lg border border-white/10 flex flex-col">
-          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+        <section aria-label="Live OpsHub Telemetry Stream" className="surface-ceramic rounded-2xl flex flex-col overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-bro-cyan" />
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
-                OpsHub Live Feed (ops:all)
+              <Radio className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
+              <h2 className="font-display text-base font-bold text-white">
+                OpsHub Live Feed
               </h2>
             </div>
-            <span className="font-mono text-[10px] text-slate-400 tabular-nums">{liveFeed.length} events</span>
+            <span className="text-xs text-slate-300 tabular-nums">{liveFeed.length} events</span>
           </div>
-          <div className="p-3 space-y-2 max-h-80 overflow-y-auto flex-1">
+          <div className="p-4 space-y-2.5 max-h-96 overflow-y-auto flex-1">
             {liveFeed.length === 0 ? (
-              <div className="py-10 text-center font-mono text-[11px] text-slate-500 space-y-1">
-                <p>Listening on channel <span className="text-bro-cyan">ops:all</span>.</p>
-                <p>Status changes, RNS releases, OCR completions & EDI tenders stream here in real time.</p>
+              <div className="py-10 text-center text-xs text-slate-300 space-y-1.5">
+                <p>
+                  Listening on channel <span className="font-mono text-bro-cyan">ops:all</span>.
+                </p>
+                <p className="text-slate-400">
+                  Status changes, RNS releases, OCR completions &amp; EDI tenders stream here in real time.
+                </p>
               </div>
             ) : (
               liveFeed.map((ev) => (
-                <div key={ev.id} className="p-2.5 rounded bg-bro-obsidian/70 border border-white/10 space-y-1">
-                  <div className="flex items-center justify-between gap-2 font-mono text-[10px]">
-                    <span className="text-bro-cyan font-bold">{ev.type}</span>
-                    <span className="text-slate-500 tabular-nums">{formatTimeAgo(ev.timestamp)}</span>
+                <div key={ev.id} className="p-3 rounded-xl bg-[#0b1120] border border-white/10 space-y-1">
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="font-mono text-bro-cyan font-bold">{ev.type}</span>
+                    <span className="text-slate-400 tabular-nums">{formatTimeAgo(ev.timestamp)}</span>
                   </div>
-                  <p className="font-mono text-[11px] text-slate-300 break-words">{ev.detail}</p>
+                  <p className="text-xs text-slate-300 break-words font-mono">{ev.detail}</p>
                 </div>
               ))
             )}
@@ -671,64 +715,65 @@ export default function OpsOverviewApp() {
       </div>
 
       {/* Recent Loads Table */}
-      <section aria-label="Recent Loads" className="glass-panel rounded-lg border border-white/10 overflow-hidden">
-        <div className="p-4 border-b border-white/10 flex items-center justify-between gap-3">
+      <section aria-label="Recent Loads" className="surface-ceramic rounded-2xl overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-bro-cyan" />
-            <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+            <Truck className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
+            <h2 className="font-display text-base font-bold text-white">
               Recent Active Shipments
             </h2>
           </div>
           <a
             href="/ops/dispatch"
-            className="inline-flex items-center gap-1 font-mono text-[11px] text-bro-cyan hover:text-cyan-300"
+            className="inline-flex items-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl text-xs font-semibold text-bro-cyan hover:text-cyan-200 hover:bg-white/[0.04] transition-colors"
           >
-            Open Full Dispatch Board <ArrowRight className="w-3.5 h-3.5" />
+            <span>Open Full Dispatch Board</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </a>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                <th className="px-4 py-2.5">Load #</th>
-                <th className="px-4 py-2.5">Commodity</th>
-                <th className="px-4 py-2.5">Division</th>
-                <th className="px-4 py-2.5">Corridor</th>
-                <th className="px-4 py-2.5">Status</th>
-                <th className="px-4 py-2.5 text-right">Customer Rate</th>
-                <th className="px-4 py-2.5 text-right">Updated</th>
+              <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                <th className="px-4 py-3">Load #</th>
+                <th className="px-4 py-3">Commodity</th>
+                <th className="px-4 py-3">Division</th>
+                <th className="px-4 py-3">Corridor</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Customer Rate</th>
+                <th className="px-4 py-3 text-right">Updated</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-xs">
+            <tbody className="divide-y divide-white/[0.06] text-xs">
               {recentLoads.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center font-mono text-slate-500">
+                  <td colSpan={7} className="px-4 py-10 text-center text-slate-300">
                     {loading ? 'Loading shipment telemetry...' : 'No loads recorded in D1 yet.'}
                   </td>
                 </tr>
               ) : (
                 recentLoads.map((load) => (
-                  <tr key={load.id} className="hover:bg-white/5">
-                    <td className="px-4 py-3 font-mono font-bold text-white whitespace-nowrap">
+                  <tr key={load.id} className="hover:bg-white/[0.03]">
+                    <td className="px-4 py-3.5 font-mono font-bold text-white whitespace-nowrap tabular-nums">
                       {load.loadNumber}
                     </td>
-                    <td className="px-4 py-3 text-slate-200 max-w-xs truncate">{load.commodity}</td>
-                    <td className="px-4 py-3 font-mono text-[11px] uppercase text-slate-300 whitespace-nowrap">
+                    <td className="px-4 py-3.5 text-sm text-slate-200 max-w-xs truncate">{load.commodity}</td>
+                    <td className="px-4 py-3.5 text-xs uppercase text-slate-300 whitespace-nowrap">
                       {load.equipmentType.replace(/_/g, ' ')}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[11px] uppercase text-slate-400 whitespace-nowrap">
+                    <td className="px-4 py-3.5 text-xs uppercase text-slate-400 whitespace-nowrap">
                       {load.direction.replace(/_/g, ' ')}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded border font-mono text-[10px] font-bold ${STATUS_BADGE[load.status]}`}>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 rounded-full border text-xs font-semibold ${STATUS_BADGE[load.status]}`}>
                         {load.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-right tabular-nums text-white whitespace-nowrap">
+                    <td className="px-4 py-3.5 font-mono text-right tabular-nums font-semibold text-white whitespace-nowrap">
                       {formatCents(load.rateCustomerCents, load.currency)}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[11px] text-right tabular-nums text-slate-400 whitespace-nowrap">
+                    <td className="px-4 py-3.5 text-xs text-right tabular-nums text-slate-400 whitespace-nowrap">
                       {formatTimeAgo(load.updatedAt)}
                     </td>
                   </tr>

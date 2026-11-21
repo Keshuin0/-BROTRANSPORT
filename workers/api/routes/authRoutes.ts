@@ -14,6 +14,7 @@ import {
   revokeSession,
   verifyEmailOtp,
 } from '../auth.js';
+import { sendOtpEmail } from '../../services/email.js';
 
 export type ApiEnv = {
   Bindings: CloudflareEnv;
@@ -91,23 +92,51 @@ authRoutes.post('/otp/request', async (c) => {
   const parsed = OtpRequestSchema.safeParse(await c.req.json().catch(() => ({})));
   if (!parsed.success) return c.json({ error: 'Provide a valid email.' }, 400);
 
+  const isProd = c.env?.ENVIRONMENT === 'production';
+  const hasResendKey = Boolean(c.env?.RESEND_API_KEY?.trim());
+  if (isProd && !hasResendKey) {
+    return c.json({ error: 'Email delivery service is not configured for OTP verification.' }, 503);
+  }
+
+  const emailLower = parsed.data.email.trim().toLowerCase();
   const db = createDb(c.env.DB);
   const found = await db
-    .select({ id: users.id })
+    .select({ id: users.id, name: users.name, email: users.email, active: users.active })
     .from(users)
-    .where(eq(users.email, parsed.data.email.trim().toLowerCase()))
+    .where(eq(users.email, emailLower))
     .limit(1);
 
-  if (found.length === 0) {
+  const targetUser = found[0];
+  if (!targetUser || !targetUser.active) {
     // Do not leak user existence
     return c.json({ success: true, message: 'If an account exists, a 6-digit code was sent.' });
   }
 
-  const { code } = await issueEmailOtp(c.env, parsed.data.email);
-  const isDev = c.env.ENVIRONMENT !== 'production';
+  const { code } = await issueEmailOtp(c.env, targetUser.email);
+  let emailSent = false;
+
+  if (hasResendKey) {
+    const emailRes = await sendOtpEmail(c.env, {
+      to: targetUser.email,
+      recipientName: targetUser.name,
+      otpCode: code,
+      expiresInMinutes: 10,
+      purpose: 'Portal Sign-In Verification',
+    });
+    emailSent = emailRes.sent;
+    if (!emailRes.sent) {
+      console.error('[OTP_EMAIL_ERROR]', emailRes.error);
+      if (isProd) {
+        return c.json({ error: 'Unable to dispatch OTP email right now. Please try again shortly.' }, 502);
+      }
+    }
+  }
+
+  const isDev = !isProd;
   return c.json({
     success: true,
-    message: '6-digit verification code issued.',
+    message: emailSent ? '6-digit verification code sent via email.' : '6-digit verification code issued.',
+    emailSent,
     ...(isDev ? { devCode: code } : {}),
   });
 });
@@ -128,13 +157,26 @@ authRoutes.post('/otp/verify', async (c) => {
   return c.json({ success: true, user, redirectTo: defaultHomeForRole(user.role) });
 });
 
-authRoutes.post('/logout', async (c) => {
+async function clearAuthSession(c: {
+  env: CloudflareEnv;
+  req: { header: (name: string) => string | undefined };
+  header: (name: string, value: string) => void;
+}) {
   const { sessionId } = await resolveSessionFromCookie(c.env, c.req.header('cookie'));
-  if (sessionId && c.env.DB) {
+  if (sessionId && c.env?.DB) {
     await revokeSession(c.env, sessionId);
   }
-  const isProd = c.env.ENVIRONMENT === 'production';
+  const isProd = c.env?.ENVIRONMENT === 'production';
   c.header('Set-Cookie', buildSessionCookie('', isProd, true));
+}
+
+authRoutes.get('/logout', async (c) => {
+  await clearAuthSession(c);
+  return c.redirect('/login', 302);
+});
+
+authRoutes.post('/logout', async (c) => {
+  await clearAuthSession(c);
   const accept = c.req.header('Accept') || '';
   if (accept.includes('text/html')) {
     return c.redirect('/login', 302);

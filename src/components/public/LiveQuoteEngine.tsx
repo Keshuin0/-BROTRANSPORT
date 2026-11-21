@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type SyntheticEvent } from 'react';
 import { Calculator, CheckCircle2, Leaf, MapPin, ShieldCheck, Truck, Snowflake, Layers, ArrowRight } from 'lucide-react';
 import type { EquipmentType, Currency, RateCalculationResult } from '@bro/contracts';
 import { solveOfflinePow } from '../../lib/powWorker';
@@ -30,6 +30,29 @@ const HUB_PRESETS: HubOption[] = [
   { label: 'Los Angeles, CA (West Coast)', city: 'Los Angeles', provState: 'CA', country: 'US', lat: 34.0522, lon: -118.2437 },
   { label: 'Seattle, WA (Pacific NW)', city: 'Seattle', provState: 'WA', country: 'US', lat: 47.6062, lon: -122.3321 },
 ];
+
+function findHubIndex(raw: string | null): number {
+  if (!raw) return -1;
+  const normalized = raw.trim().toLowerCase();
+  if (!normalized) return -1;
+  const cityPart = normalized.split(',')[0].trim();
+
+  const exactIdx = HUB_PRESETS.findIndex(
+    (h) =>
+      h.city.toLowerCase() === normalized ||
+      h.city.toLowerCase() === cityPart ||
+      h.provState.toLowerCase() === normalized ||
+      h.label.toLowerCase() === normalized,
+  );
+  if (exactIdx >= 0) return exactIdx;
+
+  return HUB_PRESETS.findIndex(
+    (h) =>
+      (cityPart.length >= 2 && h.city.toLowerCase().includes(cityPart)) ||
+      h.label.toLowerCase().includes(normalized) ||
+      (cityPart.length >= 2 && h.label.toLowerCase().includes(cityPart)),
+  );
+}
 
 interface EstimateApiResponse {
   estimate: RateCalculationResult;
@@ -64,20 +87,16 @@ export default function LiveQuoteEngine() {
   // Hydrate URL query parameters from Homepage Fast Quote, Fleet Blueprint Deck, 3D Globe, or Cmd+K!
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    const eq = sp.get('equipment');
+    const eq = sp.get('equipment')?.toLowerCase().replace(/[\s-]/g, '_');
     if (eq === 'dry_van' || eq === 'reefer' || eq === 'flatbed') setEquipmentType(eq);
     const wt = Number(sp.get('weight'));
     if (Number.isFinite(wt) && wt >= 100 && wt <= 45000) setWeightLbs(Math.round(wt));
-    const orig = sp.get('origin')?.toLowerCase();
-    if (orig) {
-      const idx = HUB_PRESETS.findIndex((h) => h.city.toLowerCase().includes(orig) || h.provState.toLowerCase() === orig);
-      if (idx >= 0) setOriginIdx(idx);
-    }
-    const dst = sp.get('dest')?.toLowerCase();
-    if (dst) {
-      const idx = HUB_PRESETS.findIndex((h) => h.city.toLowerCase().includes(dst) || h.provState.toLowerCase() === dst);
-      if (idx >= 0) setDestIdx(idx);
-    }
+
+    const origIdx = findHubIndex(sp.get('origin'));
+    if (origIdx >= 0) setOriginIdx(origIdx);
+
+    const dstIdx = findHubIndex(sp.get('dest') ?? sp.get('destination'));
+    if (dstIdx >= 0) setDestIdx(dstIdx);
   }, []);
 
   const origin = HUB_PRESETS[originIdx];
@@ -151,7 +170,7 @@ export default function LiveQuoteEngine() {
   const fmtMoney = (cents: number, cur: string) =>
     `${(cents / 100).toLocaleString('en-CA', { style: 'currency', currency: cur })}`;
 
-  const handleConfirmQuote = async (e: React.FormEvent) => {
+  const handleConfirmQuote = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
@@ -196,21 +215,32 @@ export default function LiveQuoteEngine() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left 7 cols: Configuration & Booking Form */}
-      <form onSubmit={handleConfirmQuote} className="lg:col-span-7 space-y-6 rounded-3xl surface-ceramic p-6 sm:p-8">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-bro-cyan">
-              GEO-ROUTED SPOT & CONTRACT PRICING
+      <form onSubmit={handleConfirmQuote} className="lg:col-span-7 space-y-6 rounded-3xl surface-ceramic p-5 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
+          <div className="min-w-0">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-bro-cyan">
+              Geo-Routed Spot &amp; Contract Pricing
             </span>
-            <h2 className="text-xl font-display font-bold text-white">Configure Commercial Shipment</h2>
+            <h2 className="text-xl font-display font-bold text-white mt-0.5">
+              Configure Commercial Shipment
+            </h2>
           </div>
-          <div className="inline-flex rounded border border-white/10 p-0.5 bg-bro-obsidian font-mono text-xs">
+          <div
+            role="group"
+            aria-label="Billing currency"
+            className="inline-flex rounded-xl border border-white/15 p-1 bg-[#060912] font-mono text-xs shrink-0"
+          >
             {(['CAD', 'USD'] as const).map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setCurrency(c)}
-                className={`px-3 py-1 rounded cursor-pointer ${currency === c ? 'bg-bro-gold text-black font-bold' : 'text-slate-400'}`}
+                aria-pressed={currency === c}
+                className={`min-h-[44px] px-3.5 py-2 rounded-lg cursor-pointer transition-colors ${
+                  currency === c
+                    ? 'bg-bro-gold text-black font-bold'
+                    : 'text-slate-300 hover:text-white'
+                }`}
               >
                 {c}
               </button>
@@ -220,42 +250,48 @@ export default function LiveQuoteEngine() {
 
         {/* Equipment Selector */}
         <div className="space-y-2">
-          <label className="block font-mono text-[11px] uppercase text-slate-400">Equipment Division</label>
-          <div className="grid grid-cols-3 gap-3">
+          <span className="block font-mono text-xs uppercase text-slate-300">Equipment Division</span>
+          <div role="group" aria-label="Equipment division" className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {[
               { id: 'dry_van', label: '53ft Dry Van', sub: 'Enclosed Box', Icon: Truck },
               { id: 'reefer', label: '53ft Reefer', sub: 'Cold-Chain', Icon: Snowflake },
               { id: 'flatbed', label: '53ft Flatbed', sub: 'Open Deck', Icon: Layers },
-            ].map(({ id, label, sub, Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setEquipmentType(id as EquipmentType)}
-                className={`p-3.5 rounded border text-left transition-all cursor-pointer space-y-1 ${
-                  equipmentType === id
-                    ? 'border-bro-cyan bg-bro-cyan/10 text-white'
-                    : 'border-white/10 bg-bro-obsidian/60 text-slate-400 hover:text-white'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${equipmentType === id ? 'text-bro-cyan' : 'text-slate-500'}`} />
-                <div className="font-mono text-xs font-bold">{label}</div>
-                <div className="text-[10px] text-slate-400">{sub}</div>
-              </button>
-            ))}
+            ].map(({ id, label, sub, Icon }) => {
+              const active = equipmentType === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setEquipmentType(id as EquipmentType)}
+                  aria-pressed={active}
+                  className={`min-h-[48px] p-3.5 rounded-2xl border text-left transition-colors cursor-pointer flex sm:block items-center justify-between gap-3 sm:space-y-1 ${
+                    active
+                      ? 'border-bro-cyan bg-bro-cyan/10 text-white'
+                      : 'border-white/10 bg-[#060912] text-slate-300 hover:text-white hover:border-white/25'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 sm:block sm:space-y-1">
+                    <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-bro-cyan' : 'text-slate-300'}`} aria-hidden="true" />
+                    <div className="font-mono text-xs font-bold text-white">{label}</div>
+                  </div>
+                  <div className="text-[11px] text-slate-300">{sub}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Origin & Destination Hubs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label htmlFor="q-origin" className="block font-mono text-[11px] uppercase text-slate-400">
+            <label htmlFor="q-origin" className="block font-mono text-[11px] uppercase text-slate-300">
               Origin Corridor Hub
             </label>
             <select
               id="q-origin"
               value={originIdx}
               onChange={(e) => setOriginIdx(Number(e.target.value))}
-              className="w-full bg-bro-obsidian/80 border border-white/10 rounded px-3 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
             >
               {HUB_PRESETS.map((h, i) => (
                 <option key={h.label} value={i}>{h.label}</option>
@@ -263,14 +299,14 @@ export default function LiveQuoteEngine() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="q-dest" className="block font-mono text-[11px] uppercase text-slate-400">
+            <label htmlFor="q-dest" className="block font-mono text-[11px] uppercase text-slate-300">
               Destination Corridor Hub
             </label>
             <select
               id="q-dest"
               value={destIdx}
               onChange={(e) => setDestIdx(Number(e.target.value))}
-              className="w-full bg-bro-obsidian/80 border border-white/10 rounded px-3 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
             >
               {HUB_PRESETS.map((h, i) => (
                 <option key={h.label} value={i}>{h.label}</option>
@@ -280,74 +316,80 @@ export default function LiveQuoteEngine() {
         </div>
 
         {/* Weight Slider + Conditional Reefer/Flatbed Controls */}
-        <div className="space-y-4 pt-2 border-t border-white/10">
+        <div className="space-y-4 pt-2 border-t border-white/[0.08]">
           <div className="space-y-1.5">
             <div className="flex justify-between font-mono text-xs">
-              <span className="text-slate-400 uppercase">Gross Cargo Weight</span>
+              <label htmlFor="q-weight" className="text-slate-300 uppercase">
+                Gross Cargo Weight
+              </label>
               <span className="text-bro-gold font-bold tabular-nums">{weightLbs.toLocaleString()} LBS</span>
             </div>
             <input
+              id="q-weight"
               type="range"
               min={1000}
               max={45000}
               step={500}
               value={weightLbs}
               onChange={(e) => setWeightLbs(Number(e.target.value))}
-              className="w-full accent-bro-gold cursor-pointer"
+              className="w-full min-h-[44px] accent-bro-gold cursor-pointer"
             />
           </div>
 
           {equipmentType === 'reefer' && (
-            <div className="space-y-1.5 p-3.5 rounded bg-bro-obsidian/70 border border-bro-cyan/20">
+            <div className="space-y-1.5 p-4 rounded-2xl bg-[#060912] border border-bro-cyan/25">
               <div className="flex justify-between font-mono text-xs">
-                <span className="text-bro-cyan uppercase">Thermo King Setpoint</span>
+                <label htmlFor="q-temp" className="text-bro-cyan uppercase">
+                  Thermo King Setpoint
+                </label>
                 <span className="text-white font-bold tabular-nums">{tempSetpointC.toFixed(1)}°C</span>
               </div>
               <input
+                id="q-temp"
                 type="range"
                 min={-28}
                 max={20}
                 step={0.5}
                 value={tempSetpointC}
                 onChange={(e) => setTempSetpointC(Number(e.target.value))}
-                className="w-full accent-bro-cyan cursor-pointer"
+                className="w-full min-h-[44px] accent-bro-cyan cursor-pointer"
               />
             </div>
           )}
 
           {equipmentType === 'flatbed' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
-              <label className="flex items-center gap-2.5 p-3 rounded border border-white/10 bg-bro-obsidian/60 cursor-pointer">
-                <input type="checkbox" checked={requiresTarp} onChange={(e) => setRequiresTarp(e.target.checked)} className="accent-bro-gold" />
+              <label className="min-h-[44px] flex items-center gap-2.5 p-3 rounded-xl border border-white/10 bg-[#060912] text-slate-200 cursor-pointer">
+                <input type="checkbox" checked={requiresTarp} onChange={(e) => setRequiresTarp(e.target.checked)} className="w-4 h-4 accent-bro-gold" />
                 <span>8ft Heavy-Duty Weather Tarping</span>
               </label>
-              <label className="flex items-center gap-2.5 p-3 rounded border border-white/10 bg-bro-obsidian/60 cursor-pointer">
-                <input type="checkbox" checked={requiresStrapping} onChange={(e) => setRequiresStrapping(e.target.checked)} className="accent-bro-gold" />
-                <span>Chains, Binders & Straps</span>
+              <label className="min-h-[44px] flex items-center gap-2.5 p-3 rounded-xl border border-white/10 bg-[#060912] text-slate-200 cursor-pointer">
+                <input type="checkbox" checked={requiresStrapping} onChange={(e) => setRequiresStrapping(e.target.checked)} className="w-4 h-4 accent-bro-gold" />
+                <span>Chains, Binders &amp; Straps</span>
               </label>
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-[11px]">
-            <label className="flex items-center gap-2 p-2.5 rounded border border-white/10 bg-bro-obsidian/60 cursor-pointer">
-              <input type="checkbox" checked={requiresTeamDriver} onChange={(e) => setRequiresTeamDriver(e.target.checked)} className="accent-bro-cyan" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+            <label className="min-h-[44px] flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-white/10 bg-[#060912] text-slate-200 cursor-pointer">
+              <input type="checkbox" checked={requiresTeamDriver} onChange={(e) => setRequiresTeamDriver(e.target.checked)} className="w-4 h-4 accent-bro-cyan" />
               <span>Team Expedite</span>
             </label>
-            <label className="flex items-center gap-2 p-2.5 rounded border border-white/10 bg-bro-obsidian/60 cursor-pointer">
-              <input type="checkbox" checked={isFoodFda} onChange={(e) => setIsFoodFda(e.target.checked)} className="accent-bro-cyan" />
+            <label className="min-h-[44px] flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-white/10 bg-[#060912] text-slate-200 cursor-pointer">
+              <input type="checkbox" checked={isFoodFda} onChange={(e) => setIsFoodFda(e.target.checked)} className="w-4 h-4 accent-bro-cyan" />
               <span>FDA / CFIA Food</span>
             </label>
-            <label className="flex items-center gap-2 p-2.5 rounded border border-white/10 bg-bro-obsidian/60 cursor-pointer">
-              <input type="checkbox" checked={isHazmat} onChange={(e) => setIsHazmat(e.target.checked)} className="accent-bro-gold" />
+            <label className="min-h-[44px] flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-white/10 bg-[#060912] text-slate-200 cursor-pointer">
+              <input type="checkbox" checked={isHazmat} onChange={(e) => setIsHazmat(e.target.checked)} className="w-4 h-4 accent-bro-gold" />
               <span>TDG / DOT Hazmat</span>
             </label>
           </div>
         </div>
 
         {/* Contact & Commodity */}
-        <div className="space-y-3 pt-4 border-t border-white/10">
-          <div className="space-y-1">
-            <label htmlFor="q-commodity" className="block font-mono text-[10px] uppercase text-slate-400">
+        <div className="space-y-3.5 pt-4 border-t border-white/[0.08]">
+          <div className="space-y-1.5">
+            <label htmlFor="q-commodity" className="block font-mono text-[11px] uppercase text-slate-300">
               Commodity Description
             </label>
             <input
@@ -356,69 +398,87 @@ export default function LiveQuoteEngine() {
               required
               value={commodity}
               onChange={(e) => setCommodity(e.target.value)}
-              className="w-full bg-bro-obsidian/80 border border-white/10 rounded px-3 py-2 text-xs text-white outline-none focus:border-bro-cyan"
+              className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input
-              type="text"
-              required
-              placeholder="Contact Name"
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              className="bg-bro-obsidian/80 border border-white/10 rounded px-3 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
-            />
-            <input
-              type="email"
-              required
-              placeholder="Corporate Email"
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-              className="bg-bro-obsidian/80 border border-white/10 rounded px-3 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
-            />
-            <input
-              type="tel"
-              required
-              minLength={10}
-              placeholder="Phone (10-digit)"
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              className="bg-bro-obsidian/80 border border-white/10 rounded px-3 py-2.5 text-xs text-white outline-none focus:border-bro-cyan"
-            />
+            <div className="space-y-1.5">
+              <label htmlFor="q-contact-name" className="block font-mono text-[11px] uppercase text-slate-300">
+                Contact Name
+              </label>
+              <input
+                id="q-contact-name"
+                type="text"
+                required
+                placeholder="Owen MacLeod"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 outline-none focus:border-bro-cyan"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="q-contact-email" className="block font-mono text-[11px] uppercase text-slate-300">
+                Corporate Email
+              </label>
+              <input
+                id="q-contact-email"
+                type="email"
+                required
+                placeholder="dispatch@company.com"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 outline-none focus:border-bro-cyan"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="q-contact-phone" className="block font-mono text-[11px] uppercase text-slate-300">
+                Phone (10-digit)
+              </label>
+              <input
+                id="q-contact-phone"
+                type="tel"
+                required
+                minLength={10}
+                placeholder="902-555-0192"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 outline-none focus:border-bro-cyan"
+              />
+            </div>
           </div>
         </div>
 
         {error && (
-          <div role="alert" className="p-3 rounded bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-mono">
+          <div role="alert" className="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-mono">
             {error}
           </div>
         )}
 
         {confirmed ? (
-          <div className="p-5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 space-y-3">
-            <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-bold uppercase">
-              <CheckCircle2 className="w-5 h-5" />
-              <span>Rate Quote Locked & Persisted — Ref: {confirmed.quoteRef}</span>
+          <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-300 font-mono text-xs font-bold uppercase">
+              <CheckCircle2 className="w-5 h-5 shrink-0" aria-hidden="true" />
+              <span>Rate Quote Locked &amp; Persisted — Ref: {confirmed.quoteRef}</span>
             </div>
             <div className="text-sm text-white">
               Guaranteed Spot Estimate:{' '}
               <strong className="font-mono text-bro-gold tabular-nums">
                 {fmtMoney(confirmed.totalCents, confirmed.currency)} {confirmed.currency}
               </strong>{' '}
-              · SmartWay Footprint: <span className="font-mono text-emerald-300">{confirmed.co2Kg} kg CO₂e</span>
+              · SmartWay Footprint: <span className="font-mono text-emerald-300 tabular-nums">{confirmed.co2Kg} kg CO₂e</span>
             </div>
             <div className="flex flex-wrap gap-3 pt-1">
               <a
                 href="/portal/shipper"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-bro-cyan text-black font-mono text-xs font-bold uppercase"
+                className="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white hover:bg-bro-cyan text-black text-xs font-semibold transition-colors"
               >
                 <span>Book in Shipper Portal</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
               </a>
               <button
                 type="button"
                 onClick={() => setConfirmed(null)}
-                className="px-4 py-2 rounded border border-white/15 font-mono text-xs text-slate-300 cursor-pointer"
+                className="min-h-[44px] px-4 py-2.5 rounded-full border border-white/15 hover:border-white/30 text-xs font-medium text-slate-200 cursor-pointer transition-colors"
               >
                 New Calculation
               </button>
@@ -428,44 +488,46 @@ export default function LiveQuoteEngine() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded bg-bro-gold hover:bg-bro-gold/90 text-black font-mono text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3.5 rounded-full bg-bro-gold hover:bg-amber-400 text-black text-sm font-semibold tracking-tight transition-colors disabled:opacity-50 cursor-pointer"
           >
-            <Calculator className="w-4 h-4" />
+            <Calculator className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>{submitting ? 'Locking Guaranteed Spot Rate...' : 'Lock Rate & Dispatch Confirmation'}</span>
           </button>
         )}
       </form>
 
       {/* Right 5 cols: Real-Time Itemized Rate Breakdown */}
-      <aside className="lg:col-span-5 rounded-lg border border-bro-gold/30 bg-bro-obsidian/90 p-6 space-y-5 sticky top-20">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <span className="font-mono text-xs font-bold uppercase text-bro-gold">LIVE RATE BREAKDOWN</span>
-          <span className="font-mono text-[10px] text-slate-400">
-            {estimating ? 'RECALCULATING...' : estimateResp?.routingSource || 'OSRM / GEO'}
+      <aside className="lg:col-span-5 rounded-3xl surface-ceramic border-bro-gold/30 p-6 space-y-5 lg:sticky lg:top-24">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-3.5">
+          <span className="font-mono text-xs font-bold uppercase text-bro-gold">Live Rate Breakdown</span>
+          <span className="font-mono text-[11px] text-slate-300">
+            {estimating ? 'Recalculating…' : estimateResp?.routingSource || 'OSRM / GEO'}
           </span>
         </div>
 
         {estimateResp ? (
-          <div className="space-y-4">
-            <div className="p-4 rounded bg-bro-steel/60 border border-white/10">
-              <div className="font-mono text-[10px] uppercase text-slate-400">All-In Estimated Total</div>
-              <div className="text-3xl font-display font-black text-white tabular-nums mt-1">
+          <div className={`space-y-4 transition-opacity duration-200 ${estimating ? 'opacity-60' : 'opacity-100'}`}>
+            <div className="p-4 rounded-2xl bg-[#060912] border border-white/[0.08]">
+              <div className="font-mono text-[11px] uppercase text-slate-300">All-In Estimated Total</div>
+              <div className="text-3xl font-display font-bold text-white tabular-nums mt-1">
                 {fmtMoney(estimateResp.estimate.totalCents, estimateResp.estimate.currency)}
                 <span className="text-xs font-mono text-bro-gold ml-2">{estimateResp.estimate.currency}</span>
               </div>
-              <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-slate-300">
-                <span>{estimateResp.estimate.distanceKm.toLocaleString()} km ({estimateResp.estimate.distanceMiles.toLocaleString()} mi)</span>
-                <span className="text-bro-cyan">ETA ~{estimateResp.estimate.estimatedTransitHours} hrs</span>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-slate-300 tabular-nums">
+                <span>
+                  {estimateResp.estimate.distanceKm.toLocaleString()} km ({estimateResp.estimate.distanceMiles.toLocaleString()} mi)
+                </span>
+                <span className="text-bro-cyan tabular-nums">ETA ~{estimateResp.estimate.estimatedTransitHours} hrs</span>
               </div>
             </div>
 
-            <div className="space-y-2 font-mono text-xs text-slate-300">
+            <div className="space-y-2.5 font-mono text-xs text-slate-200">
               <div className="flex justify-between">
-                <span className="text-slate-400">Base Linehaul</span>
+                <span className="text-slate-300">Base Linehaul</span>
                 <span className="tabular-nums">{fmtMoney(estimateResp.estimate.linehaulCents, estimateResp.estimate.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Diesel Fuel Surcharge (FSC)</span>
+                <span className="text-slate-300">Diesel Fuel Surcharge (FSC)</span>
                 <span className="tabular-nums">{fmtMoney(estimateResp.estimate.fuelSurchargeCents, estimateResp.estimate.currency)}</span>
               </div>
               {estimateResp.estimate.customsBrokerageCents > 0 && (
@@ -476,21 +538,21 @@ export default function LiveQuoteEngine() {
               )}
               {estimateResp.estimate.accessorialBreakdown.map((acc) => (
                 <div key={acc.code} className="flex justify-between text-[11px]">
-                  <span className="text-slate-400 truncate pr-2">{acc.label}</span>
+                  <span className="text-slate-300 truncate pr-2">{acc.label}</span>
                   <span className="tabular-nums shrink-0">{fmtMoney(acc.amountCents, estimateResp.estimate.currency)}</span>
                 </div>
               ))}
             </div>
 
             {estimateResp.recommendedPort && (
-              <div className="p-3 rounded bg-bro-cyan/5 border border-bro-cyan/25 font-mono text-[11px] space-y-1">
+              <div className="p-3.5 rounded-2xl bg-bro-cyan/[0.06] border border-bro-cyan/25 font-mono text-xs space-y-1">
                 <div className="flex items-center gap-1.5 text-bro-cyan font-bold">
-                  <MapPin className="w-3.5 h-3.5" />
+                  <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   <span>Primary Border Port: {estimateResp.recommendedPort.crossingName}</span>
                 </div>
-                <div className="text-slate-400">
+                <div className="text-slate-300 text-[11px]">
                   CBP Port #{estimateResp.recommendedPort.cbpCode} · Live Wait:{' '}
-                  <strong className="text-white">
+                  <strong className="text-white tabular-nums">
                     {estimateResp.recommendedPort.waitMinutes !== null
                       ? `${estimateResp.recommendedPort.waitMinutes} min`
                       : 'Nominal'}
@@ -499,18 +561,18 @@ export default function LiveQuoteEngine() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/10 font-mono text-[11px]">
-              <div className="p-2.5 rounded bg-bro-steel/40 border border-white/10 flex items-center gap-2">
-                <Leaf className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/[0.08] font-mono text-xs">
+              <div className="p-3 rounded-2xl bg-[#060912] border border-white/[0.08] flex items-center gap-2.5">
+                <Leaf className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
                 <div>
-                  <div className="text-slate-500 text-[9px]">SMARTWAY CO₂e</div>
+                  <div className="text-slate-300 text-[11px]">SmartWay CO₂e</div>
                   <div className="text-emerald-300 font-bold tabular-nums">{estimateResp.estimate.co2Kg} kg</div>
                 </div>
               </div>
-              <div className="p-2.5 rounded bg-bro-steel/40 border border-white/10 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-bro-gold shrink-0" />
+              <div className="p-3 rounded-2xl bg-[#060912] border border-white/[0.08] flex items-center gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-bro-gold shrink-0" aria-hidden="true" />
                 <div>
-                  <div className="text-slate-500 text-[9px]">TAX STATUS</div>
+                  <div className="text-slate-300 text-[11px]">Tax Status</div>
                   <div className="text-white font-bold">
                     {estimateResp.estimate.isCrossBorder ? '0% Zero-Rated' : 'Domestic'}
                   </div>
@@ -519,8 +581,8 @@ export default function LiveQuoteEngine() {
             </div>
           </div>
         ) : (
-          <div className="py-12 text-center font-mono text-xs text-slate-500">
-            Computing highway distance & live lane tariff...
+          <div className="py-12 text-center font-mono text-xs text-slate-300">
+            Computing highway distance &amp; live lane tariff…
           </div>
         )}
       </aside>

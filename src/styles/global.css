@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./motion.css";
 
 @theme {
   --color-bro-obsidian: #020308;
@@ -8,8 +9,8 @@
   --color-bro-crimson: #ff0055;
   --color-bro-ice: #eef4fb;
 
-  --font-display: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   --shadow-neon-glow: 0 0 24px rgba(0, 240, 255, 0.22);
@@ -18,25 +19,25 @@
 }
 
 @font-face {
-  font-family: 'Space Grotesk';
+  font-family: 'Sora';
   font-style: normal;
-  font-weight: 300 700;
+  font-weight: 100 800;
   font-display: swap;
-  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+  src: url('/fonts/sora-latin.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Plus Jakarta Sans';
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 200 800;
   font-display: swap;
-  src: url('/fonts/inter-latin.woff2') format('woff2');
+  src: url('/fonts/plus-jakarta-sans-latin.woff2') format('woff2');
 }
 
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
-  font-weight: 400 800;
+  font-weight: 100 800;
   font-display: swap;
   src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
 }
@@ -44,13 +45,16 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --bro-text-primary: #f8fafc;
+    --bro-text-secondary: #cbd5e1;
+    --bro-text-muted: #94a3b8;
   }
 
   body {
     font-family: var(--font-sans);
     background-color: var(--color-bro-obsidian);
     color: var(--color-bro-ice);
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -61,9 +65,41 @@
     letter-spacing: -0.025em;
   }
 
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible,
+  [role="button"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="menuitem"]:focus-visible {
+    outline: 2px solid #00f0ff;
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+}
+
+/* Fluid editorial display & section title scales */
+@utility text-hero-fluid {
+  font-size: clamp(2.15rem, 4.4vw + 0.75rem, 4.25rem);
+  line-height: 1.03;
+  letter-spacing: -0.032em;
+}
+
+@utility text-title-fluid {
+  font-size: clamp(1.65rem, 2.5vw + 0.65rem, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
 }
 
 /* Deep spatial atmospheric illumination (zero wireframe grid noise) */
@@ -76,18 +112,18 @@
 }
 
 /*
- * Apple HIG / Liquid Glass Floating Chrome Layer
- * Reserve STRICTLY for floating navigation bars, pills, controls & HUD overlays above content.
- * Features directional top-edge specular refraction highlight & deep saturation blur.
+ * Apple Two-Layer Material Hierarchy — Functional Layer ONLY
+ * Reserve optical blur STRICTLY for floating navigation bars, mobile dock,
+ * command palette, slide-over drawers, and globe HUD overlays above content.
  */
 @utility liquid-glass {
   background: linear-gradient(
     180deg,
-    rgba(22, 28, 48, 0.68) 0%,
-    rgba(10, 14, 26, 0.78) 100%
+    rgba(22, 28, 48, 0.72) 0%,
+    rgba(10, 14, 26, 0.82) 100%
   );
-  backdrop-filter: blur(26px) saturate(190%);
-  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  backdrop-filter: blur(24px) saturate(185%);
+  -webkit-backdrop-filter: blur(24px) saturate(185%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
@@ -98,38 +134,47 @@
 @utility liquid-glass-pill {
   background: linear-gradient(
     180deg,
-    rgba(28, 36, 62, 0.62) 0%,
-    rgba(14, 19, 34, 0.74) 100%
+    rgba(28, 36, 62, 0.66) 0%,
+    rgba(13, 18, 33, 0.78) 100%
   );
-  backdrop-filter: blur(20px) saturate(175%);
-  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  backdrop-filter: blur(18px) saturate(175%);
+  -webkit-backdrop-filter: blur(18px) saturate(175%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.24),
     0 10px 24px -8px rgba(0, 0, 0, 0.65);
 }
 
-/* Machined Ceramic Content Surfaces (high legibility contrast per Apple Materials HIG) */
+@utility dock-edge-fade {
+  background: linear-gradient(to top, rgba(5, 8, 17, 0.94) 35%, transparent);
+}
+
+/*
+ * Apple Two-Layer Material Hierarchy — Content Layer
+ * Architectural ceramic/graphite surfaces with ZERO nested backdrop-filter blur.
+ */
 @utility surface-ceramic {
   background: linear-gradient(
     180deg,
-    rgba(16, 22, 38, 0.86) 0%,
-    rgba(9, 13, 24, 0.94) 100%
+    #0b1120 0%,
+    #070b16 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.085);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
     0 18px 40px -16px rgba(0, 0, 0, 0.72);
 }
 
 @utility glass-panel {
-  background: rgba(11, 15, 28, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: rgba(11, 17, 32, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 14px 32px -16px rgba(0, 0, 0, 0.68);
 }
 
 @utility glass-gold {
-  background: linear-gradient(180deg, rgba(24, 20, 16, 0.84), rgba(12, 14, 24, 0.92));
+  background: linear-gradient(180deg, rgba(24, 20, 16, 0.92), rgba(12, 14, 24, 0.96));
   border: 1px solid rgba(255, 170, 0, 0.26);
   box-shadow: inset 0 1px 0 rgba(255, 210, 120, 0.14);
 }
@@ -162,10 +207,13 @@
 @media (prefers-reduced-transparency: reduce) {
   .liquid-glass,
   .liquid-glass-pill,
-  .surface-ceramic {
+  .surface-ceramic,
+  .glass-panel,
+  .glass-gold,
+  [class*="backdrop-blur"] {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: #0c101d !important;
+    background: #0a0f1d !important;
     border-color: rgba(255, 255, 255, 0.22) !important;
   }
 }
@@ -179,5 +227,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  [data-loading-spinner] {
+    animation-duration: 1.5s !important;
+    animation-iteration-count: infinite !important;
   }
 }

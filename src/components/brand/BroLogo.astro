@@ -2,10 +2,22 @@
 interface Props {
   compact?: boolean;
   showSlogan?: boolean;
+  uid?: string;
   class?: string;
 }
 
-const { compact = false, showSlogan = false, class: className = '' } = Astro.props;
+const {
+  compact = false,
+  showSlogan = false,
+  uid = crypto.randomUUID().slice(0, 6),
+  class: className = '',
+} = Astro.props;
+
+const safeUid = uid.replace(/[^a-zA-Z0-9_-]/g, '') || 'bro';
+const squircleBgId = `bro-squircle-bg-${safeUid}`;
+const bezelSpecularId = `bro-bezel-specular-${safeUid}`;
+const markGoldId = `bro-mark-gold-${safeUid}`;
+const markCyanId = `bro-mark-cyan-${safeUid}`;
 ---
 
 <div class={`inline-flex flex-col select-none ${className}`}>
@@ -17,32 +29,32 @@ const { compact = false, showSlogan = false, class: className = '' } = Astro.pro
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="bro-squircle-bg" x1="16" y1="4" x2="112" y2="124" gradientUnits="userSpaceOnUse">
+        <linearGradient id={squircleBgId} x1="16" y1="4" x2="112" y2="124" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stop-color="#19223B" />
           <stop offset="55%" stop-color="#0B1020" />
           <stop offset="100%" stop-color="#04060E" />
         </linearGradient>
-        <linearGradient id="bro-bezel-specular" x1="64" y1="2" x2="64" y2="126" gradientUnits="userSpaceOnUse">
+        <linearGradient id={bezelSpecularId} x1="64" y1="2" x2="64" y2="126" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45" />
           <stop offset="28%" stop-color="#FFAA00" stop-opacity="0.55" />
           <stop offset="100%" stop-color="#00F0FF" stop-opacity="0.32" />
         </linearGradient>
-        <linearGradient id="bro-mark-gold" x1="20" y1="30" x2="72" y2="96" gradientUnits="userSpaceOnUse">
+        <linearGradient id={markGoldId} x1="20" y1="30" x2="72" y2="96" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stop-color="#FFF0B8" />
           <stop offset="45%" stop-color="#FFAA00" />
           <stop offset="100%" stop-color="#D97706" />
         </linearGradient>
-        <linearGradient id="bro-mark-cyan" x1="78" y1="36" x2="114" y2="92" gradientUnits="userSpaceOnUse">
+        <linearGradient id={markCyanId} x1="78" y1="36" x2="114" y2="92" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stop-color="#A5F3FC" />
           <stop offset="50%" stop-color="#00F0FF" />
           <stop offset="100%" stop-color="#0284C7" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="124" height="124" rx="28" fill="url(#bro-squircle-bg)" />
-      <rect x="3" y="3" width="122" height="122" rx="27" stroke="url(#bro-bezel-specular)" stroke-width="2.5" />
-      <path d="M40 34L32 94M64 34L56 94M24 52H72M20 76H68" stroke="url(#bro-mark-gold)" stroke-width="8" stroke-linecap="round" />
-      <path d="M80 38H96C104.5 38 110 43.2 110 51C110 56.5 106.5 60.8 101.2 62.5C107.6 64.2 111.5 69.2 111.5 76C111.5 85 105 90 95.5 90H80V38Z" stroke="url(#bro-mark-cyan)" stroke-width="6.5" stroke-linejoin="round" />
-      <line x1="80" y1="63" x2="100" y2="63" stroke="url(#bro-mark-cyan)" stroke-width="5.5" stroke-linecap="round" />
+      <rect x="2" y="2" width="124" height="124" rx="28" fill={`url(#${squircleBgId})`} />
+      <rect x="3" y="3" width="122" height="122" rx="27" stroke={`url(#${bezelSpecularId})`} stroke-width="2.5" />
+      <path d="M40 34L32 94M64 34L56 94M24 52H72M20 76H68" stroke={`url(#${markGoldId})`} stroke-width="8" stroke-linecap="round" />
+      <path d="M80 38H96C104.5 38 110 43.2 110 51C110 56.5 106.5 60.8 101.2 62.5C107.6 64.2 111.5 69.2 111.5 76C111.5 85 105 90 95.5 90H80V38Z" stroke={`url(#${markCyanId})`} stroke-width="6.5" stroke-linejoin="round" />
+      <line x1="80" y1="63" x2="100" y2="63" stroke={`url(#${markCyanId})`} stroke-width="5.5" stroke-linecap="round" />
     </svg>
 
     <div class="flex flex-col leading-none">

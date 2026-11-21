@@ -248,32 +248,32 @@ export default function AgentControlCenter() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-widest text-bro-gold">
-            MODULE 06 // SUPER ADMIN GOVERNANCE · RBAC · AUTONOMOUS AGENTS
+          <p className="text-xs font-medium uppercase tracking-wider text-bro-gold">
+            Super Admin Governance · RBAC · Autonomous Agents
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight mt-1">
             Autonomous Agent &amp; Security Control Center
           </h1>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             disabled={busyAgent === '__seed__'}
             onClick={() => void handleBootstrapSeed()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-gold/15 border border-bro-gold/40 hover:bg-bro-gold/25 font-mono text-xs font-bold text-bro-gold cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-bro-gold/15 border border-bro-gold/40 hover:bg-bro-gold/25 text-xs font-semibold text-bro-gold cursor-pointer disabled:opacity-50 transition-colors"
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            {busyAgent === '__seed__' ? 'Seeding Fleet...' : 'Initialize Fleet Seed'}
+            <ShieldCheck className="w-4 h-4" aria-hidden="true" />
+            <span>{busyAgent === '__seed__' ? 'Seeding Fleet...' : 'Initialize Fleet Seed'}</span>
           </button>
           <button
             type="button"
             onClick={() => void fetchAdminData()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-steel border border-white/15 hover:border-bro-cyan/50 font-mono text-xs text-white cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-[#0b1120] border border-white/15 hover:border-bro-cyan/50 text-xs font-semibold text-white cursor-pointer transition-colors"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Sync Governance State
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
+            <span>Sync Governance State</span>
           </button>
         </div>
       </div>
@@ -282,14 +282,19 @@ export default function AgentControlCenter() {
       {banner && (
         <div
           role={banner.kind === 'error' ? 'alert' : 'status'}
-          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border font-mono text-xs ${
+          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-xs font-medium ${
             banner.kind === 'error'
-              ? 'bg-rose-950/50 border-bro-crimson/40 text-rose-200'
-              : 'bg-emerald-950/50 border-emerald-500/40 text-emerald-200'
+              ? 'bg-rose-950/60 border-rose-400/50 text-rose-200'
+              : 'bg-emerald-950/60 border-emerald-400/40 text-emerald-200'
           }`}
         >
           <span>{banner.text}</span>
-          <button type="button" onClick={() => setBanner(null)} aria-label="Dismiss" className="cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setBanner(null)}
+            aria-label="Dismiss message"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -297,21 +302,21 @@ export default function AgentControlCenter() {
 
       {/* Autonomous Agent Governance Grid (All 5 Agents / Workflows) */}
       <section aria-label="Autonomous Agent Governance Grid" className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Bot className="w-4 h-4 text-bro-cyan" />
-            <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+            <Bot className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
+            <h2 className="font-display text-base font-bold text-white">
               Autonomous Agents &amp; Cloudflare HITL Workflows ({agents.length})
             </h2>
           </div>
-          <span className="font-mono text-[10px] text-slate-400">
-            All control actions recorded in immutable D1 audit_logs
+          <span className="text-xs text-slate-400">
+            All control actions recorded in immutable D1 audit logs
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {loading && agents.length === 0 ? (
-            <div className="col-span-full glass-panel rounded-lg p-8 text-center font-mono text-xs text-slate-500">
+            <div className="col-span-full surface-ceramic rounded-2xl p-8 text-center text-xs text-slate-300">
               Querying Durable Object agents and Cloudflare Workflows...
             </div>
           ) : (
@@ -324,32 +329,32 @@ export default function AgentControlCenter() {
               return (
                 <div
                   key={ag.agent}
-                  className={`glass-panel rounded-lg p-4 border flex flex-col justify-between gap-4 ${
+                  className={`surface-ceramic rounded-2xl p-5 border flex flex-col justify-between gap-4 ${
                     ag.error
-                      ? 'border-bro-crimson/45'
+                      ? 'border-rose-400/50'
                       : isEnabled
                         ? 'border-bro-cyan/30'
                         : 'border-bro-gold/40'
                   }`}
                 >
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="font-mono text-xs font-bold text-white">{ag.agent}</h3>
-                        <span className="font-mono text-[10px] text-slate-400">
+                        <h3 className="font-display text-sm font-bold text-white">{ag.agent}</h3>
+                        <span className="text-xs text-slate-400">
                           {ag.type || (isControllable ? 'Durable Object Alarm' : 'Durable Object Router')}
                         </span>
                       </div>
                       <span
-                        className={`px-2 py-0.5 rounded border font-mono text-[10px] font-bold uppercase shrink-0 ${
+                        className={`px-2.5 py-1 rounded-full border text-xs font-semibold uppercase shrink-0 ${
                           ag.error
-                            ? 'bg-rose-950/70 border-bro-crimson/50 text-rose-200'
+                            ? 'bg-rose-950/70 border-rose-400/50 text-rose-200'
                             : isEnabled
-                              ? 'bg-emerald-950/70 border-emerald-500/45 text-emerald-300'
+                              ? 'bg-emerald-950/70 border-emerald-400/45 text-emerald-200'
                               : 'bg-bro-gold/15 border-bro-gold/45 text-bro-gold'
                         }`}
                       >
-                        {ag.error ? 'UNREACHABLE' : isEnabled ? 'ACTIVE' : 'PAUSED'}
+                        {ag.error ? 'Unreachable' : isEnabled ? 'Active' : 'Paused'}
                       </span>
                     </div>
 
@@ -357,19 +362,21 @@ export default function AgentControlCenter() {
                       {AGENT_DESCRIPTIONS[ag.agent] || 'Autonomous logistics orchestration service.'}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2 font-mono text-[10px] pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs pt-1">
                       {ag.lastRunAt !== undefined && (
-                        <div className="p-2 rounded bg-bro-obsidian/70 border border-white/10">
-                          <div className="text-slate-500 uppercase">Last Audit</div>
-                          <div className="text-slate-200 tabular-nums mt-0.5 truncate">{formatUtc(ag.lastRunAt)}</div>
+                        <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10">
+                          <div className="text-xs text-slate-400">Last Audit</div>
+                          <div className="font-mono text-slate-200 tabular-nums mt-1 truncate">
+                            {formatUtc(ag.lastRunAt)}
+                          </div>
                         </div>
                       )}
                       {ag.findingsCount !== undefined && (
-                        <div className="p-2 rounded bg-bro-obsidian/70 border border-white/10">
-                          <div className="text-slate-500 uppercase">Findings</div>
+                        <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10">
+                          <div className="text-xs text-slate-400">Findings</div>
                           <div
-                            className={`font-bold tabular-nums mt-0.5 ${
-                              ag.findingsCount > 0 ? 'text-bro-crimson' : 'text-emerald-300'
+                            className={`font-semibold tabular-nums mt-1 ${
+                              ag.findingsCount > 0 ? 'text-rose-200' : 'text-emerald-200'
                             }`}
                           >
                             {ag.findingsCount} alert(s)
@@ -377,25 +384,25 @@ export default function AgentControlCenter() {
                         </div>
                       )}
                       {ag.commandsProcessed !== undefined && (
-                        <div className="p-2 rounded bg-bro-obsidian/70 border border-white/10 col-span-2">
-                          <div className="text-slate-500 uppercase">Commands Routed</div>
-                          <div className="text-bro-cyan font-bold tabular-nums mt-0.5">
+                        <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10 sm:col-span-2">
+                          <div className="text-xs text-slate-400">Commands Routed</div>
+                          <div className="text-bro-cyan font-semibold tabular-nums mt-1">
                             {ag.commandsProcessed.toLocaleString()} deterministic intents
                           </div>
                         </div>
                       )}
                       {ag.hitlThreshold !== undefined && (
-                        <div className="p-2 rounded bg-bro-obsidian/70 border border-white/10 col-span-2">
-                          <div className="text-slate-500 uppercase">HITL Confidence Lock</div>
-                          <div className="text-bro-cyan font-bold tabular-nums mt-0.5">
+                        <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10 sm:col-span-2">
+                          <div className="text-xs text-slate-400">HITL Confidence Lock</div>
+                          <div className="text-bro-cyan font-semibold tabular-nums mt-1">
                             &gt;= {Math.round(ag.hitlThreshold * 100)}% Auto / &lt;{Math.round(ag.hitlThreshold * 100)}% Human Gate
                           </div>
                         </div>
                       )}
                       {ag.hitlVarianceGate && (
-                        <div className="p-2 rounded bg-bro-obsidian/70 border border-white/10 col-span-2">
-                          <div className="text-slate-500 uppercase">Rate-Con Variance Lock</div>
-                          <div className="text-bro-gold font-bold tabular-nums mt-0.5">
+                        <div className="p-3 rounded-xl bg-[#0b1120] border border-white/10 sm:col-span-2">
+                          <div className="text-xs text-slate-400">Rate-Con Variance Lock</div>
+                          <div className="text-bro-gold font-semibold tabular-nums mt-1">
                             Exact Match ({ag.hitlVarianceGate} tolerance)
                           </div>
                         </div>
@@ -403,12 +410,12 @@ export default function AgentControlCenter() {
                     </div>
 
                     {findings.length > 0 && (
-                      <div className="p-2.5 rounded bg-rose-950/40 border border-bro-crimson/35 space-y-1 max-h-28 overflow-y-auto">
+                      <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-400/45 space-y-1.5 max-h-32 overflow-y-auto">
                         {findings.slice(0, 4).map((f, idx) => (
-                          <div key={idx} className="flex items-start gap-1.5 font-mono text-[10px] text-rose-100">
-                            <AlertTriangle className="w-3 h-3 text-bro-crimson shrink-0 mt-0.5" />
+                          <div key={idx} className="flex items-start gap-2 text-xs text-rose-100">
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-300 shrink-0 mt-0.5" aria-hidden="true" />
                             <span>
-                              <strong className="text-white">{f.entityId}:</strong> {f.message}
+                              <strong className="text-white font-mono">{f.entityId}:</strong> {f.message}
                             </span>
                           </div>
                         ))}
@@ -417,38 +424,42 @@ export default function AgentControlCenter() {
                   </div>
 
                   {/* Governance Controls */}
-                  <div className="pt-3 border-t border-white/10 flex items-center gap-2">
+                  <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-2">
                     {isControllable ? (
                       <>
                         <button
                           type="button"
                           disabled={isBusy}
                           onClick={() => void handleAgentAction(ag.agent, 'run')}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-bro-cyan text-bro-obsidian font-mono text-[11px] font-bold uppercase hover:bg-cyan-300 cursor-pointer disabled:opacity-50"
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-bro-cyan text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 cursor-pointer disabled:opacity-50 transition-colors"
                         >
-                          <Activity className="w-3.5 h-3.5" />
-                          {isBusy ? 'Running...' : 'Run Audit Now'}
+                          <Activity className="w-4 h-4" aria-hidden="true" />
+                          <span>{isBusy ? 'Running...' : 'Run Audit Now'}</span>
                         </button>
                         <button
                           type="button"
                           disabled={isBusy}
                           onClick={() => void handleAgentAction(ag.agent, 'toggle', !isEnabled)}
-                          className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded border font-mono text-[11px] font-bold uppercase cursor-pointer disabled:opacity-50 ${
+                          className={`inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl border text-xs font-bold uppercase tracking-wider cursor-pointer disabled:opacity-50 transition-colors ${
                             isEnabled
                               ? 'bg-bro-gold/15 border-bro-gold/45 text-bro-gold hover:bg-bro-gold/25'
-                              : 'bg-emerald-950/70 border-emerald-500/45 text-emerald-300 hover:bg-emerald-900'
+                              : 'bg-emerald-950/70 border-emerald-400/45 text-emerald-200 hover:bg-emerald-900'
                           }`}
                         >
-                          {isEnabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                          {isEnabled ? 'Pause' : 'Resume'}
+                          {isEnabled ? (
+                            <Pause className="w-4 h-4" aria-hidden="true" />
+                          ) : (
+                            <Play className="w-4 h-4" aria-hidden="true" />
+                          )}
+                          <span>{isEnabled ? 'Pause' : 'Resume'}</span>
                         </button>
                       </>
                     ) : (
-                      <div className="w-full flex items-center justify-between font-mono text-[10px] text-slate-400">
-                        <span className="inline-flex items-center gap-1 text-emerald-300">
-                          <ShieldCheck className="w-3.5 h-3.5" /> Enforced HITL / Event-Driven
+                      <div className="w-full flex flex-wrap items-center justify-between gap-2 min-h-[44px] text-xs text-slate-300">
+                        <span className="inline-flex items-center gap-1.5 text-emerald-200 font-medium">
+                          <ShieldCheck className="w-4 h-4" aria-hidden="true" /> Enforced HITL / Event-Driven
                         </span>
-                        <span className="uppercase">Managed Runtime</span>
+                        <span className="text-slate-400">Managed Runtime</span>
                       </div>
                     )}
                   </div>
@@ -460,15 +471,15 @@ export default function AgentControlCenter() {
       </section>
 
       {/* RBAC User Role Editor */}
-      <section aria-label="RBAC User Role Editor" className="glass-panel rounded-lg border border-white/10 overflow-hidden">
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+      <section aria-label="RBAC User Role Editor" className="surface-ceramic rounded-2xl overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-bro-gold" />
-            <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+            <Users className="w-4 h-4 text-bro-gold shrink-0" aria-hidden="true" />
+            <h2 className="font-display text-base font-bold text-white">
               Zero-Trust RBAC User Role Editor ({users.length})
             </h2>
           </div>
-          <span className="font-mono text-[10px] text-slate-400">
+          <span className="text-xs text-slate-400">
             Dual-Portal isolation enforced via Better Auth &amp; edge middleware
           </span>
         </div>
@@ -476,18 +487,18 @@ export default function AgentControlCenter() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                <th className="px-4 py-2.5">User &amp; Email</th>
-                <th className="px-4 py-2.5">Organization</th>
-                <th className="px-4 py-2.5">Assigned RBAC Role</th>
-                <th className="px-4 py-2.5">Account State</th>
-                <th className="px-4 py-2.5 text-right">Apply Change</th>
+              <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                <th className="px-4 py-3">User &amp; Email</th>
+                <th className="px-4 py-3">Organization</th>
+                <th className="px-4 py-3">Assigned RBAC Role</th>
+                <th className="px-4 py-3">Account State</th>
+                <th className="px-4 py-3 text-right">Apply Change</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-xs">
+            <tbody className="divide-y divide-white/[0.06] text-xs">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center font-mono text-slate-500">
+                  <td colSpan={5} className="px-4 py-10 text-center text-slate-300">
                     {loading ? 'Loading RBAC directory...' : 'No users found.'}
                   </td>
                 </tr>
@@ -497,15 +508,15 @@ export default function AgentControlCenter() {
                   const dirty = draft.role !== u.role || draft.active !== u.active;
                   const isBusy = busyUserId === u.id;
                   return (
-                    <tr key={u.id} className="hover:bg-white/5">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-white">{u.name}</div>
-                        <div className="font-mono text-[10px] text-slate-400">{u.email}</div>
+                    <tr key={u.id} className="hover:bg-white/[0.03]">
+                      <td className="px-4 py-3.5">
+                        <div className="text-sm font-medium text-white">{u.name}</div>
+                        <div className="font-mono text-xs text-slate-400">{u.email}</div>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                      <td className="px-4 py-3.5 font-mono text-xs text-slate-300 whitespace-nowrap">
                         {u.organizationId || '—'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <select
                           aria-label={`RBAC role for ${u.email}`}
                           value={draft.role}
@@ -515,7 +526,7 @@ export default function AgentControlCenter() {
                               [u.id]: { ...draft, role: e.target.value as UserRole },
                             }))
                           }
-                          className="rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-2.5 py-1.5 font-mono text-xs text-white"
+                          className="rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[44px] sm:min-h-[40px] font-mono text-xs text-white outline-none"
                         >
                           {ALL_ROLES.map((r) => (
                             <option key={r} value={r}>
@@ -524,7 +535,7 @@ export default function AgentControlCenter() {
                           ))}
                         </select>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() =>
@@ -533,28 +544,28 @@ export default function AgentControlCenter() {
                               [u.id]: { ...draft, active: !draft.active },
                             }))
                           }
-                          className={`px-2.5 py-1 rounded border font-mono text-[10px] uppercase font-bold cursor-pointer ${
+                          className={`px-3 py-1.5 min-h-[44px] sm:min-h-[40px] rounded-full border text-xs uppercase font-semibold cursor-pointer transition-colors ${
                             draft.active
-                              ? 'bg-emerald-950/70 border-emerald-500/45 text-emerald-300'
-                              : 'bg-rose-950/70 border-bro-crimson/50 text-rose-200'
+                              ? 'bg-emerald-950/70 border-emerald-400/45 text-emerald-200'
+                              : 'bg-rose-950/70 border-rose-400/50 text-rose-200'
                           }`}
                         >
-                          {draft.active ? 'ACTIVE' : 'SUSPENDED'}
+                          {draft.active ? 'Active' : 'Suspended'}
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
                         <button
                           type="button"
                           disabled={!dirty || isBusy}
                           onClick={() => void handleSaveUserRole(u)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-mono text-[11px] font-bold uppercase cursor-pointer transition-colors ${
+                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
                             dirty
-                              ? 'bg-bro-cyan text-bro-obsidian hover:bg-cyan-300'
-                              : 'bg-bro-steel border border-white/10 text-slate-500 cursor-not-allowed'
+                              ? 'bg-bro-cyan text-bro-obsidian hover:bg-cyan-300 cursor-pointer'
+                              : 'bg-white/[0.04] border border-white/10 text-slate-400 cursor-not-allowed'
                           }`}
                         >
-                          <Save className="w-3.5 h-3.5" />
-                          {isBusy ? 'Saving...' : 'Save Role'}
+                          <Save className="w-4 h-4" aria-hidden="true" />
+                          <span>{isBusy ? 'Saving...' : 'Save Role'}</span>
                         </button>
                       </td>
                     </tr>
@@ -567,37 +578,43 @@ export default function AgentControlCenter() {
       </section>
 
       {/* Immutable Security Audit Trail */}
-      <section aria-label="Immutable Security Audit Trail" className="glass-panel rounded-lg border border-white/10 overflow-hidden">
-        <div className="p-4 border-b border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <section aria-label="Immutable Security Audit Trail" className="surface-ceramic rounded-2xl overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-bro-cyan" />
-            <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+            <Shield className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
+            <h2 className="font-display text-base font-bold text-white">
               Immutable Security &amp; Operations Audit Trail ({filteredLogs.length})
             </h2>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <input
                 type="text"
+                aria-label="Search audit logs by action, entity, or payload details"
                 value={auditSearch}
                 onChange={(e) => setAuditSearch(e.target.value)}
                 placeholder="Search action, entity, details..."
-                className="pl-8 pr-3 py-1.5 rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan font-mono text-[11px] text-white placeholder-slate-500 outline-none"
+                className="w-full sm:w-64 pl-9 pr-3 py-2 min-h-[40px] rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan text-xs text-white placeholder:text-slate-400 outline-none"
               />
             </div>
 
-            <div className="inline-flex rounded border border-white/15 bg-bro-obsidian p-0.5">
+            <div
+              role="group"
+              aria-label="Filter audit logs by actor type"
+              className="flex flex-wrap items-center gap-1 rounded-xl border border-white/10 bg-[#060912] p-1"
+            >
               {(['all', 'user', 'agent', 'workflow', 'webhook', 'system'] as const).map((kind) => (
                 <button
                   key={kind}
                   type="button"
+                  aria-pressed={actorFilter === kind}
                   onClick={() => setActorFilter(kind)}
-                  className={`px-2 py-1 rounded font-mono text-[10px] uppercase cursor-pointer ${
+                  className={`px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-medium capitalize cursor-pointer transition-colors ${
                     actorFilter === kind
-                      ? 'bg-bro-cyan/20 text-bro-cyan font-bold'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-white text-black font-semibold shadow-sm'
+                      : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   {kind}
@@ -610,52 +627,52 @@ export default function AgentControlCenter() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                <th className="px-4 py-2.5">Timestamp (UTC)</th>
-                <th className="px-4 py-2.5">Actor</th>
-                <th className="px-4 py-2.5">Action</th>
-                <th className="px-4 py-2.5">Entity</th>
-                <th className="px-4 py-2.5">Payload Detail</th>
+              <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                <th className="px-4 py-3">Timestamp (UTC)</th>
+                <th className="px-4 py-3">Actor</th>
+                <th className="px-4 py-3">Action</th>
+                <th className="px-4 py-3">Entity</th>
+                <th className="px-4 py-3">Payload Detail</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-xs font-mono">
+            <tbody className="divide-y divide-white/[0.06] text-xs font-mono">
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                    <Terminal className="w-5 h-5 mx-auto mb-1 text-slate-600" />
+                  <td colSpan={5} className="px-4 py-10 text-center font-sans text-slate-300">
+                    <Terminal className="w-5 h-5 mx-auto mb-1.5 text-slate-400" aria-hidden="true" />
                     No audit records match the current filter.
                   </td>
                 </tr>
               ) : (
                 filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-white/5">
-                    <td className="px-4 py-2.5 text-slate-400 tabular-nums whitespace-nowrap text-[11px]">
+                  <tr key={log.id} className="hover:bg-white/[0.03]">
+                    <td className="px-4 py-3 text-slate-300 tabular-nums whitespace-nowrap text-xs">
                       {formatUtc(log.createdAt)}
                     </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span
-                        className={`px-1.5 py-0.5 rounded border text-[10px] uppercase font-bold ${
+                        className={`px-2.5 py-0.5 rounded-full border text-xs uppercase font-semibold ${
                           log.actorType === 'agent'
                             ? 'bg-bro-gold/15 border-bro-gold/40 text-bro-gold'
                             : log.actorType === 'webhook'
                               ? 'bg-bro-cyan/15 border-bro-cyan/40 text-bro-cyan'
                               : log.actorType === 'user'
-                                ? 'bg-indigo-950/70 border-indigo-500/40 text-indigo-300'
-                                : 'bg-slate-800 border-slate-700 text-slate-300'
+                                ? 'bg-indigo-950/70 border-indigo-400/40 text-indigo-200'
+                                : 'bg-slate-800 border-slate-600 text-slate-200'
                         }`}
                       >
                         {log.actorType}
                       </span>
                       {log.actorUserId && (
-                        <div className="text-[10px] text-slate-500 mt-0.5">{log.actorUserId}</div>
+                        <div className="text-xs text-slate-400 mt-1">{log.actorUserId}</div>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 font-bold text-white whitespace-nowrap">{log.action}</td>
-                    <td className="px-4 py-2.5 text-slate-300 whitespace-nowrap">
-                      <span className="text-slate-500">{log.entityType}/</span>
+                    <td className="px-4 py-3 font-bold text-white whitespace-nowrap">{log.action}</td>
+                    <td className="px-4 py-3 text-slate-300 whitespace-nowrap">
+                      <span className="text-slate-400">{log.entityType}/</span>
                       {log.entityId}
                     </td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-400 max-w-md truncate" title={log.detailJson || ''}>
+                    <td className="px-4 py-3 text-xs text-slate-300 max-w-md truncate" title={log.detailJson || ''}>
                       {log.detailJson || '—'}
                     </td>
                   </tr>

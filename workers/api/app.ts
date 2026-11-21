@@ -67,4 +67,6 @@ apiApp.route('/', ediRoutes);
 apiApp.route('/', billingAndIftaRoutes);
 apiApp.route('/', opsAdminRoutes);
 
+apiApp.notFound((c) => c.json({ error: 'API endpoint not found', path: c.req.path }, 404));
+
 export default apiApp;

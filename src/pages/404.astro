@@ -1,0 +1,88 @@
+---
+import PublicLayout from '../layouts/PublicLayout.astro';
+import { defaultHomeForRole } from '@bro/contracts';
+
+Astro.response.status = 404;
+
+const user = Astro.locals.user;
+const isAuthenticated = Boolean(user && user.role !== 'visitor');
+const workspaceHref = isAuthenticated ? defaultHomeForRole(user!.role) : '/login';
+const workspaceLabel = isAuthenticated ? 'Return to My Portal' : 'Portal Sign-In';
+const requestedPath = Astro.url.pathname;
+---
+
+<PublicLayout
+  title="Route Not Found | #BRO Transport Corp."
+  description="The requested corridor endpoint or page could not be located on the #BRO Transport Corp. digital network."
+>
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 py-14 sm:py-24">
+    <div class="rounded-3xl surface-ceramic p-7 sm:p-12 space-y-7">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-5">
+        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-bro-gold/35 bg-bro-gold/10 font-mono text-[11px] font-semibold uppercase tracking-wider text-bro-gold">
+          <span class="h-2 w-2 rounded-full bg-bro-gold" aria-hidden="true"></span>
+          HTTP 404 · Waypoint Not Found
+        </span>
+        <span class="font-mono text-xs text-slate-400">SCAC: BROP · Telemetry Check</span>
+      </div>
+
+      <div class="space-y-3">
+        <h1 class="text-3xl sm:text-5xl font-display font-bold tracking-tight text-white">
+          Corridor Route Offline or Unmapped
+        </h1>
+        <p class="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
+          The requested path <code class="px-2 py-0.5 rounded-md bg-[#060913] border border-white/10 font-mono text-bro-cyan text-xs">{requestedPath}</code> could not be resolved by the #BRO Transport Corp. dispatch edge. Verify the URL or select a verified lane below.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 pt-2">
+        <a
+          href="/"
+          data-astro-prefetch
+          class="inline-flex items-center justify-center gap-2 min-h-[44px] px-6 py-2.5 rounded-full bg-white hover:bg-bro-cyan text-black text-xs sm:text-sm font-semibold tracking-tight transition-colors"
+        >
+          <span>Back to Command Center</span>
+          <span aria-hidden="true">→</span>
+        </a>
+
+        <a
+          href="/quote"
+          data-astro-prefetch
+          class="inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-full border border-white/15 bg-[#0b1120] hover:border-bro-cyan/50 text-white text-xs sm:text-sm font-medium transition-colors"
+        >
+          Rate Calculator
+        </a>
+
+        <a
+          href={workspaceHref}
+          class="inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-full border border-bro-gold/35 bg-bro-gold/10 hover:bg-bro-gold/20 text-bro-gold text-xs sm:text-sm font-semibold transition-colors"
+        >
+          {workspaceLabel}
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-white/[0.08] text-xs">
+        <a
+          href="/customs"
+          class="p-4 rounded-2xl bg-[#070b15] border border-white/[0.08] hover:border-bro-cyan/40 transition-colors space-y-1 min-h-[44px]"
+        >
+          <div class="font-semibold text-white">Customs &amp; CARM Desk</div>
+          <div class="text-slate-400">Live CBP / CBSA border waits</div>
+        </a>
+        <a
+          href="/verify"
+          class="p-4 rounded-2xl bg-[#070b15] border border-white/[0.08] hover:border-emerald-400/40 transition-colors space-y-1 min-h-[44px]"
+        >
+          <div class="font-semibold text-white">Verify eBOL Custody</div>
+          <div class="text-slate-400">ECDSA P-256 tamper audit</div>
+        </a>
+        <a
+          href="/apply"
+          class="p-4 rounded-2xl bg-[#070b15] border border-white/[0.08] hover:border-bro-gold/40 transition-colors space-y-1 min-h-[44px]"
+        >
+          <div class="font-semibold text-white">Carrier Onboarding</div>
+          <div class="text-slate-400">FMCSA USDOT qualification</div>
+        </a>
+      </div>
+    </div>
+  </section>
+</PublicLayout>

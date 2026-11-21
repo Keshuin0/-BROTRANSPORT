@@ -163,8 +163,12 @@ const PULSE_RING_FRAGMENT_SHADER = /* glsl */ `
   varying float vAlpha;
 
   void main() {
-    if (vAlpha <= 0.002) discard;
-    gl_FragColor = vec4(vColor, vAlpha);
+    if (vAlpha <= 0.002) {
+      gl_FragColor = vec4(0.0);
+      return;
+    }
+    float smoothAlpha = vAlpha * smoothstep(0.002, 0.04, vAlpha);
+    gl_FragColor = vec4(vColor, smoothAlpha);
   }
 `;
 

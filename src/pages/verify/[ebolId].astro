@@ -2,14 +2,14 @@
 import PublicLayout from '../../layouts/PublicLayout.astro';
 import EbolCryptoLab from '../../components/public/EbolCryptoLab';
 
-const ebolId = Astro.params.ebolId ?? 'BROP-2026-9948';
+const ebolId = Astro.params.ebolId ?? 'load_9948';
 ---
 
 <PublicLayout
   title={`Verify eBOL ${ebolId} | #BRO Transport Corp.`}
   description={`Independent ECDSA P-256 cryptographic verification of shipment custody chain ${ebolId}.`}
 >
-  <section class="max-w-6xl mx-auto px-4 sm:px-6 pt-28 pb-14">
+  <section class="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-14">
     <EbolCryptoLab client:load initialLoadId={ebolId} />
   </section>
 </PublicLayout>

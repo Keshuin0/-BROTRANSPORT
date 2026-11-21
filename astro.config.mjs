@@ -51,6 +51,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,woff2}'],
+        globIgnores: ['**/_worker.js/**', '**/_routes.json', '**/_headers'],
         navigateFallback: null,
         runtimeCaching: [
           {

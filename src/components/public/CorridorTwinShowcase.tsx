@@ -251,21 +251,24 @@ export default function CorridorTwinShowcase() {
   return (
     <section className="rounded-3xl surface-ceramic overflow-hidden">
       {/* Top Visual Banner With Photorealistic International Bridge Hero */}
-      <div className="relative h-56 sm:h-64 overflow-hidden border-b border-white/[0.08]">
+      <div className="relative min-h-[15rem] sm:min-h-[16rem] h-auto flex flex-col justify-end overflow-hidden border-b border-white/[0.08]">
         <img
           src="/images/fleet/corridor-bridge.webp"
           alt="International cross-border bridge customs plaza illuminated at dusk"
-          className="w-full h-full object-cover object-center opacity-75"
+          width={1280}
+          height={714}
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-75"
           loading="lazy"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-t from-[#090d18] via-[#090d18]/65 to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-[#090d18] via-[#090d18]/70 to-transparent"
           aria-hidden="true"
         />
-        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div className="relative z-10 p-5 sm:p-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 text-xs font-medium text-bro-cyan">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
               <span>Interactive Corridor Mission Twin</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
@@ -274,7 +277,11 @@ export default function CorridorTwinShowcase() {
           </div>
 
           {/* Interactive Corridor Pill Selector */}
-          <div className="flex flex-wrap gap-1.5 p-1.5 rounded-2xl liquid-glass">
+          <div
+            role="group"
+            aria-label="Select cross-border freight corridor"
+            className="flex flex-wrap gap-1.5 p-1.5 rounded-2xl liquid-glass"
+          >
             {CORRIDORS.map((c) => {
               const active = c.id === corridor.id;
               return (
@@ -283,7 +290,7 @@ export default function CorridorTwinShowcase() {
                   type="button"
                   onClick={() => setSelectedId(c.id)}
                   aria-pressed={active}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                  className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
                     active ? 'bg-white text-black font-semibold shadow-sm' : 'text-slate-200 hover:bg-white/10'
                   }`}
                 >
@@ -296,49 +303,61 @@ export default function CorridorTwinShowcase() {
       </div>
 
       {/* Main Digital Twin Workspace */}
-      <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="p-5 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left 7 cols: Corridor Telemetry + Customs Barcode + Thermal/Securement Curve */}
         <div className="lg:col-span-7 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-xl font-display font-bold text-white tracking-tight">{corridor.title}</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{corridor.subtitle}</p>
+              <p className="text-xs text-slate-300 mt-0.5">{corridor.subtitle}</p>
             </div>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-400/35 bg-emerald-500/10 text-xs font-medium text-emerald-300">
-              <CheckCircle2 className="w-3.5 h-3.5" /> CARM R2 Pre-Cleared
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> CARM R2 Pre-Cleared
             </span>
           </div>
 
           {/* 3 Live Telemetry Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="p-4 rounded-2xl bg-[#060913] border border-white/[0.08]">
-              <div className="text-[11px] text-slate-400">Live Lane Estimate</div>
-              <div className="mt-1 font-display text-2xl font-bold text-white tabular-nums">
-                {loading || !estimate ? 'Computing…' : `${fmtCad(estimate.totalCents)} CAD`}
+              <div className="text-xs text-slate-300">Live Lane Estimate</div>
+              <div
+                className={`mt-1 font-display text-2xl font-bold text-white tabular-nums transition-opacity duration-200 ${
+                  loading && estimate ? 'opacity-60' : 'opacity-100'
+                }`}
+              >
+                {estimate ? `${fmtCad(estimate.totalCents)} CAD` : 'Computing…'}
               </div>
-              <div className="mt-1 font-mono text-[10px] text-bro-cyan tabular-nums">
+              <div
+                className={`mt-1 font-mono text-[11px] text-bro-cyan tabular-nums transition-opacity duration-200 ${
+                  loading && estimate ? 'opacity-60' : 'opacity-100'
+                }`}
+              >
                 {estimate ? `${estimate.distanceKm.toLocaleString()} km · ${estimate.estimatedTransitHours}h` : routingSource}
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-[#060913] border border-white/[0.08]">
-              <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-bro-gold" /> Primary Port
+              <div className="text-xs text-slate-300 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-bro-gold shrink-0" aria-hidden="true" /> Primary Port
               </div>
               <div className="mt-1 text-xs font-semibold text-white leading-snug">{corridor.portLabel}</div>
-              <div className="mt-1 font-mono text-[10px] text-bro-gold tabular-nums">
+              <div className="mt-1 font-mono text-[11px] text-bro-gold tabular-nums">
                 {portWaitMins !== null ? `Live CBP Wait: ${portWaitMins} min` : 'PAPS / PARS Electronic Queue'}
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-[#060913] border border-white/[0.08]">
-              <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                <Leaf className="w-3.5 h-3.5 text-emerald-400" /> SmartWay Footprint
+              <div className="text-xs text-slate-300 flex items-center gap-1.5">
+                <Leaf className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden="true" /> SmartWay Footprint
               </div>
-              <div className="mt-1 font-display text-2xl font-bold text-emerald-300 tabular-nums">
+              <div
+                className={`mt-1 font-display text-2xl font-bold text-emerald-300 tabular-nums transition-opacity duration-200 ${
+                  loading && estimate ? 'opacity-60' : 'opacity-100'
+                }`}
+              >
                 {estimate ? `${estimate.co2Kg} kg` : '—'}
               </div>
-              <div className="mt-1 font-mono text-[10px] text-slate-400">
+              <div className="mt-1 font-mono text-[11px] text-slate-300">
                 0% Zero-Rated Cross-Border Tax
               </div>
             </div>
@@ -347,30 +366,30 @@ export default function CorridorTwinShowcase() {
           {/* Dual Interactive Proof Panels: Code-128B Barcode + Chamber Telemetry */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-[#060913] border border-white/[0.08] space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-slate-300 flex items-center gap-1.5">
-                  <FileCode2 className="w-3.5 h-3.5 text-bro-cyan" /> Scannable ACE PAPS
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="font-medium text-slate-200 flex items-center gap-1.5">
+                  <FileCode2 className="w-3.5 h-3.5 text-bro-cyan shrink-0" aria-hidden="true" /> Scannable ACE PAPS
                 </span>
-                <span className="font-mono text-[10px] text-bro-cyan">{corridor.scnControl}</span>
+                <span className="font-mono text-[11px] text-bro-cyan">{corridor.scnControl}</span>
               </div>
               <div className="p-3 rounded-xl bg-white flex justify-center overflow-hidden">
-                <div dangerouslySetInnerHTML={{ __html: barcodeSvg }} />
+                <div className="w-full max-w-full flex justify-center" dangerouslySetInnerHTML={{ __html: barcodeSvg }} />
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-[#060913] border border-white/[0.08] space-y-3 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-slate-300 flex items-center gap-1.5">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="font-medium text-slate-200 flex items-center gap-1.5">
                   {corridor.equipmentType === 'reefer' ? (
-                    <Snowflake className="w-3.5 h-3.5 text-bro-cyan" />
+                    <Snowflake className="w-3.5 h-3.5 text-bro-cyan shrink-0" aria-hidden="true" />
                   ) : (
-                    <Truck className="w-3.5 h-3.5 text-bro-gold" />
+                    <Truck className="w-3.5 h-3.5 text-bro-gold shrink-0" aria-hidden="true" />
                   )}
                   <span>
                     {corridor.equipmentType === 'reefer' ? 'FSMA Thermal Stability' : 'Load Integrity Index'}
                   </span>
                 </span>
-                <span className="font-mono text-[10px] text-emerald-400 tabular-nums">
+                <span className="font-mono text-[11px] text-emerald-300 tabular-nums">
                   {corridor.equipmentType === 'reefer' ? `${corridor.tempSetpointC?.toFixed(1)}°C LOCKED` : '100% INTACT'}
                 </span>
               </div>
@@ -384,21 +403,21 @@ export default function CorridorTwinShowcase() {
                   points={telemetryPolyline}
                 />
               </svg>
-              <div className="text-[11px] text-slate-400 truncate">{corridor.commodity}</div>
+              <div className="text-xs text-slate-300 truncate">{corridor.commodity}</div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="flex items-center gap-2 text-xs text-slate-300">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
               <span>Deterministic contract rate + OSRM routing engine</span>
             </div>
             <a
               href={quoteHref}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-bro-cyan text-xs font-semibold tracking-tight transition-colors"
+              className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-bro-cyan text-xs font-semibold tracking-tight transition-colors"
             >
               <span>Lock &amp; Book This Exact Lane</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
             </a>
           </div>
         </div>
@@ -407,10 +426,10 @@ export default function CorridorTwinShowcase() {
         <div className="lg:col-span-5 space-y-3 bg-[#060913] border border-white/[0.08] rounded-2xl p-5">
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
             <span className="text-xs font-semibold text-white flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-bro-gold" />
+              <Cpu className="w-4 h-4 text-bro-gold shrink-0" aria-hidden="true" />
               <span>Autonomous Border-to-Cash Flow</span>
             </span>
-            <span className="font-mono text-[10px] text-slate-400">5 Stages</span>
+            <span className="font-mono text-[11px] text-slate-300">5 Stages</span>
           </div>
 
           <div className="space-y-2">
@@ -421,26 +440,35 @@ export default function CorridorTwinShowcase() {
                   key={st.step}
                   type="button"
                   onClick={() => setActiveStageIdx(idx)}
-                  className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  aria-expanded={active}
+                  className={`w-full min-h-[44px] text-left p-3.5 rounded-xl border transition-colors cursor-pointer ${
                     active
                       ? 'border-bro-cyan/50 bg-bro-cyan/[0.08]'
                       : 'border-white/[0.06] bg-white/[0.02] hover:border-white/20'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <span
-                        className={`w-5 h-5 rounded-full font-mono text-[10px] font-bold flex items-center justify-center ${
-                          active ? 'bg-bro-cyan text-black' : 'bg-white/10 text-slate-300'
+                        className={`w-6 h-6 rounded-full font-mono text-[11px] font-bold flex items-center justify-center shrink-0 ${
+                          active ? 'bg-bro-cyan text-black' : 'bg-white/10 text-slate-200'
                         }`}
                       >
                         {st.step}
                       </span>
                       <span className="text-xs font-semibold text-white">{st.title}</span>
                     </div>
-                    <span className="font-mono text-[10px] text-slate-400">{st.tag}</span>
+                    <span className="font-mono text-[11px] text-slate-300 shrink-0">{st.tag}</span>
                   </div>
-                  {active && <p className="mt-2.5 pl-7 text-xs text-slate-300 leading-relaxed">{st.detail}</p>}
+                  <div
+                    className="bro-accordion-content"
+                    aria-expanded={active}
+                    aria-hidden={!active}
+                  >
+                    <div>
+                      <p className="pt-2.5 pl-8 text-xs text-slate-300 leading-relaxed">{st.detail}</p>
+                    </div>
+                  </div>
                 </button>
               );
             })}

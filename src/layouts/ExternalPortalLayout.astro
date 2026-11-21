@@ -1,79 +1,138 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import { canAccessRoute, isOpsRole } from '@bro/contracts';
 import '../styles/global.css';
 import BroLogo from '../components/brand/BroLogo.astro';
 import CommandPalette from '../components/nav/CommandPalette';
+import MobileNavDrawer from '../components/nav/MobileNavDrawer';
 
 interface Props {
   title: string;
   portalType: 'shipper' | 'driver';
+  description?: string;
 }
 
-const { title, portalType } = Astro.props;
+const {
+  title,
+  portalType,
+  description = '#BRO Transport Corp. External Partner Portal — live cross-border shipment tracking, FSMA temperature custody, and offline-capable Driver PWA.',
+} = Astro.props;
+
 const user = Astro.locals.user;
+const role = user?.role ?? 'visitor';
 const pathname = Astro.url.pathname;
+
+const canShipper = canAccessRoute(role, '/portal/shipper');
+const canDriver = canAccessRoute(role, '/portal/driver');
+const canOps = isOpsRole(role);
 ---
 
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#030307" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#020308" />
+    <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <title>{title} | #BRO External Portal</title>
-    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/sora-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
     <ClientRouter />
+    <script>
+      import '../lib/motionRuntime';
+    </script>
   </head>
   <body class="bg-spatial-cosmos text-bro-ice min-h-screen flex flex-col selection:bg-bro-cyan/30">
-    <header class="sticky top-3 z-40 px-3 sm:px-6 pointer-events-none">
-      <div class="max-w-7xl mx-auto rounded-full liquid-glass px-4 sm:px-5 h-14 sm:h-16 flex items-center justify-between gap-4 pointer-events-auto">
-        <div class="flex items-center gap-3">
-          <a href="/" class="shrink-0">
-            <BroLogo compact />
-          </a>
-          <span class={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium border ${
-            portalType === 'driver'
-              ? 'border-bro-gold/40 bg-bro-gold/10 text-bro-gold'
-              : 'border-bro-cyan/40 bg-bro-cyan/10 text-bro-cyan'
-          }`}>
-            {portalType === 'driver' ? 'Driver Offline PWA' : 'Customer & Shipper Portal'}
-          </span>
-        </div>
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[130] focus:px-4 focus:py-2.5 focus:rounded-full focus:bg-bro-cyan focus:text-black focus:text-xs focus:font-bold"
+    >
+      Skip to main content
+    </a>
 
-        <div class="flex items-center gap-2.5">
-          <CommandPalette client:load />
-          <a
-            href={portalType === 'driver' ? '/portal/shipper' : '/portal/driver'}
-            class="hidden md:inline-flex text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-full border border-white/15 bg-white/[0.05] transition-colors"
-          >
-            {portalType === 'driver' ? 'Shipper View' : 'Driver View'}
-          </a>
-          {user && (
-            <div class="flex items-center gap-2">
-              <span class="hidden sm:inline text-xs font-medium text-slate-200">{user.name}</span>
-              <form method="POST" action="/api/auth/logout">
-                <button
-                  type="submit"
-                  class="px-3 py-1.5 rounded-full border border-white/15 hover:border-rose-400/60 text-xs font-medium text-slate-300 hover:text-rose-200 cursor-pointer transition-colors"
-                >
-                  Sign Out
-                </button>
-              </form>
-            </div>
-          )}
-        </div>
-      </div>
-    </header>
+    <div class="pt-3">
+      <header class="sticky top-3 z-40 px-2 sm:px-6 pointer-events-none">
+        <div class="max-w-7xl mx-auto rounded-full liquid-glass px-3 sm:px-5 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4 pointer-events-auto">
+          <div class="flex items-center gap-3 min-w-0">
+            <a href="/" class="shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-bro-cyan">
+              <BroLogo compact uid="ext" />
+            </a>
+            <span
+              class={`hidden lg:inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium border whitespace-nowrap shrink-0 ${
+                portalType === 'driver'
+                  ? 'border-bro-gold/40 bg-bro-gold/10 text-bro-gold'
+                  : 'border-bro-cyan/40 bg-bro-cyan/10 text-bro-cyan'
+              }`}
+            >
+              {portalType === 'driver' ? 'Driver Offline PWA' : 'Customer & Shipper Portal'}
+            </span>
+          </div>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-8 pb-10">
+          <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <CommandPalette client:load userRole={user?.role ?? null} />
+
+            {portalType === 'driver' && canShipper && (
+              <a
+                href="/portal/shipper"
+                class="hidden lg:inline-flex items-center min-h-[44px] text-xs font-medium text-slate-200 hover:text-white px-3.5 rounded-full border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] whitespace-nowrap shrink-0 transition-colors"
+              >
+                Shipper View
+              </a>
+            )}
+            {portalType === 'shipper' && canDriver && (
+              <a
+                href="/portal/driver"
+                class="hidden lg:inline-flex items-center min-h-[44px] text-xs font-medium text-slate-200 hover:text-white px-3.5 rounded-full border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] whitespace-nowrap shrink-0 transition-colors"
+              >
+                Driver View
+              </a>
+            )}
+            {canOps && (
+              <a
+                href="/ops"
+                class="hidden lg:inline-flex items-center min-h-[44px] text-xs font-semibold text-bro-gold hover:text-amber-200 px-3.5 rounded-full border border-bro-gold/35 bg-bro-gold/10 hover:bg-bro-gold/20 whitespace-nowrap shrink-0 transition-colors"
+              >
+                Ops Tower
+              </a>
+            )}
+
+            {user && (
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="hidden md:inline text-xs font-medium text-slate-200 max-w-[130px] truncate">
+                  {user.name}
+                </span>
+                <form method="POST" action="/api/auth/logout" data-astro-reload>
+                  <button
+                    type="submit"
+                    class="min-h-[44px] inline-flex items-center px-3 sm:px-3.5 rounded-full border border-white/15 bg-white/[0.04] hover:border-rose-400/60 hover:bg-rose-950/30 text-[11px] sm:text-xs font-medium text-slate-200 hover:text-rose-200 whitespace-nowrap cursor-pointer transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <MobileNavDrawer
+              client:load
+              currentPath={pathname}
+              userRole={user?.role ?? null}
+              userName={user?.name ?? null}
+            />
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <main id="main-content" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-12">
       <slot />
     </main>
 
-    <footer class="border-t border-white/[0.06] py-5 px-6 text-center text-xs text-slate-500">
-      #BRO Transport Corp. External Partner Portal · <span class="font-mono">{pathname}</span>
+    <footer class="border-t border-white/[0.06] py-5 px-6 text-center text-xs text-slate-400">
+      #BRO Transport Corp. External Partner Portal · <span class="font-mono text-slate-300">{pathname}</span>
     </footer>
   </body>
 </html>

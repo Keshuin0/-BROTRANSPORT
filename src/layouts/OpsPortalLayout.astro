@@ -1,16 +1,23 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import { canAccessRoute } from '@bro/contracts';
 import '../styles/global.css';
 import BroLogo from '../components/brand/BroLogo.astro';
 import CommandPalette from '../components/nav/CommandPalette';
 
 interface Props {
   title: string;
+  description?: string;
 }
 
-const { title } = Astro.props;
+const {
+  title,
+  description = '#BRO Transport Corp. Internal Operations Command Tower — dispatch, EDI X12, AI OCR verification, customs CARM R2, billing, and safety telemetry.',
+} = Astro.props;
+
 const pathname = Astro.url.pathname;
 const user = Astro.locals.user;
+const role = user?.role ?? 'visitor';
 
 const opsNav = [
   { href: '/ops', label: 'Control Tower', code: '00' },
@@ -21,29 +28,71 @@ const opsNav = [
   { href: '/ops/fleet', label: 'Fleet & Safety', code: '05' },
   { href: '/ops/admin', label: 'Admin & Agents', code: '06' },
 ];
+
+const visibleOpsNav = opsNav.filter((item) => canAccessRoute(role, item.href));
 ---
 
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#030307" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#020308" />
+    <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <title>{title} | #BRO Ops Command Tower</title>
-    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/sora-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
     <ClientRouter />
+    <script>
+      import '../lib/motionRuntime';
+    </script>
   </head>
   <body class="bg-spatial-cosmos text-bro-ice min-h-screen flex flex-col lg:flex-row selection:bg-bro-gold/30">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[130] focus:px-4 focus:py-2.5 focus:rounded-full focus:bg-bro-cyan focus:text-black focus:text-xs focus:font-bold"
+    >
+      Skip to main content
+    </a>
+
     <!-- Left Command Sidebar (macOS Translucent Material) -->
     <aside class="w-full lg:w-64 shrink-0 bg-[#080c18]/85 backdrop-blur-2xl border-b lg:border-b-0 lg:border-r border-white/[0.09] flex flex-col justify-between">
       <div>
-        <div class="p-4 border-b border-white/[0.08] flex items-center justify-between">
-          <a href="/" class="shrink-0">
-            <BroLogo compact />
+        <div class="px-3 py-3 sm:p-4 border-b border-white/[0.08] flex items-center justify-between gap-2">
+          <a href="/" class="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-bro-cyan">
+            <BroLogo compact uid="ops" />
           </a>
+
+          <!-- Mobile / Tablet Profile & Sign Out Controls (<1024px) -->
+          <div class="flex lg:hidden items-center gap-1.5 sm:gap-2 shrink-0">
+            {user && (
+              <span class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[11px] text-slate-200 max-w-[140px] truncate">
+                {user.name.split(' ')[0]} · {user.role.replace(/_/g, ' ')}
+              </span>
+            )}
+            <a
+              href="/"
+              class="min-h-[44px] inline-flex items-center justify-center px-2.5 sm:px-3 rounded-full border border-white/15 bg-white/[0.04] hover:border-white/30 text-[11px] sm:text-xs font-medium text-slate-200 hover:text-white whitespace-nowrap shrink-0 transition-colors"
+            >
+              <span class="hidden sm:inline">Public&nbsp;</span>Site
+            </a>
+            {user && (
+              <form method="POST" action="/api/auth/logout" data-astro-reload>
+                <button
+                  type="submit"
+                  class="min-h-[44px] inline-flex items-center justify-center px-2.5 sm:px-3 rounded-full border border-rose-500/40 bg-rose-950/30 hover:bg-rose-950/60 text-[11px] sm:text-xs font-medium text-rose-200 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                >
+                  Sign Out
+                </button>
+              </form>
+            )}
+          </div>
         </div>
+
         <div class="px-4 py-2.5 border-b border-white/[0.08] bg-bro-gold/[0.06] flex items-center justify-between text-xs">
           <span class="text-bro-gold font-semibold tracking-tight">Ops Command Tower</span>
           <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-400">
@@ -51,14 +100,15 @@ const opsNav = [
           </span>
         </div>
 
-        <nav aria-label="Operations Navigation" class="p-3 flex lg:flex-col gap-1 overflow-x-auto">
-          {opsNav.map((item) => {
-            const active = pathname === item.href;
+        <nav aria-label="Operations Navigation" class="p-3 flex flex-wrap lg:flex-nowrap lg:flex-col gap-1.5">
+          {visibleOpsNav.map((item) => {
+            const active =
+              item.href === '/ops' ? pathname === '/ops' : pathname.startsWith(item.href);
             return (
               <a
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                class={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all ${
+                class={`min-h-[44px] flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-colors ${
                   active
                     ? 'bg-white text-black font-semibold shadow-sm'
                     : 'text-slate-300 hover:bg-white/[0.07] hover:text-white'
@@ -79,11 +129,17 @@ const opsNav = [
           </div>
         )}
         <div class="flex items-center gap-2">
-          <a href="/" class="flex-1 text-center py-1.5 rounded-full border border-white/15 text-[11px] font-medium text-slate-300 hover:text-white transition-colors">
+          <a
+            href="/"
+            class="flex-1 min-h-[44px] inline-flex items-center justify-center rounded-full border border-white/15 text-xs font-medium text-slate-200 hover:text-white hover:border-white/30 transition-colors"
+          >
             Public Site
           </a>
-          <form method="POST" action="/api/auth/logout" class="flex-1">
-            <button type="submit" class="w-full py-1.5 rounded-full border border-rose-500/35 text-[11px] font-medium text-rose-200 hover:bg-rose-950/50 cursor-pointer transition-colors">
+          <form method="POST" action="/api/auth/logout" data-astro-reload class="flex-1">
+            <button
+              type="submit"
+              class="w-full min-h-[44px] inline-flex items-center justify-center rounded-full border border-rose-500/35 text-xs font-medium text-rose-200 hover:bg-rose-950/50 cursor-pointer transition-colors"
+            >
               Sign Out
             </button>
           </form>
@@ -93,17 +149,17 @@ const opsNav = [
 
     <!-- Main Ops Workspace -->
     <div class="flex-1 min-w-0 flex flex-col">
-      <header class="h-14 border-b border-white/[0.08] bg-[#060913]/85 backdrop-blur-2xl px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-30">
+      <header class="min-h-14 py-2 border-b border-white/[0.08] bg-[#060913]/85 backdrop-blur-2xl px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-30">
         <div class="font-display text-sm font-semibold tracking-tight text-white truncate">
           {title}
         </div>
-        <div class="flex items-center gap-3">
-          <CommandPalette client:load />
+        <div class="flex items-center gap-3 shrink-0">
+          <CommandPalette client:load userRole={user?.role ?? null} showMobileIcon />
           <span class="hidden sm:inline font-mono text-[11px] text-slate-400">SCAC: BROP</span>
         </div>
       </header>
 
-      <main class="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
+      <main id="main-content" class="flex-1 p-4 sm:p-6 max-w-[1600px] w-full mx-auto">
         <slot />
       </main>
     </div>

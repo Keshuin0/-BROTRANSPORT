@@ -7,11 +7,11 @@ import CarrierApplyForm from '../components/driver/CarrierApplyForm';
   title="Carrier & Driver Onboarding (FMCSA Verified) | #BRO Transport Corp."
   description="Apply to haul commercial Dry Van, Reefer, and Flatbed cross-border freight with live FMCSA QCMobile USDOT verification and border dead-zone offline submission support."
 >
-  <section class="pt-28 pb-12 px-4 sm:px-6 border-b border-white/[0.08]">
+  <section class="pt-6 sm:pt-10 pb-10 px-4 sm:px-6 border-b border-white/[0.08]">
     <div class="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div class="space-y-2.5">
         <div class="text-xs font-medium text-bro-gold">Capacity Partner Gateway</div>
-        <h1 class="text-3xl sm:text-5xl font-display font-bold tracking-tight text-white">
+        <h1 class="text-title-fluid font-display font-bold text-white">
           Engineered for Capacity Partners
         </h1>
         <p class="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed">
@@ -20,14 +20,14 @@ import CarrierApplyForm from '../components/driver/CarrierApplyForm';
       </div>
       <a
         href="/portal/driver"
-        class="inline-flex items-center px-5 py-2.5 rounded-full liquid-glass-pill text-bro-gold hover:border-bro-gold/50 text-xs font-semibold shrink-0 transition-all"
+        class="min-h-[44px] inline-flex items-center px-5 py-2.5 rounded-full liquid-glass-pill text-bro-gold hover:border-bro-gold/50 text-xs font-semibold shrink-0 transition-colors"
       >
         Existing Driver? Open PWA →
       </a>
     </div>
   </section>
 
-  <section class="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+  <section class="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
     <CarrierApplyForm client:load />
   </section>
 </PublicLayout>

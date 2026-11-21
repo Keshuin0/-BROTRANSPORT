@@ -51,6 +51,9 @@ const GRATICULE_EQUATOR_RGB: readonly [number, number, number] = [0.15, 0.58, 0.
 const MAX_ANGULAR_STEP_DEG = 2.5;
 const MIN_SEGMENT_DIST_SQ = 1e-6;
 
+const SCRATCH_PREV = new THREE.Vector3();
+const SCRATCH_NEXT = new THREE.Vector3();
+
 function pushSubdividedSegment(
   positions: number[],
   colors: number[],
@@ -70,7 +73,7 @@ function pushSubdividedSegment(
   const angularSpan = Math.hypot(dLon, dLat);
   const steps = Math.max(1, Math.ceil(angularSpan / MAX_ANGULAR_STEP_DEG));
 
-  let prev = latLonToVector3(lat1, lon1, radius);
+  latLonToVector3(lat1, lon1, radius, SCRATCH_PREV);
   for (let s = 1; s <= steps; s++) {
     const t = s / steps;
     let curLon = lon1 + dLon * t;
@@ -78,12 +81,19 @@ function pushSubdividedSegment(
     else if (curLon < -180) curLon += 360;
     const curLat = lat1 + dLat * t;
 
-    const next = latLonToVector3(curLat, curLon, radius);
-    if (prev.distanceToSquared(next) >= MIN_SEGMENT_DIST_SQ) {
-      positions.push(prev.x, prev.y, prev.z, next.x, next.y, next.z);
+    latLonToVector3(curLat, curLon, radius, SCRATCH_NEXT);
+    if (SCRATCH_PREV.distanceToSquared(SCRATCH_NEXT) >= MIN_SEGMENT_DIST_SQ) {
+      positions.push(
+        SCRATCH_PREV.x,
+        SCRATCH_PREV.y,
+        SCRATCH_PREV.z,
+        SCRATCH_NEXT.x,
+        SCRATCH_NEXT.y,
+        SCRATCH_NEXT.z,
+      );
       colors.push(rgb[0], rgb[1], rgb[2], rgb[0], rgb[1], rgb[2]);
     }
-    prev = next;
+    SCRATCH_PREV.copy(SCRATCH_NEXT);
   }
 }
 
@@ -163,9 +173,16 @@ export function buildGraticuleGeometry(
   for (let lat = -90 + stepDeg; lat <= 90 - stepDeg; lat += stepDeg) {
     const rgb = lat === 0 ? GRATICULE_EQUATOR_RGB : GRATICULE_STD_RGB;
     for (let lon = -180; lon < 180; lon += sampleDeg) {
-      const p1 = latLonToVector3(lat, lon, radius);
-      const p2 = latLonToVector3(lat, lon + sampleDeg, radius);
-      positions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+      latLonToVector3(lat, lon, radius, SCRATCH_PREV);
+      latLonToVector3(lat, lon + sampleDeg, radius, SCRATCH_NEXT);
+      positions.push(
+        SCRATCH_PREV.x,
+        SCRATCH_PREV.y,
+        SCRATCH_PREV.z,
+        SCRATCH_NEXT.x,
+        SCRATCH_NEXT.y,
+        SCRATCH_NEXT.z,
+      );
       colors.push(rgb[0], rgb[1], rgb[2], rgb[0], rgb[1], rgb[2]);
     }
   }
@@ -174,9 +191,16 @@ export function buildGraticuleGeometry(
   for (let lon = -180; lon < 180; lon += stepDeg) {
     const rgb = lon === 0 ? GRATICULE_EQUATOR_RGB : GRATICULE_STD_RGB;
     for (let lat = -84; lat < 84; lat += sampleDeg) {
-      const p1 = latLonToVector3(lat, lon, radius);
-      const p2 = latLonToVector3(lat + sampleDeg, lon, radius);
-      positions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+      latLonToVector3(lat, lon, radius, SCRATCH_PREV);
+      latLonToVector3(lat + sampleDeg, lon, radius, SCRATCH_NEXT);
+      positions.push(
+        SCRATCH_PREV.x,
+        SCRATCH_PREV.y,
+        SCRATCH_PREV.z,
+        SCRATCH_NEXT.x,
+        SCRATCH_NEXT.y,
+        SCRATCH_NEXT.z,
+      );
       colors.push(rgb[0], rgb[1], rgb[2], rgb[0], rgb[1], rgb[2]);
     }
   }

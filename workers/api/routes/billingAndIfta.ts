@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import {
   createDb,
   invoices,
@@ -8,11 +9,13 @@ import {
   drivers,
   driverSettlements,
   iftaLogs,
+  documents,
   auditLogs,
 } from '@bro/db';
 import {
   CreateInvoiceSchema,
   IftaLogInputSchema,
+  InvoiceLineItemSchema,
   calculateDriverSettlement,
   calculateIftaQuarter,
   calculateInvoiceTotals,
@@ -24,14 +27,114 @@ import {
   generateInvoicePdf,
   generateSettlementPdf,
   mergeFactoringPacketPdf,
+  type SettlementDeductionLine,
+  type SettlementLoadLine,
 } from '../../services/pdfGenerator.js';
 
 export const billingAndIftaRoutes = new Hono<ApiEnv>();
 
+const MarkPaidSchema = z.object({
+  paymentRef: z.string().trim().max(120).optional(),
+});
+
+const GenerateSettlementSchema = z.object({
+  driverId: z.string().trim().min(1, { error: 'driverId required.' }),
+  periodStart: z.number().int().optional(),
+  periodEnd: z.number().int().optional(),
+  fuelDeductionCents: z.number().int().min(0).optional(),
+  insuranceDeductionCents: z.number().int().min(0).optional(),
+});
+
+function isBillingRole(role: string): boolean {
+  return role === 'billing_clerk' || role === 'super_admin';
+}
+
+function safeFilename(raw: string): string {
+  return raw.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+function safeParseLineItems(rawJson: string, fallbackSubtotalCents: number): InvoiceLineItem[] {
+  try {
+    const raw: unknown = JSON.parse(rawJson);
+    if (Array.isArray(raw)) {
+      const valid = raw
+        .map((item) => InvoiceLineItemSchema.safeParse(item))
+        .filter((r) => r.success)
+        .map((r) => r.data);
+      if (valid.length > 0) return valid;
+    }
+  } catch {
+    // Fall through to synthesized baseline item
+  }
+  return [
+    {
+      code: 'FREIGHT',
+      description: 'Commercial Freight Linehaul',
+      quantity: 1,
+      unitPriceCents: fallbackSubtotalCents,
+      amountCents: fallbackSubtotalCents,
+    },
+  ];
+}
+
+function safeParseSettlementLoads(
+  rawJson: string,
+  driver: typeof drivers.$inferSelect | undefined,
+  fallbackGrossPayCents: number,
+): SettlementLoadLine[] {
+  try {
+    const raw: unknown = JSON.parse(rawJson);
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    const items = raw.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'));
+    if (items.length === 0) return [];
+    const perLoadFallback = Math.round(fallbackGrossPayCents / items.length);
+    return items.map((item, idx) => {
+      const loadNumber = typeof item.loadNumber === 'string' && item.loadNumber.trim() ? item.loadNumber : `LOAD-${idx + 1}`;
+      const loadedMiles = typeof item.loadedMiles === 'number' && Number.isFinite(item.loadedMiles) ? item.loadedMiles : undefined;
+      let grossPayCents: number;
+      if (typeof item.grossPayCents === 'number' && Number.isFinite(item.grossPayCents)) {
+        grossPayCents = Math.round(item.grossPayCents);
+      } else if (driver?.payModel === 'cpm' && loadedMiles !== undefined) {
+        grossPayCents = Math.round(loadedMiles * driver.payRateValue);
+      } else {
+        grossPayCents = perLoadFallback;
+      }
+      return {
+        loadNumber,
+        lane: typeof item.lane === 'string' ? item.lane : undefined,
+        originDest: typeof item.originDest === 'string' ? item.originDest : undefined,
+        deliveredDate: typeof item.deliveredDate === 'string' ? item.deliveredDate : undefined,
+        loadedMiles,
+        payModel: typeof item.payModel === 'string' ? item.payModel : driver?.payModel,
+        grossPayCents,
+        detentionPayCents: typeof item.detentionPayCents === 'number' ? Math.round(item.detentionPayCents) : undefined,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+function safeParseSettlementDeductions(rawJson: string): SettlementDeductionLine[] {
+  try {
+    const raw: unknown = JSON.parse(rawJson);
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
+      .map((item) => ({
+        code: typeof item.code === 'string' ? item.code : undefined,
+        label: typeof item.label === 'string' && item.label.trim() ? item.label : 'Deduction',
+        amountCents: typeof item.amountCents === 'number' && Number.isFinite(item.amountCents) ? Math.round(item.amountCents) : 0,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 /** Ops: List invoices with computed AR Aging buckets + Load P&L margins. */
 billingAndIftaRoutes.get('/ops/billing/invoices', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'billing_clerk' && user.role !== 'super_admin')) {
+  if (!user || !isBillingRole(user.role)) {
     return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const db = createDb(c.env.DB);
@@ -58,7 +161,7 @@ billingAndIftaRoutes.get('/ops/billing/invoices', async (c) => {
 
 billingAndIftaRoutes.post('/ops/billing/invoices', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'billing_clerk' && user.role !== 'super_admin')) {
+  if (!user || !isBillingRole(user.role)) {
     return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const parsed = CreateInvoiceSchema.safeParse(await c.req.json().catch(() => ({})));
@@ -97,7 +200,7 @@ billingAndIftaRoutes.post('/ops/billing/invoices', async (c) => {
 
 billingAndIftaRoutes.post('/ops/billing/invoices/:id/approve', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'billing_clerk' && user.role !== 'super_admin')) {
+  if (!user || !isBillingRole(user.role)) {
     return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const id = c.req.param('id');
@@ -121,7 +224,7 @@ billingAndIftaRoutes.post('/ops/billing/invoices/:id/approve', async (c) => {
   const now = Date.now();
   const loadRows = await db.select().from(loads).where(eq(loads.id, inv.loadId)).limit(1);
   const orgRows = await db.select().from(organizations).where(eq(organizations.id, inv.shipperOrgId)).limit(1);
-  const lineItems = JSON.parse(inv.lineItemsJson) as InvoiceLineItem[];
+  const lineItems = safeParseLineItems(inv.lineItemsJson, inv.subtotalCents);
 
   const pdfBytes = await generateInvoicePdf({
     invoiceNumber: inv.invoiceNumber,
@@ -162,11 +265,15 @@ billingAndIftaRoutes.post('/ops/billing/invoices/:id/approve', async (c) => {
 
 billingAndIftaRoutes.post('/ops/billing/invoices/:id/mark-paid', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'billing_clerk' && user.role !== 'super_admin')) {
+  if (!user || !isBillingRole(user.role)) {
     return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const id = c.req.param('id');
-  const body = (await c.req.json().catch(() => ({}))) as { paymentRef?: string };
+  const parsedBody = MarkPaidSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsedBody.success) {
+    return c.json({ error: parsedBody.error.issues[0]?.message || 'Invalid payment payload.' }, 400);
+  }
+
   const db = createDb(c.env.DB);
   const rows = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
   if (!rows[0]) return c.json({ error: 'Invoice not found.' }, 404);
@@ -174,7 +281,7 @@ billingAndIftaRoutes.post('/ops/billing/invoices/:id/mark-paid', async (c) => {
   const now = Date.now();
   await db
     .update(invoices)
-    .set({ status: 'paid', paidAt: now, paymentRef: body.paymentRef || 'EFT/ACH-CLEARED', updatedAt: now })
+    .set({ status: 'paid', paidAt: now, paymentRef: parsedBody.data.paymentRef || 'EFT/ACH-CLEARED', updatedAt: now })
     .where(eq(invoices.id, id));
   await db.update(loads).set({ status: 'PAID', updatedAt: now }).where(eq(loads.id, rows[0].loadId));
 
@@ -193,13 +300,15 @@ billingAndIftaRoutes.get('/billing/invoices/:id/pdf', async (c) => {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
+  const filename = `${safeFilename(inv.invoiceNumber)}.pdf`;
+
   if (inv.invoicePdfR2Key && c.env.VAULT) {
     const obj = await c.env.VAULT.get(inv.invoicePdfR2Key);
     if (obj) {
       return new Response(obj.body, {
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': `inline; filename="${inv.invoiceNumber}.pdf"`,
+          'Content-Disposition': `inline; filename="${filename}"`,
         },
       });
     }
@@ -213,7 +322,7 @@ billingAndIftaRoutes.get('/billing/invoices/:id/pdf', async (c) => {
     orgAddress: orgRows[0]?.address || 'North America',
     loadNumber: loadRows[0]?.loadNumber || inv.loadId,
     currency: inv.currency,
-    lineItems: JSON.parse(inv.lineItemsJson) as InvoiceLineItem[],
+    lineItems: safeParseLineItems(inv.lineItemsJson, inv.subtotalCents),
     subtotalCents: inv.subtotalCents,
     taxCents: inv.taxCents,
     taxLabel: inv.taxLabel,
@@ -222,18 +331,22 @@ billingAndIftaRoutes.get('/billing/invoices/:id/pdf', async (c) => {
     issuedDateIso: new Date(inv.createdAt).toISOString().slice(0, 10),
   });
   return new Response(pdf as BodyInit, {
-    headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `inline; filename="${inv.invoiceNumber}.pdf"` },
+    headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `inline; filename="${filename}"` },
   });
 });
 
 billingAndIftaRoutes.get('/ops/billing/invoices/:id/factoring-packet.pdf', async (c) => {
   const user = c.get('user');
-  if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
+  if (!user || !isBillingRole(user.role)) {
+    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
+  }
   const id = c.req.param('id');
   const db = createDb(c.env.DB);
   const rows = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
   const inv = rows[0];
   if (!inv) return c.json({ error: 'Invoice not found.' }, 404);
+
+  const filename = `${safeFilename(inv.invoiceNumber)}_Factoring_Packet.pdf`;
 
   if (inv.factoringPacketR2Key && c.env.VAULT) {
     const obj = await c.env.VAULT.get(inv.factoringPacketR2Key);
@@ -241,19 +354,60 @@ billingAndIftaRoutes.get('/ops/billing/invoices/:id/factoring-packet.pdf', async
       return new Response(obj.body, {
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': `inline; filename="${inv.invoiceNumber}_Factoring_Packet.pdf"`,
+          'Content-Disposition': `inline; filename="${filename}"`,
         },
       });
     }
   }
-  return c.json({ error: 'Approve invoice first to assemble Factoring Packet PDF.' }, 404);
+
+  // On-the-fly fallback when R2 is unbound or factoring packet hasn't been materialized yet
+  const [orgRows, loadRows, loadDocs] = await Promise.all([
+    db.select().from(organizations).where(eq(organizations.id, inv.shipperOrgId)).limit(1),
+    db.select().from(loads).where(eq(loads.id, inv.loadId)).limit(1),
+    db.select().from(documents).where(eq(documents.loadId, inv.loadId)),
+  ]);
+
+  const invoicePdf = await generateInvoicePdf({
+    invoiceNumber: inv.invoiceNumber,
+    orgName: orgRows[0]?.name || 'Commercial Shipper',
+    orgAddress: orgRows[0]?.address || 'North America',
+    loadNumber: loadRows[0]?.loadNumber || inv.loadId,
+    currency: inv.currency,
+    lineItems: safeParseLineItems(inv.lineItemsJson, inv.subtotalCents),
+    subtotalCents: inv.subtotalCents,
+    taxCents: inv.taxCents,
+    taxLabel: inv.taxLabel,
+    totalCents: inv.totalCents,
+    dueDateIso: new Date(inv.dueDate).toISOString().slice(0, 10),
+    issuedDateIso: new Date(inv.createdAt).toISOString().slice(0, 10),
+  });
+
+  const pdfBuffers: Uint8Array[] = [invoicePdf];
+  if (c.env.VAULT) {
+    for (const doc of loadDocs) {
+      if (doc.mimeType === 'application/pdf' && doc.ocrStatus === 'verified') {
+        const docObj = await c.env.VAULT.get(doc.r2Key);
+        if (docObj) {
+          pdfBuffers.push(new Uint8Array(await docObj.arrayBuffer()));
+        }
+      }
+    }
+  }
+
+  const packetPdf = await mergeFactoringPacketPdf(pdfBuffers);
+  return new Response(packetPdf as BodyInit, {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${filename}"`,
+    },
+  });
 });
 
 /** Driver Settlements (Payroll). */
 billingAndIftaRoutes.get('/ops/settlements', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'billing_clerk' && user.role !== 'super_admin')) {
-    return c.json({ error: 'Billing role required.' }, 403);
+  if (!user || !isBillingRole(user.role)) {
+    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
   const db = createDb(c.env.DB);
   const [rows, drvList] = await Promise.all([
@@ -265,17 +419,14 @@ billingAndIftaRoutes.get('/ops/settlements', async (c) => {
 
 billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
   const user = c.get('user');
-  if (!user || (user.role !== 'billing_clerk' && user.role !== 'super_admin')) {
-    return c.json({ error: 'Billing role required.' }, 403);
+  if (!user || !isBillingRole(user.role)) {
+    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
   }
-  const body = (await c.req.json().catch(() => ({}))) as {
-    driverId: string;
-    periodStart?: number;
-    periodEnd?: number;
-    fuelDeductionCents?: number;
-    insuranceDeductionCents?: number;
-  };
-  if (!body.driverId) return c.json({ error: 'driverId required.' }, 400);
+  const parsed = GenerateSettlementSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Invalid settlement generation request.' }, 400);
+  }
+  const body = parsed.data;
 
   const db = createDb(c.env.DB);
   const drvRows = await db.select().from(drivers).where(eq(drivers.id, body.driverId)).limit(1);
@@ -305,20 +456,22 @@ billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
   const periodStart = body.periodStart ?? now - 14 * 86_400_000;
   const periodEnd = body.periodEnd ?? now;
 
+  const loadLines = drvLoads.map((l) => ({
+    loadNumber: l.loadNumber,
+    loadedMiles: l.loadedMiles,
+    payModel: drv.payModel,
+    grossPayCents:
+      drv.payModel === 'cpm'
+        ? Math.round(l.loadedMiles * drv.payRateValue)
+        : Math.round((l.rateCustomerCents * drv.payRateValue) / 10000),
+  }));
+
   const pdfBytes = await generateSettlementPdf({
     settlementNumber,
     driverName: drv.fullName,
     periodLabel: `${new Date(periodStart).toISOString().slice(0, 10)} to ${new Date(periodEnd).toISOString().slice(0, 10)}`,
     currency: 'CAD',
-    loads: drvLoads.map((l) => ({
-      loadNumber: l.loadNumber,
-      loadedMiles: l.loadedMiles,
-      payModel: drv.payModel,
-      grossPayCents:
-        drv.payModel === 'cpm'
-          ? Math.round(l.loadedMiles * drv.payRateValue)
-          : Math.round((l.rateCustomerCents * drv.payRateValue) / 10000),
-    })),
+    loads: loadLines,
     deductions,
     grossPayCents: calc.grossPayCents,
     reimbursementsCents: calc.reimbursementsCents,
@@ -337,7 +490,7 @@ billingAndIftaRoutes.post('/ops/settlements/generate', async (c) => {
     driverId: drv.id,
     periodStart,
     periodEnd,
-    loadsJson: JSON.stringify(drvLoads.map((l) => ({ loadNumber: l.loadNumber, loadedMiles: l.loadedMiles }))),
+    loadsJson: JSON.stringify(loadLines),
     deductionsJson: JSON.stringify(deductions),
     grossPayCents: calc.grossPayCents,
     reimbursementsCents: calc.reimbursementsCents,
@@ -372,24 +525,57 @@ billingAndIftaRoutes.get('/settlements/:id/pdf', async (c) => {
   const rows = await db.select().from(driverSettlements).where(eq(driverSettlements.id, id)).limit(1);
   const stl = rows[0];
   if (!stl) return c.json({ error: 'Settlement not found.' }, 404);
+
+  const drvRows = await db.select().from(drivers).where(eq(drivers.id, stl.driverId)).limit(1);
+  const drv = drvRows[0];
+
+  // Close IDOR vulnerability: only Ops roles or the owning driver user can access this settlement PDF
+  if (!isOpsRole(user.role) && (!drv || drv.userId !== user.id)) {
+    return c.json({ error: 'Forbidden: you do not have access to this driver settlement.' }, 403);
+  }
+
+  const filename = `${safeFilename(stl.settlementNumber)}.pdf`;
+
   if (stl.pdfR2Key && c.env.VAULT) {
     const obj = await c.env.VAULT.get(stl.pdfR2Key);
     if (obj) {
       return new Response(obj.body, {
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': `inline; filename="${stl.settlementNumber}.pdf"`,
+          'Content-Disposition': `inline; filename="${filename}"`,
         },
       });
     }
   }
-  return c.json({ error: 'Settlement PDF not yet rendered.' }, 404);
+
+  // On-the-fly fallback when R2 is unbound or missing
+  const pdfBytes = await generateSettlementPdf({
+    settlementNumber: stl.settlementNumber,
+    driverName: drv?.fullName || 'Assigned Driver',
+    periodLabel: `${new Date(stl.periodStart).toISOString().slice(0, 10)} to ${new Date(stl.periodEnd).toISOString().slice(0, 10)}`,
+    currency: stl.currency,
+    loads: safeParseSettlementLoads(stl.loadsJson, drv, stl.grossPayCents),
+    deductions: safeParseSettlementDeductions(stl.deductionsJson),
+    grossPayCents: stl.grossPayCents,
+    reimbursementsCents: stl.reimbursementsCents,
+    deductionsCents: stl.deductionsCents,
+    netPayCents: stl.netPayCents,
+  });
+
+  return new Response(pdfBytes as BodyInit, {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${filename}"`,
+    },
+  });
 });
 
 /** Quarterly IFTA Fuel Tax Engine & Filing CSV Export. */
 billingAndIftaRoutes.post('/ops/ifta/logs', async (c) => {
   const user = c.get('user');
-  if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
+  if (!user || !isBillingRole(user.role)) {
+    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
+  }
   const parsed = IftaLogInputSchema.safeParse(await c.req.json().catch(() => ({})));
   if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message || 'Invalid IFTA log.' }, 400);
 
@@ -412,7 +598,9 @@ billingAndIftaRoutes.post('/ops/ifta/logs', async (c) => {
 
 billingAndIftaRoutes.get('/ops/ifta/report', async (c) => {
   const user = c.get('user');
-  if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
+  if (!user || !isBillingRole(user.role)) {
+    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
+  }
   const quarter = c.req.query('quarter') || '2026-Q4';
   const db = createDb(c.env.DB);
   const logs = await db.select().from(iftaLogs).where(eq(iftaLogs.quarter, quarter));
@@ -422,7 +610,9 @@ billingAndIftaRoutes.get('/ops/ifta/report', async (c) => {
 
 billingAndIftaRoutes.get('/ops/ifta/report.csv', async (c) => {
   const user = c.get('user');
-  if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
+  if (!user || !isBillingRole(user.role)) {
+    return c.json({ error: 'Billing Clerk or Super Admin role required.' }, 403);
+  }
   const quarter = c.req.query('quarter') || '2026-Q4';
   const db = createDb(c.env.DB);
   const logs = await db.select().from(iftaLogs).where(eq(iftaLogs.quarter, quarter));
@@ -439,7 +629,7 @@ billingAndIftaRoutes.get('/ops/ifta/report.csv', async (c) => {
   return new Response(lines.join('\n') + '\n', {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="BRO_IFTA_${quarter}.csv"`,
+      'Content-Disposition': `attachment; filename="BRO_IFTA_${safeFilename(quarter)}.csv"`,
     },
   });
 });

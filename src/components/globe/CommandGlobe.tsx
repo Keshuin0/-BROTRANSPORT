@@ -5,6 +5,7 @@ import {
   Compass,
   MapPin,
   Navigation,
+  Orbit,
   Radio,
   ShieldCheck,
   X,
@@ -119,13 +120,13 @@ function getWaitStatusStyles(status: WaitSeverityStatus): {
       };
     case 'congested':
       return {
-        badgeClass: 'border-bro-crimson/40 bg-bro-crimson/10 text-bro-crimson',
-        valueClass: 'text-bro-crimson',
+        badgeClass: 'border-rose-500/40 bg-rose-500/10 text-rose-300',
+        valueClass: 'text-rose-400',
         label: 'Heavy Delay',
       };
     default:
       return {
-        badgeClass: 'border-slate-700 bg-slate-900/70 text-slate-300',
+        badgeClass: 'border-white/15 bg-white/5 text-slate-300',
         valueClass: 'text-slate-200',
         label: 'Standby',
       };
@@ -140,17 +141,31 @@ function formatCoords(lat: number, lon: number): string {
 
 export default function CommandGlobe({ className = '', variant = 'card' }: CommandGlobeProps) {
   const isHero = variant === 'hero';
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<GlobeEngine | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const [selectedNode, setSelectedNode] = useState<GlobeNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GlobeNode | null>(null);
-  const [activePreset, setActivePreset] = useState<CameraPreset['id']>('north_america');
+  const [activePreset, setActivePreset] = useState<CameraPreset['id'] | null>('north_america');
   const [feedStatus, setFeedStatus] = useState<FeedStatus>('loading');
   const [webglFallback, setWebglFallback] = useState(false);
+  const [touchOrbitEnabled, setTouchOrbitEnabled] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+  const [sheetEntered, setSheetEntered] = useState(false);
 
-  // Mount & cleanly dispose GlobeEngine
+  // Track coarse-pointer capability cleanly (handles iPad Pro landscape >= 1024px)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia('(pointer: coarse)');
+    const syncCoarse = () => setIsCoarsePointer(query.matches);
+    syncCoarse();
+    query.addEventListener('change', syncCoarse);
+    return () => query.removeEventListener('change', syncCoarse);
+  }, []);
+
+  // Mount & cleanly dispose GlobeEngine (including Astro ClientRouter swap teardown)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -159,23 +174,120 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
     try {
       engine = new GlobeEngine({
         container,
-        onSelectNode: (node) => setSelectedNode(node),
+        onSelectNode: (node) => {
+          setSelectedNode(node);
+          if (node) {
+            setActivePreset(null);
+          }
+        },
         onHoverNode: (node) => setHoveredNode(node),
         onContextLost: (lost) => setWebglFallback(lost),
+        onUserInteract: () => setActivePreset(null),
       });
       engineRef.current = engine;
     } catch {
       setWebglFallback(true);
     }
 
-    return () => {
+    const handleBeforeSwap = () => {
       engine?.dispose();
-      engineRef.current = null;
+      if (engineRef.current === engine) {
+        engineRef.current = null;
+      }
+    };
+    document.addEventListener('astro:before-swap', handleBeforeSwap);
+
+    return () => {
+      document.removeEventListener('astro:before-swap', handleBeforeSwap);
+      engine?.dispose();
+      if (engineRef.current === engine) {
+        engineRef.current = null;
+      }
     };
   }, []);
 
+  // Desktop scroll-linked parallax tilt (hero variant only, gated by reduced motion)
+  useEffect(() => {
+    if (!isHero || webglFallback || typeof window === 'undefined') return;
+    const motionQuery =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)')
+        : null;
+
+    let rafId: number | null = null;
+
+    const updateScrollTilt = (explicitProgress?: number) => {
+      rafId = null;
+      const engine = engineRef.current;
+      const rootEl = rootRef.current;
+      if (!engine || !rootEl) return;
+
+      if (motionQuery?.matches || window.innerWidth < 1024) {
+        engine.setScrollProgress(0);
+        return;
+      }
+
+      if (typeof explicitProgress === 'number' && Number.isFinite(explicitProgress)) {
+        engine.setScrollProgress(explicitProgress);
+        return;
+      }
+
+      const heroScrollRaw = document.documentElement.dataset.heroScroll;
+      if (heroScrollRaw !== undefined) {
+        const parsed = Number(heroScrollRaw);
+        if (Number.isFinite(parsed)) {
+          engine.setScrollProgress(parsed);
+          return;
+        }
+      }
+
+      const rect = rootEl.getBoundingClientRect();
+      const progress = Math.max(-1, Math.min(1, -rect.top / Math.max(1, rect.height)));
+      engine.setScrollProgress(progress);
+    };
+
+    const scheduleScrollUpdate = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => updateScrollTilt());
+    };
+
+    const handleHeroScroll = (event: Event) => {
+      const detail = (event as CustomEvent<{ progress?: unknown }>).detail;
+      if (detail && typeof detail.progress === 'number' && Number.isFinite(detail.progress)) {
+        updateScrollTilt(detail.progress);
+      }
+    };
+
+    updateScrollTilt();
+    window.addEventListener('scroll', scheduleScrollUpdate, { passive: true });
+    window.addEventListener('bro:hero-scroll', handleHeroScroll);
+    motionQuery?.addEventListener('change', scheduleScrollUpdate);
+
+    const handleBeforeSwap = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      window.removeEventListener('scroll', scheduleScrollUpdate);
+      window.removeEventListener('bro:hero-scroll', handleHeroScroll);
+    };
+    document.addEventListener('astro:before-swap', handleBeforeSwap);
+
+    return () => {
+      document.removeEventListener('astro:before-swap', handleBeforeSwap);
+      window.removeEventListener('scroll', scheduleScrollUpdate);
+      window.removeEventListener('bro:hero-scroll', handleHeroScroll);
+      motionQuery?.removeEventListener('change', scheduleScrollUpdate);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, [isHero, webglFallback]);
+
   // Fetch live CBSA/CBP commercial border wait times & hydrate WebGL beacons
   useEffect(() => {
+    if (webglFallback) return;
+
     let active = true;
     let controller = new AbortController();
 
@@ -218,11 +330,12 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
       controller.abort();
       clearInterval(timer);
     };
-  }, []);
+  }, [webglFallback]);
 
   // Escape key closes the telemetry card cleanly
   const handleDismissCard = useCallback(() => {
     setSelectedNode(null);
+    setSheetEntered(false);
     engineRef.current?.clearSelection();
   }, []);
 
@@ -237,19 +350,43 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [selectedNode, handleDismissCard]);
 
+  // Animate sheet entrance & focus close button only when selectedNode.id changes
+  const selectedNodeId = selectedNode?.id ?? null;
+  useEffect(() => {
+    if (!selectedNodeId) {
+      setSheetEntered(false);
+      return;
+    }
+    setSheetEntered(false);
+    const rafId = requestAnimationFrame(() => {
+      setSheetEntered(true);
+      closeButtonRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [selectedNodeId]);
+
   const handleSelectPreset = useCallback((preset: CameraPreset) => {
     setActivePreset(preset.id);
     engineRef.current?.flyTo(preset.lat, preset.lon, preset.distance);
+  }, []);
+
+  const handleToggleTouchOrbit = useCallback(() => {
+    setTouchOrbitEnabled((prev) => {
+      const next = !prev;
+      engineRef.current?.setTouchOrbitEnabled(next);
+      return next;
+    });
   }, []);
 
   const quoteHref = selectedNode ? buildQuoteUrlForNode(selectedNode) : '/quote';
 
   return (
     <div
+      ref={rootRef}
       className={`relative w-full select-none overflow-hidden ${
         isHero
-          ? 'h-[430px] sm:h-[520px] lg:h-[680px] bg-transparent'
-          : 'h-[440px] md:h-[540px] rounded-2xl surface-ceramic'
+          ? 'h-[460px] sm:h-[520px] lg:h-[680px] bg-transparent'
+          : 'h-[460px] md:h-[540px] rounded-2xl surface-ceramic'
       } ${className}`}
       aria-label="Interactive 3D North American Freight Corridor and Border Command Globe"
     >
@@ -283,8 +420,8 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
 
       {/* Top Floating Liquid Glass Camera Segmented Control */}
       <div
-        className={`absolute top-3 z-20 inline-flex flex-wrap items-center gap-1 rounded-full liquid-glass p-1 ${
-          isHero ? 'right-3 lg:right-6' : 'left-3'
+        className={`absolute top-3 sm:top-4 z-20 inline-flex flex-wrap items-center gap-1 max-w-[calc(100%-1.5rem)] rounded-full liquid-glass p-1 ${
+          isHero ? 'right-3 sm:right-5 lg:right-8' : 'left-3 sm:left-5'
         }`}
         role="group"
         aria-label="Camera corridor presets"
@@ -297,71 +434,117 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
               type="button"
               onClick={() => handleSelectPreset(preset)}
               aria-pressed={isActive}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan cursor-pointer ${
+              className={`min-h-[44px] sm:min-h-[38px] px-2.5 sm:px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-[color,background-color,border-color,transform] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan cursor-pointer ${
                 isActive
                   ? 'bg-white text-black font-semibold shadow-sm'
                   : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
-              {preset.label}
+              {preset.id === 'atlantic' ? (
+                <>
+                  <span className="sm:hidden">Atlantic</span>
+                  <span className="hidden sm:inline">{preset.label}</span>
+                </>
+              ) : (
+                preset.label
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Subtle Hover Readout Pill (Liquid Glass floating control) */}
-      {hoveredNode && hoveredNode.id !== selectedNode?.id && (
-        <div className="pointer-events-none absolute bottom-16 right-4 lg:bottom-6 lg:right-6 z-20 hidden sm:inline-flex items-center gap-2 rounded-full liquid-glass-pill px-3.5 py-1.5 text-xs text-white">
-          <MapPin className="w-3.5 h-3.5 text-bro-cyan shrink-0" aria-hidden="true" />
-          <span className="font-medium">
-            {hoveredNode.kind === 'border_port' ? hoveredNode.crossingName : hoveredNode.name}
-          </span>
-          <span className="text-slate-400">· Click to inspect</span>
-        </div>
-      )}
-
-      {/* Bottom Floating Liquid Glass Telemetry & Wait-Time Legend Pill */}
+      {/* Bottom Non-Overlapping HUD Stack (Hover Pill + Touch Toggle + Legend Pill) */}
       <div
-        className={`pointer-events-none absolute bottom-3 z-10 rounded-2xl liquid-glass px-4 py-2.5 text-[11px] text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1.5 ${
-          isHero ? 'right-3 lg:right-6' : 'left-3'
+        className={`pointer-events-none absolute bottom-3 z-20 flex flex-col gap-2 ${
+          isHero
+            ? 'inset-x-3 sm:inset-x-5 lg:inset-x-auto lg:right-8 items-stretch sm:items-end'
+            : 'inset-x-3 sm:inset-x-5 items-stretch sm:items-start'
         }`}
       >
-        <div className="flex items-center gap-2">
-          <span
-            className={`h-2 w-2 rounded-full ${
-              feedStatus === 'live' ? 'bg-emerald-400' : 'bg-bro-gold'
+        {/* Subtle Hover Readout Pill (desktop/tablet above legend) */}
+        {hoveredNode && hoveredNode.id !== selectedNode?.id && (
+          <div
+            className={`hidden sm:inline-flex items-center gap-2 rounded-full liquid-glass-pill px-3.5 py-1.5 text-xs text-white ${
+              isHero ? 'self-end' : 'self-start'
             }`}
-            aria-hidden="true"
-          />
-          <span className="text-white font-semibold tracking-tight">
-            {feedStatus === 'live'
-              ? 'CBP / CBSA Live Sync'
-              : feedStatus === 'loading'
-                ? 'Syncing Crossings...'
-                : 'Orbital Standby'}
-          </span>
-        </div>
+          >
+            <MapPin className="w-3.5 h-3.5 text-bro-cyan shrink-0" aria-hidden="true" />
+            <span className="font-medium">
+              {hoveredNode.kind === 'border_port' ? hoveredNode.crossingName : hoveredNode.name}
+            </span>
+            <span className="text-slate-300">· Click to inspect</span>
+          </div>
+        )}
 
-        <span className="text-slate-500 hidden sm:inline">|</span>
+        <div
+          className={`flex flex-wrap items-center gap-2 ${
+            isHero ? 'justify-between sm:justify-end' : 'justify-between sm:justify-start'
+          }`}
+        >
+          {/* Touch/Mobile/Tablet 3D Orbit Toggle (prevents mobile vertical scroll trap) */}
+          <button
+            type="button"
+            onClick={handleToggleTouchOrbit}
+            aria-pressed={touchOrbitEnabled}
+            aria-label={
+              touchOrbitEnabled
+                ? 'Disable 3D touch rotation so vertical page scrolling takes priority'
+                : 'Enable 3D touch globe rotation'
+            }
+            className={`${
+              isCoarsePointer ? 'inline-flex' : 'inline-flex lg:hidden'
+            } pointer-events-auto min-h-[44px] items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-[color,background-color,border-color,transform] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan cursor-pointer ${
+              touchOrbitEnabled
+                ? 'bg-bro-cyan text-black shadow-sm'
+                : 'liquid-glass-pill text-white hover:border-bro-cyan/60'
+            }`}
+          >
+            <Orbit className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>{touchOrbitEnabled ? '3D Orbit On' : 'Interact 3D'}</span>
+          </button>
 
-        <div className="flex items-center gap-3 font-mono text-[10px] tabular-nums text-slate-300">
-          <span>{CORRIDOR_ROUTES.length} Lanes</span>
-          <span>{BORDER_PORTS.length} Crossings</span>
-        </div>
+          {/* Bottom Floating Liquid Glass Telemetry & Wait-Time Legend Pill */}
+          <div className="rounded-2xl liquid-glass px-3.5 sm:px-4 py-2 text-xs text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  feedStatus === 'live' ? 'bg-emerald-400' : 'bg-bro-gold'
+                }`}
+                aria-hidden="true"
+              />
+              <span className="text-white font-semibold tracking-tight">
+                {feedStatus === 'live'
+                  ? 'CBP / CBSA Live'
+                  : feedStatus === 'loading'
+                    ? 'Syncing...'
+                    : 'Orbital Standby'}
+              </span>
+            </div>
 
-        <div className="flex items-center gap-2.5 font-mono text-[10px] text-slate-300">
-          <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-bro-cyan" aria-hidden="true" />
-            &lt;15m
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-bro-gold" aria-hidden="true" />
-            15–45m
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-bro-crimson" aria-hidden="true" />
-            &gt;45m
-          </span>
+            <span className="text-slate-400 hidden sm:inline" aria-hidden="true">
+              |
+            </span>
+
+            <div className="hidden sm:flex items-center gap-3 font-mono text-xs tabular-nums text-slate-300">
+              <span>{CORRIDOR_ROUTES.length} Lanes</span>
+              <span>{BORDER_PORTS.length} Crossings</span>
+            </div>
+
+            <div className="flex items-center gap-2.5 font-mono text-xs text-slate-300">
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-bro-cyan" aria-hidden="true" />
+                &lt;15m
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-bro-gold" aria-hidden="true" />
+                15–45m
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-bro-crimson" aria-hidden="true" />
+                &gt;45m
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -375,12 +558,14 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
               ? `Border crossing telemetry for ${selectedNode.crossingName}`
               : `Logistics hub telemetry for ${selectedNode.name}`
           }
-          className="absolute top-16 right-3 lg:top-16 lg:right-6 z-20 w-[calc(100%-1.5rem)] sm:w-80 rounded-2xl liquid-glass p-4 text-left"
+          className={`absolute top-16 sm:top-20 z-30 w-[calc(100%-1.5rem)] sm:w-80 max-h-[calc(100%-6.5rem)] overflow-y-auto rounded-2xl liquid-glass p-4 text-left transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none motion-reduce:translate-y-0 ${
+            isHero ? 'right-3 sm:right-5 lg:right-8' : 'right-3 sm:right-5'
+          } ${sheetEntered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-bro-cyan font-semibold">
-                <Radio className="w-3 h-3" aria-hidden="true" />
+              <div className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-bro-cyan font-semibold">
+                <Radio className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 <span>
                   {selectedNode.kind === 'border_port'
                     ? `Port #${selectedNode.cbpCode}`
@@ -406,9 +591,9 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
               type="button"
               onClick={handleDismissCard}
               aria-label="Close telemetry card"
-              className="rounded-full bg-white/10 p-1.5 text-slate-300 hover:bg-white/20 hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-bro-cyan cursor-pointer shrink-0"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-bro-cyan cursor-pointer shrink-0"
             >
-              <X className="w-3.5 h-3.5" aria-hidden="true" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
@@ -419,12 +604,12 @@ export default function CommandGlobe({ className = '', variant = 'card' }: Comma
           )}
 
           <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
-            <span className="font-mono text-[10px] text-slate-400 tabular-nums">
+            <span className="font-mono text-xs text-slate-300 tabular-nums">
               {formatCoords(selectedNode.lat, selectedNode.lon)}
             </span>
             <a
               href={quoteHref}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white text-black px-3.5 py-1.5 text-xs font-semibold hover:bg-bro-cyan transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white text-black px-4 py-2 text-xs font-semibold hover:bg-bro-cyan transition-[color,background-color,border-color,transform] duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bro-cyan shrink-0"
             >
               Quote Lane
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -445,27 +630,27 @@ function BorderPortDetails({
 
   return (
     <div className="mt-3 space-y-2.5">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded border border-slate-800 bg-bro-steel/60 p-2.5">
-          <div className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-slate-400">
-            <Clock className="w-3 h-3 text-bro-cyan" aria-hidden="true" />
-            Commercial Wait
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="rounded-xl border border-white/10 bg-[#0b1120] p-3">
+          <div className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-slate-300">
+            <Clock className="w-3.5 h-3.5 text-bro-cyan shrink-0" aria-hidden="true" />
+            <span>Wait</span>
           </div>
           <div className={`mt-1 font-mono text-lg font-bold tabular-nums ${styles.valueClass}`}>
             {node.commercialWaitMinutes !== null ? `${node.commercialWaitMinutes} min` : '-- min'}
           </div>
           <span
-            className={`mt-1 inline-block rounded border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase ${styles.badgeClass}`}
+            className={`mt-1.5 inline-block rounded-lg border px-2 py-0.5 font-mono text-xs font-semibold ${styles.badgeClass}`}
           >
             {styles.label}
           </span>
         </div>
 
-        <div className="rounded border border-slate-800 bg-bro-steel/60 p-2.5 flex flex-col justify-between">
+        <div className="rounded-xl border border-white/10 bg-[#0b1120] p-3 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-slate-400">
-              <Navigation className="w-3 h-3 text-bro-gold" aria-hidden="true" />
-              Highway
+            <div className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-slate-300">
+              <Navigation className="w-3.5 h-3.5 text-bro-gold shrink-0" aria-hidden="true" />
+              <span>Highway</span>
             </div>
             <div className="mt-1 font-mono text-xs font-semibold text-bro-ice">
               {node.highway}
@@ -474,13 +659,13 @@ function BorderPortDetails({
 
           <div className="mt-2">
             {node.commercialFastLane ? (
-              <span className="inline-flex items-center gap-1 rounded border border-bro-cyan/40 bg-bro-cyan/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-bro-cyan">
-                <ShieldCheck className="w-3 h-3" aria-hidden="true" />
-                FAST LANE
+              <span className="inline-flex items-center gap-1 rounded-lg border border-bro-cyan/40 bg-bro-cyan/10 px-2 py-0.5 font-mono text-xs font-semibold text-bro-cyan">
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                FAST
               </span>
             ) : (
-              <span className="inline-flex items-center rounded border border-slate-700 bg-slate-900/80 px-1.5 py-0.5 font-mono text-[9px] text-slate-400">
-                STANDARD LANE
+              <span className="inline-flex items-center rounded-lg border border-white/10 bg-[#0b1120] px-2 py-0.5 font-mono text-xs text-slate-300">
+                Standard
               </span>
             )}
           </div>
@@ -488,8 +673,8 @@ function BorderPortDetails({
       </div>
 
       {node.fastLaneWaitMinutes !== null && (
-        <div className="flex items-center justify-between rounded border border-slate-800/80 bg-slate-950/60 px-2.5 py-1.5 font-mono text-[10px]">
-          <span className="text-slate-400">FAST COMMERCIAL WAIT</span>
+        <div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#0b1120] px-3 py-2 font-mono text-xs">
+          <span className="text-slate-300">FAST Commercial Wait</span>
           <span className="font-semibold text-bro-cyan tabular-nums">
             {node.fastLaneWaitMinutes} min
           </span>
@@ -504,27 +689,27 @@ function HubDetails({ node }: { node: Extract<GlobeNode, { kind: 'hub' }> }) {
 
   return (
     <div className="mt-3 space-y-2.5">
-      <div className="rounded border border-slate-800 bg-bro-steel/60 p-2.5">
-        <div className="font-mono text-[9px] uppercase tracking-wider text-slate-400">
-          Primary Freight Corridor
+      <div className="rounded-xl border border-white/10 bg-[#0b1120] p-3">
+        <div className="font-mono text-xs uppercase tracking-wider text-slate-300">
+          Primary Corridor
         </div>
         <div className="mt-1 text-xs font-medium text-bro-ice leading-snug">
           {node.primaryCorridor}
         </div>
-        <div className="mt-1.5 font-mono text-[10px] text-slate-400">
-          ACTIVE LINKS: <span className="text-bro-gold font-semibold">{connectedLanes}</span>
+        <div className="mt-2 font-mono text-xs text-slate-300">
+          Active Links: <span className="text-bro-gold font-semibold">{connectedLanes}</span>
         </div>
       </div>
 
-      <div>
-        <div className="font-mono text-[9px] uppercase tracking-wider text-slate-400 mb-1.5">
+      <div className="rounded-xl border border-white/10 bg-[#0b1120] p-3">
+        <div className="font-mono text-xs uppercase tracking-wider text-slate-300 mb-2">
           Commercial Divisions
         </div>
         <div className="flex flex-wrap gap-1.5">
           {node.divisions.map((div) => (
             <span
               key={div}
-              className="rounded border border-slate-700 bg-slate-900/80 px-2 py-0.5 font-mono text-[10px] text-slate-200"
+              className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-xs text-slate-200"
             >
               {DIVISION_LABELS[div]}
             </span>

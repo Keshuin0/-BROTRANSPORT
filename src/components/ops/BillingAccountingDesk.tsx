@@ -1,4 +1,13 @@
-import { useState, useEffect, useCallback, useRef, type ComponentType, type SyntheticEvent } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type ComponentType,
+  type KeyboardEvent,
+  type RefObject,
+  type SyntheticEvent,
+} from 'react';
 import {
   CheckCircle2,
   CreditCard,
@@ -23,6 +32,7 @@ import {
   type LoadDirection,
   type LoadStatus,
 } from '@bro/contracts';
+import { useModalFocusTrap } from '../../lib/useModalFocusTrap';
 
 interface InvoiceRow {
   id: string;
@@ -103,10 +113,36 @@ interface EquipmentSummary {
   type: string;
 }
 
+interface CreateInvoiceFormState {
+  loadId: string;
+  shipperOrgId: string;
+  currency: 'CAD' | 'USD';
+  direction: LoadDirection;
+  destinationProvince: string;
+  dueDays: string;
+  itemCode: string;
+  itemDescription: string;
+  amountDollars: string;
+}
+
 type BillingTab = 'invoices' | 'settlements' | 'ifta' | 'pnl';
 
 const QUARTERS = ['2026-Q1', '2026-Q2', '2026-Q3', '2026-Q4'] as const;
 const IFTA_JURISDICTIONS = Object.keys(IFTA_DIESEL_RATE_CENTS_PER_GAL).sort();
+
+function createEmptyInvoiceForm(): CreateInvoiceFormState {
+  return {
+    loadId: '',
+    shipperOrgId: '',
+    currency: 'CAD',
+    direction: 'ca_to_us',
+    destinationProvince: 'PE',
+    dueDays: '30',
+    itemCode: 'FREIGHT',
+    itemDescription: '',
+    amountDollars: '',
+  };
+}
 
 function formatCents(cents: number, currency: 'CAD' | 'USD' = 'CAD'): string {
   const formatted = (Math.abs(cents) / 100).toLocaleString('en-CA', {
@@ -147,8 +183,16 @@ export default function BillingAccountingDesk() {
   const [tractors, setTractors] = useState<EquipmentSummary[]>([]);
   const [busyInvoiceId, setBusyInvoiceId] = useState<string | null>(null);
 
+  // Create Invoice Modal state
+  const [createInvOpen, setCreateInvOpen] = useState(false);
+  const [createInvBusy, setCreateInvBusy] = useState(false);
+  const [createInvError, setCreateInvError] = useState<string | null>(null);
+  const [createInvForm, setCreateInvForm] = useState<CreateInvoiceFormState>(() => createEmptyInvoiceForm());
+  const createInvLoadRef = useRef<HTMLSelectElement | null>(null);
+
   // Mark Paid Modal state
   const [payModalInv, setPayModalInv] = useState<InvoiceRow | null>(null);
+  const [renderedPayInv, setRenderedPayInv] = useState<InvoiceRow | null>(null);
   const [paymentRef, setPaymentRef] = useState('EFT/ACH-CLEARED');
   const payInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -166,13 +210,39 @@ export default function BillingAccountingDesk() {
   const [iftaRawCount, setIftaRawCount] = useState(0);
   const [iftaBusy, setIftaBusy] = useState(false);
   const [iftaForm, setIftaForm] = useState({
-    tractorId: 'eq_trc_101',
+    tractorId: '',
     loadId: '',
     jurisdictionCode: 'PE',
     distanceKm: '240',
     fuelLiters: '150',
     fuelCostDollars: '265.00',
   });
+
+  const closePayModal = useCallback(() => {
+    setPayModalInv(null);
+  }, []);
+
+  const closeCreateInvModal = useCallback(() => {
+    setCreateInvOpen(false);
+  }, []);
+
+  const payModal = useModalFocusTrap<HTMLDivElement, HTMLInputElement>({
+    open: Boolean(payModalInv),
+    onClose: closePayModal,
+    initialFocusRef: payInputRef,
+  });
+
+  const createInvModal = useModalFocusTrap<HTMLDivElement, HTMLElement>({
+    open: createInvOpen,
+    onClose: closeCreateInvModal,
+    initialFocusRef: createInvLoadRef as unknown as RefObject<HTMLElement | null>,
+  });
+
+  useEffect(() => {
+    if (payModalInv) {
+      setRenderedPayInv(payModalInv);
+    }
+  }, [payModalInv]);
 
   const fetchBillingCore = useCallback(async () => {
     try {
@@ -247,16 +317,101 @@ export default function BillingAccountingDesk() {
     void fetchIfta(quarter);
   }, [quarter, fetchIfta]);
 
-  useEffect(() => {
-    if (payModalInv) {
-      payInputRef.current?.focus();
+  const handleOpenCreateInvoice = () => {
+    setCreateInvError(null);
+    const firstLoad = loads[0];
+    if (firstLoad) {
+      setCreateInvForm({
+        loadId: firstLoad.id,
+        shipperOrgId: firstLoad.shipperOrgId,
+        currency: firstLoad.currency,
+        direction: firstLoad.direction,
+        destinationProvince: 'PE',
+        dueDays: '30',
+        itemCode: 'FREIGHT',
+        itemDescription: `Commercial Freight Linehaul (${firstLoad.commodity})`,
+        amountDollars: (firstLoad.rateCustomerCents / 100).toFixed(2),
+      });
+    } else {
+      setCreateInvForm(createEmptyInvoiceForm());
     }
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && payModalInv) setPayModalInv(null);
+    setCreateInvOpen(true);
+  };
+
+  const handleCreateInvoiceLoadChange = (nextLoadId: string) => {
+    const matched = loads.find((l) => l.id === nextLoadId);
+    if (!matched) {
+      setCreateInvForm((prev) => ({ ...prev, loadId: nextLoadId }));
+      return;
+    }
+    setCreateInvForm((prev) => ({
+      ...prev,
+      loadId: matched.id,
+      shipperOrgId: matched.shipperOrgId,
+      currency: matched.currency,
+      direction: matched.direction,
+      itemDescription: `Commercial Freight Linehaul (${matched.commodity})`,
+      amountDollars: (matched.rateCustomerCents / 100).toFixed(2),
+    }));
+  };
+
+  const handleCreateInvoiceSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCreateInvBusy(true);
+    setCreateInvError(null);
+
+    const amountCents = Math.round(Number(createInvForm.amountDollars) * 100);
+    if (!Number.isFinite(amountCents) || amountCents < 100) {
+      setCreateInvError('Invoice line item amount must be at least $1.00.');
+      setCreateInvBusy(false);
+      return;
+    }
+
+    const dueDays = Math.max(0, Math.min(90, Math.round(Number(createInvForm.dueDays) || 30)));
+    const payload = {
+      loadId: createInvForm.loadId.trim(),
+      shipperOrgId: createInvForm.shipperOrgId.trim(),
+      currency: createInvForm.currency,
+      direction: createInvForm.direction,
+      destinationProvince:
+        createInvForm.direction === 'domestic_ca' && createInvForm.destinationProvince.trim()
+          ? createInvForm.destinationProvince.trim().toUpperCase()
+          : undefined,
+      dueDays,
+      lineItems: [
+        {
+          code: createInvForm.itemCode.trim().toUpperCase() || 'FREIGHT',
+          description: createInvForm.itemDescription.trim() || 'Commercial Freight Linehaul',
+          quantity: 1,
+          unitPriceCents: amountCents,
+          amountCents,
+        },
+      ],
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [payModalInv]);
+
+    try {
+      const res = await fetch('/api/ops/billing/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; invoiceNumber?: string };
+      if (!res.ok) {
+        setCreateInvError(data.error || `Failed to create invoice (HTTP ${res.status}).`);
+      } else {
+        setBanner({
+          kind: 'success',
+          text: `Invoice ${data.invoiceNumber} created in Pending Approval state.`,
+        });
+        setCreateInvOpen(false);
+        await fetchBillingCore();
+      }
+    } catch {
+      setCreateInvError('Network error creating invoice.');
+    } finally {
+      setCreateInvBusy(false);
+    }
+  };
 
   const handleApproveInvoice = async (inv: InvoiceRow) => {
     setBusyInvoiceId(inv.id);
@@ -413,15 +568,38 @@ export default function BillingAccountingDesk() {
     { id: 'pnl', label: 'Load P&L Margin', icon: TrendingUp },
   ];
 
+  const handleTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>, idx: number) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = tabs[(idx + 1) % tabs.length];
+      setActiveTab(next.id);
+      document.getElementById(`billing-tab-${next.id}`)?.focus();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+      setActiveTab(prev.id);
+      document.getElementById(`billing-tab-${prev.id}`)?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setActiveTab(tabs[0].id);
+      document.getElementById(`billing-tab-${tabs[0].id}`)?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      const last = tabs[tabs.length - 1];
+      setActiveTab(last.id);
+      document.getElementById(`billing-tab-${last.id}`)?.focus();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-widest text-bro-cyan">
-            MODULE 04 // INTEGER-CENT ACCOUNTING · FACTORING · PAYROLL · IFTA
+          <p className="text-xs font-medium uppercase tracking-wider text-bro-cyan">
+            Integer-Cent Accounting · Factoring · Payroll · IFTA
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight mt-1">
             Billing, Settlements &amp; IFTA Tax Desk
           </h1>
         </div>
@@ -431,10 +609,10 @@ export default function BillingAccountingDesk() {
             void fetchBillingCore();
             void fetchIfta(quarter);
           }}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-steel border border-white/15 hover:border-bro-cyan/50 font-mono text-xs text-white cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-[#0b1120] border border-white/15 hover:border-bro-cyan/50 text-xs font-semibold text-white cursor-pointer transition-colors"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Sync Ledgers
+          <RefreshCw className="w-4 h-4" aria-hidden="true" />
+          <span>Sync Ledgers</span>
         </button>
       </div>
 
@@ -442,39 +620,52 @@ export default function BillingAccountingDesk() {
       {banner && (
         <div
           role={banner.kind === 'error' ? 'alert' : 'status'}
-          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border font-mono text-xs ${
+          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-xs font-medium ${
             banner.kind === 'error'
-              ? 'bg-rose-950/50 border-bro-crimson/40 text-rose-200'
-              : 'bg-emerald-950/50 border-emerald-500/40 text-emerald-200'
+              ? 'bg-rose-950/60 border-rose-400/50 text-rose-200'
+              : 'bg-emerald-950/60 border-emerald-400/40 text-emerald-200'
           }`}
         >
           <span>{banner.text}</span>
-          <button type="button" onClick={() => setBanner(null)} aria-label="Dismiss" className="cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setBanner(null)}
+            aria-label="Dismiss message"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* 4-Tab Navigation */}
-      <div role="tablist" aria-label="Billing and Accounting Modules" className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
-        {tabs.map((tab) => {
+      <div
+        role="tablist"
+        aria-label="Billing and Accounting Modules"
+        className="flex flex-wrap gap-2 border-b border-white/10 pb-3"
+      >
+        {tabs.map((tab, idx) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              id={`billing-tab-${tab.id}`}
               type="button"
               role="tab"
               aria-selected={active}
+              aria-controls={`billing-panel-${tab.id}`}
+              tabIndex={active ? 0 : -1}
               onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded font-mono text-xs uppercase transition-colors border cursor-pointer ${
+              onKeyDown={(e) => handleTabKeyDown(e, idx)}
+              className={`inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold transition-colors border cursor-pointer ${
                 active
-                  ? 'bg-bro-cyan/15 border-bro-cyan/50 text-bro-cyan font-bold'
-                  : 'bg-bro-steel/50 border-white/10 text-slate-300 hover:text-white'
+                  ? 'bg-white text-black border-white shadow-sm'
+                  : 'bg-[#0b1120] border-white/10 text-slate-300 hover:text-white hover:border-white/25'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              {tab.label}
+              <Icon className="w-4 h-4" aria-hidden="true" />
+              <span>{tab.label}</span>
             </button>
           );
         })}
@@ -482,47 +673,68 @@ export default function BillingAccountingDesk() {
 
       {/* TAB A: INVOICES & AR AGING */}
       {activeTab === 'invoices' && (
-        <div className="space-y-6">
+        <div
+          role="tabpanel"
+          id="billing-panel-invoices"
+          aria-labelledby="billing-tab-invoices"
+          className="space-y-6"
+        >
           {/* AR Aging KPI Strip */}
-          <section aria-label="Accounts Receivable Aging Buckets" className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <section
+            aria-label="Accounts Receivable Aging Buckets"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+          >
             {[
               { label: 'Current (Not Due)', cents: aging.currentCents, cls: 'text-bro-cyan border-bro-cyan/30' },
-              { label: '1–30 Days Overdue', cents: aging.days1To30Cents, cls: 'text-emerald-300 border-emerald-500/30' },
+              { label: '1–30 Days Overdue', cents: aging.days1To30Cents, cls: 'text-emerald-200 border-emerald-400/30' },
               { label: '31–60 Days Overdue', cents: aging.days31To60Cents, cls: 'text-bro-gold border-bro-gold/35' },
-              { label: '61–90 Days Overdue', cents: aging.days61To90Cents, cls: 'text-amber-400 border-amber-500/35' },
-              { label: '90+ Days Critical', cents: aging.over90Cents, cls: 'text-bro-crimson border-bro-crimson/40' },
+              { label: '61–90 Days Overdue', cents: aging.days61To90Cents, cls: 'text-amber-300 border-amber-400/35' },
+              { label: '90+ Days Critical', cents: aging.over90Cents, cls: 'text-rose-200 border-rose-400/50' },
             ].map((bucket) => (
-              <div key={bucket.label} className={`glass-panel rounded-lg p-4 border ${bucket.cls}`}>
-                <div className="font-mono text-[10px] uppercase text-slate-400">{bucket.label}</div>
-                <div className="text-xl font-bold font-mono tabular-nums mt-2">{formatCentsShort(bucket.cents)}</div>
+              <div
+                key={bucket.label}
+                className={`surface-ceramic rounded-2xl p-4 border last:col-span-2 sm:last:col-span-1 ${bucket.cls}`}
+              >
+                <div className="text-xs font-medium text-slate-300">{bucket.label}</div>
+                <div className="text-xl sm:text-2xl font-display font-bold tabular-nums mt-2">
+                  {formatCentsShort(bucket.cents)}
+                </div>
               </div>
             ))}
           </section>
 
           {/* Invoices Table */}
-          <section aria-label="Accounts Receivable Invoices" className="glass-panel rounded-lg border border-white/10 overflow-hidden">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+          <section aria-label="Accounts Receivable Invoices" className="surface-ceramic rounded-2xl overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-base font-bold text-white">
                 AR Invoices &amp; Factoring Packet Pipeline ({invoices.length})
               </h2>
+              <button
+                type="button"
+                onClick={handleOpenCreateInvoice}
+                className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-bro-cyan text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 cursor-pointer transition-colors"
+              >
+                <Plus className="w-4 h-4" aria-hidden="true" />
+                <span>Create Invoice</span>
+              </button>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                    <th className="px-4 py-2.5">Invoice # / Load</th>
-                    <th className="px-4 py-2.5">Shipper Account</th>
-                    <th className="px-4 py-2.5 text-right">Subtotal / Tax</th>
-                    <th className="px-4 py-2.5 text-right">Total Due</th>
-                    <th className="px-4 py-2.5">Due / Status</th>
-                    <th className="px-4 py-2.5 text-right">Workflow &amp; PDFs</th>
+                  <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                    <th className="px-4 py-3">Invoice # / Load</th>
+                    <th className="px-4 py-3">Shipper Account</th>
+                    <th className="px-4 py-3 text-right">Subtotal / Tax</th>
+                    <th className="px-4 py-3 text-right">Total Due</th>
+                    <th className="px-4 py-3">Due / Status</th>
+                    <th className="px-4 py-3 text-right">Workflow &amp; PDFs</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-xs">
+                <tbody className="divide-y divide-white/[0.06] text-xs">
                   {invoices.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center font-mono text-slate-500">
+                      <td colSpan={6} className="px-4 py-10 text-center text-slate-300">
                         {loading ? 'Loading accounts receivable ledger...' : 'No invoices generated yet.'}
                       </td>
                     </tr>
@@ -532,28 +744,29 @@ export default function BillingAccountingDesk() {
                       const load = loadMap.get(inv.loadId);
                       const isBusy = busyInvoiceId === inv.id;
                       const needsApproval = inv.status === 'pending_approval' || inv.status === 'draft';
+                      const hasFactoringPacket = Boolean(inv.factoringPacketR2Key);
                       return (
-                        <tr key={inv.id} className="hover:bg-white/5">
-                          <td className="px-4 py-3 font-mono whitespace-nowrap">
+                        <tr key={inv.id} className="hover:bg-white/[0.03]">
+                          <td className="px-4 py-3.5 font-mono whitespace-nowrap">
                             <div className="font-bold text-white">{inv.invoiceNumber}</div>
-                            <div className="text-[10px] text-slate-400">{load?.loadNumber || inv.loadId}</div>
+                            <div className="text-xs text-slate-400 mt-0.5">{load?.loadNumber || inv.loadId}</div>
                           </td>
-                          <td className="px-4 py-3">
-                            <div className="text-slate-100">{org?.name || inv.shipperOrgId}</div>
-                            <div className="font-mono text-[10px] text-slate-400">{inv.taxLabel}</div>
+                          <td className="px-4 py-3.5">
+                            <div className="text-sm font-medium text-slate-100">{org?.name || inv.shipperOrgId}</div>
+                            <div className="text-xs text-slate-400 mt-0.5">{inv.taxLabel}</div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono tabular-nums whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right font-mono tabular-nums whitespace-nowrap">
                             <div className="text-slate-200">{formatCents(inv.subtotalCents, inv.currency)}</div>
-                            <div className="text-[10px] text-slate-400">Tax: {formatCents(inv.taxCents, inv.currency)}</div>
+                            <div className="text-xs text-slate-400 mt-0.5">Tax: {formatCents(inv.taxCents, inv.currency)}</div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono font-bold tabular-nums text-white whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right font-mono font-bold tabular-nums text-white whitespace-nowrap">
                             {formatCents(inv.totalCents, inv.currency)}
                           </td>
-                          <td className="px-4 py-3 font-mono whitespace-nowrap">
+                          <td className="px-4 py-3.5 whitespace-nowrap">
                             <span
-                              className={`px-2 py-0.5 rounded border text-[10px] uppercase font-bold ${
+                              className={`px-2.5 py-1 rounded-full border text-xs uppercase font-semibold ${
                                 inv.status === 'paid'
-                                  ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                                  ? 'bg-emerald-950/70 border-emerald-400/50 text-emerald-200'
                                   : inv.status === 'pending_approval'
                                     ? 'bg-bro-gold/15 border-bro-gold/45 text-bro-gold'
                                     : 'bg-bro-cyan/15 border-bro-cyan/45 text-bro-cyan'
@@ -561,22 +774,22 @@ export default function BillingAccountingDesk() {
                             >
                               {inv.status.replace(/_/g, ' ')}
                             </span>
-                            <div className="text-[10px] text-slate-400 mt-1 tabular-nums">
+                            <div className="font-mono text-xs text-slate-400 mt-1.5 tabular-nums">
                               Due {formatDateIso(inv.dueDate)}
                               {inv.paymentRef ? ` · ${inv.paymentRef}` : ''}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right whitespace-nowrap">
-                            <div className="inline-flex flex-wrap justify-end gap-1.5">
+                          <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                            <div className="inline-flex flex-wrap justify-end gap-2">
                               {needsApproval && (
                                 <button
                                   type="button"
                                   disabled={isBusy}
                                   onClick={() => void handleApproveInvoice(inv)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded bg-bro-cyan text-bro-obsidian font-mono text-[10px] font-bold uppercase hover:bg-cyan-300 cursor-pointer disabled:opacity-50"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl bg-bro-cyan text-bro-obsidian text-xs font-bold uppercase hover:bg-cyan-300 cursor-pointer disabled:opacity-50 transition-colors"
                                 >
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  Approve &amp; Assemble Packet
+                                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                  <span>Approve &amp; Assemble Packet</span>
                                 </button>
                               )}
                               {inv.status !== 'paid' && (
@@ -585,36 +798,44 @@ export default function BillingAccountingDesk() {
                                   disabled={isBusy}
                                   onClick={() => {
                                     setPaymentRef('EFT/ACH-CLEARED');
+                                    setRenderedPayInv(inv);
                                     setPayModalInv(inv);
                                   }}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/45 font-mono text-[10px] font-bold uppercase text-emerald-300 cursor-pointer disabled:opacity-50"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-400/45 text-xs font-bold uppercase text-emerald-200 cursor-pointer disabled:opacity-50 transition-colors"
                                 >
-                                  <CreditCard className="w-3 h-3" />
-                                  Mark Paid
+                                  <CreditCard className="w-3.5 h-3.5" aria-hidden="true" />
+                                  <span>Mark Paid</span>
                                 </button>
                               )}
                               <a
                                 href={`/api/billing/invoices/${encodeURIComponent(inv.id)}/pdf`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded bg-bro-steel hover:bg-slate-800 border border-white/15 font-mono text-[10px] text-white"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl bg-[#0b1120] hover:bg-slate-800 border border-white/15 text-xs font-medium text-white transition-colors"
                               >
-                                <FileText className="w-3 h-3 text-bro-cyan" />
-                                Invoice PDF
+                                <FileText className="w-3.5 h-3.5 text-bro-cyan" aria-hidden="true" />
+                                <span>Invoice PDF</span>
                               </a>
-                              <a
-                                href={`/api/ops/billing/invoices/${encodeURIComponent(inv.id)}/factoring-packet.pdf`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded border font-mono text-[10px] ${
-                                  inv.factoringPacketR2Key || inv.status === 'sent' || inv.status === 'paid'
-                                    ? 'bg-bro-gold/15 border-bro-gold/45 text-bro-gold hover:bg-bro-gold/25 font-bold'
-                                    : 'bg-slate-900 border-white/10 text-slate-500'
-                                }`}
-                              >
-                                <Download className="w-3 h-3" />
-                                Factoring Packet PDF
-                              </a>
+                              {hasFactoringPacket ? (
+                                <a
+                                  href={`/api/ops/billing/invoices/${encodeURIComponent(inv.id)}/factoring-packet.pdf`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl border bg-bro-gold/15 border-bro-gold/45 text-bro-gold hover:bg-bro-gold/25 text-xs font-bold transition-colors"
+                                >
+                                  <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                                  <span>Factoring Packet PDF</span>
+                                </a>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled
+                                  title="Approve invoice first to generate and archive the Factoring Packet PDF"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl border bg-white/[0.04] border-white/10 text-slate-400 text-xs font-medium cursor-not-allowed"
+                                >
+                                  <span>Approve for Factoring PDF</span>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -630,19 +851,24 @@ export default function BillingAccountingDesk() {
 
       {/* TAB B: DRIVER SETTLEMENTS */}
       {activeTab === 'settlements' && (
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        <div
+          role="tabpanel"
+          id="billing-panel-settlements"
+          aria-labelledby="billing-tab-settlements"
+          className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start"
+        >
           {/* Settlement Generator Form */}
-          <section aria-label="Generate Driver Settlement Statement" className="xl:col-span-4 glass-panel rounded-lg border border-white/10 p-5 space-y-4">
+          <section aria-label="Generate Driver Settlement Statement" className="xl:col-span-4 surface-ceramic rounded-2xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-              <DollarSign className="w-4 h-4 text-bro-gold" />
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+              <DollarSign className="w-4 h-4 text-bro-gold shrink-0" aria-hidden="true" />
+              <h2 className="font-display text-base font-bold text-white">
                 Generate Driver Settlement Statement
               </h2>
             </div>
 
             <form onSubmit={handleGenerateSettlement} className="space-y-4">
               <div>
-                <label htmlFor="stl-driver" className="block font-mono text-[10px] uppercase text-slate-400 mb-1">
+                <label htmlFor="stl-driver" className="block text-xs font-medium text-slate-300 mb-1.5">
                   Select Driver / Owner-Operator
                 </label>
                 <select
@@ -650,7 +876,7 @@ export default function BillingAccountingDesk() {
                   required
                   value={selectedDriverId}
                   onChange={(e) => setSelectedDriverId(e.target.value)}
-                  className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white"
+                  className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] text-xs text-white outline-none"
                 >
                   <option value="">-- Select Driver --</option>
                   {drivers.map((d) => (
@@ -665,7 +891,7 @@ export default function BillingAccountingDesk() {
               </div>
 
               <div>
-                <label htmlFor="stl-fuel" className="block font-mono text-[10px] uppercase text-slate-400 mb-1">
+                <label htmlFor="stl-fuel" className="block text-xs font-medium text-slate-300 mb-1.5">
                   Fleet Fuel Card Deduction ($ CAD)
                 </label>
                 <input
@@ -675,12 +901,12 @@ export default function BillingAccountingDesk() {
                   min="0"
                   value={fuelDeductionDollars}
                   onChange={(e) => setFuelDeductionDollars(e.target.value)}
-                  className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white tabular-nums"
+                  className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white tabular-nums outline-none"
                 />
               </div>
 
               <div>
-                <label htmlFor="stl-ins" className="block font-mono text-[10px] uppercase text-slate-400 mb-1">
+                <label htmlFor="stl-ins" className="block text-xs font-medium text-slate-300 mb-1.5">
                   Occupational Insurance / Escrow Deduction ($ CAD)
                 </label>
                 <input
@@ -690,25 +916,25 @@ export default function BillingAccountingDesk() {
                   min="0"
                   value={insuranceDeductionDollars}
                   onChange={(e) => setInsuranceDeductionDollars(e.target.value)}
-                  className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white tabular-nums"
+                  className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white tabular-nums outline-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={settleBusy || !selectedDriverId}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-bro-gold text-bro-obsidian font-mono text-xs font-bold uppercase tracking-wider hover:bg-amber-400 cursor-pointer disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-bro-gold text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-amber-400 cursor-pointer disabled:opacity-50 transition-colors"
               >
-                <FileText className="w-4 h-4" />
-                {settleBusy ? 'Rendering PDF Statement...' : 'Generate Statement PDF'}
+                <FileText className="w-4 h-4" aria-hidden="true" />
+                <span>{settleBusy ? 'Rendering PDF Statement...' : 'Generate Statement PDF'}</span>
               </button>
             </form>
           </section>
 
           {/* Settlements History */}
-          <section aria-label="Driver Settlements Ledger" className="xl:col-span-8 glass-panel rounded-lg border border-white/10 overflow-hidden">
-            <div className="p-4 border-b border-white/10">
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+          <section aria-label="Driver Settlements Ledger" className="xl:col-span-8 surface-ceramic rounded-2xl overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-white/10">
+              <h2 className="font-display text-base font-bold text-white">
                 Finalized Driver Settlements ({settlements.length})
               </h2>
             </div>
@@ -716,19 +942,19 @@ export default function BillingAccountingDesk() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                    <th className="px-4 py-2.5">Statement #</th>
-                    <th className="px-4 py-2.5">Driver &amp; Period</th>
-                    <th className="px-4 py-2.5 text-right">Gross Pay</th>
-                    <th className="px-4 py-2.5 text-right">Deductions</th>
-                    <th className="px-4 py-2.5 text-right">Net Pay</th>
-                    <th className="px-4 py-2.5 text-right">PDF</th>
+                  <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                    <th className="px-4 py-3">Statement #</th>
+                    <th className="px-4 py-3">Driver &amp; Period</th>
+                    <th className="px-4 py-3 text-right">Gross Pay</th>
+                    <th className="px-4 py-3 text-right">Deductions</th>
+                    <th className="px-4 py-3 text-right">Net Pay</th>
+                    <th className="px-4 py-3 text-right">PDF</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-xs font-mono">
+                <tbody className="divide-y divide-white/[0.06] text-xs font-mono">
                   {settlements.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                      <td colSpan={6} className="px-4 py-10 text-center font-sans text-slate-300">
                         No driver settlements generated yet. Select a driver to render a statement PDF.
                       </td>
                     </tr>
@@ -736,32 +962,32 @@ export default function BillingAccountingDesk() {
                     settlements.map((stl) => {
                       const drv = driverMap.get(stl.driverId);
                       return (
-                        <tr key={stl.id} className="hover:bg-white/5">
-                          <td className="px-4 py-3 font-bold text-white whitespace-nowrap">{stl.settlementNumber}</td>
-                          <td className="px-4 py-3">
-                            <div className="text-slate-100">{drv?.fullName || stl.driverId}</div>
-                            <div className="text-[10px] text-slate-400 tabular-nums">
+                        <tr key={stl.id} className="hover:bg-white/[0.03]">
+                          <td className="px-4 py-3.5 font-bold text-white whitespace-nowrap">{stl.settlementNumber}</td>
+                          <td className="px-4 py-3.5">
+                            <div className="font-sans text-sm font-medium text-slate-100">{drv?.fullName || stl.driverId}</div>
+                            <div className="text-xs text-slate-400 tabular-nums mt-0.5">
                               {formatDateIso(stl.periodStart)} to {formatDateIso(stl.periodEnd)}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right tabular-nums text-slate-200 whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right tabular-nums text-slate-200 whitespace-nowrap">
                             {formatCents(stl.grossPayCents, stl.currency)}
                           </td>
-                          <td className="px-4 py-3 text-right tabular-nums text-rose-300 whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right tabular-nums text-rose-200 whitespace-nowrap">
                             -{formatCents(stl.deductionsCents, stl.currency)}
                           </td>
-                          <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-300 whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right font-bold tabular-nums text-emerald-200 whitespace-nowrap">
                             {formatCents(stl.netPayCents, stl.currency)}
                           </td>
-                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-right whitespace-nowrap">
                             <a
                               href={`/api/settlements/${encodeURIComponent(stl.id)}/pdf`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded bg-bro-steel hover:bg-slate-800 border border-white/15 text-[10px] text-bro-cyan font-bold"
+                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[40px] rounded-xl bg-[#0b1120] hover:bg-slate-800 border border-white/15 text-xs text-bro-cyan font-bold transition-colors"
                             >
-                              <Download className="w-3 h-3" />
-                              PDF
+                              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>PDF</span>
                             </a>
                           </td>
                         </tr>
@@ -777,65 +1003,73 @@ export default function BillingAccountingDesk() {
 
       {/* TAB C: IFTA QUARTERLY TAX */}
       {activeTab === 'ifta' && (
-        <div className="space-y-6">
+        <div
+          role="tabpanel"
+          id="billing-panel-ifta"
+          aria-labelledby="billing-tab-ifta"
+          className="space-y-6"
+        >
           {/* Quarter Selector & CSV Export */}
-          <div className="flex flex-wrap items-center justify-between gap-3 glass-panel rounded-lg p-4 border border-white/10">
+          <div className="flex flex-wrap items-center justify-between gap-3 surface-ceramic rounded-2xl p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs uppercase text-slate-400">Filing Quarter:</span>
+              <span className="text-xs font-medium text-slate-300 mr-1">Filing Quarter:</span>
               {QUARTERS.map((q) => (
                 <button
                   key={q}
                   type="button"
                   onClick={() => setQuarter(q)}
-                  className={`px-3 py-1.5 rounded font-mono text-xs border cursor-pointer ${
+                  className={`px-3.5 py-2 min-h-[40px] rounded-full font-mono text-xs border cursor-pointer transition-colors ${
                     quarter === q
-                      ? 'bg-bro-cyan/20 border-bro-cyan text-bro-cyan font-bold'
-                      : 'bg-bro-obsidian border-white/10 text-slate-400 hover:text-white'
+                      ? 'bg-white text-black border-white font-bold'
+                      : 'bg-[#0b1120] border-white/10 text-slate-300 hover:text-white'
                   }`}
                 >
                   {q}
                 </button>
               ))}
-              <span className="font-mono text-[11px] text-slate-400 ml-2 tabular-nums">
+              <span className="text-xs text-slate-300 ml-2 tabular-nums">
                 ({iftaRawCount} fuel/mileage logs)
               </span>
             </div>
 
             <a
               href={`/api/ops/ifta/report.csv?quarter=${encodeURIComponent(quarter)}`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-bro-gold text-bro-obsidian font-mono text-xs font-bold uppercase tracking-wider hover:bg-amber-400"
+              download={`BRO-IFTA-${quarter}.csv`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-bro-gold text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-amber-400 transition-colors"
             >
-              <FileSpreadsheet className="w-4 h-4" />
-              Export IFTA CSV ({quarter})
+              <FileSpreadsheet className="w-4 h-4" aria-hidden="true" />
+              <span>Export IFTA CSV ({quarter})</span>
             </a>
           </div>
 
           {/* IFTA Summary KPIs */}
           {iftaReport && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="glass-panel rounded-lg p-4 border border-white/10">
-                <div className="font-mono text-[10px] uppercase text-slate-400">Total Fleet Miles</div>
-                <div className="text-2xl font-bold font-mono tabular-nums text-white mt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="surface-ceramic rounded-2xl p-4 sm:p-5">
+                <div className="text-xs font-medium text-slate-300">Total Fleet Miles</div>
+                <div className="text-xl sm:text-2xl font-display font-bold tabular-nums text-white mt-2">
                   {iftaReport.totalMiles.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi
                 </div>
               </div>
-              <div className="glass-panel rounded-lg p-4 border border-white/10">
-                <div className="font-mono text-[10px] uppercase text-slate-400">Tax-Paid Fuel Purchased</div>
-                <div className="text-2xl font-bold font-mono tabular-nums text-bro-cyan mt-1">
+              <div className="surface-ceramic rounded-2xl p-4 sm:p-5">
+                <div className="text-xs font-medium text-slate-300">Tax-Paid Fuel Purchased</div>
+                <div className="text-xl sm:text-2xl font-display font-bold tabular-nums text-bro-cyan mt-2">
                   {iftaReport.totalGallons.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} gal
                 </div>
               </div>
-              <div className="glass-panel rounded-lg p-4 border border-white/10">
-                <div className="font-mono text-[10px] uppercase text-slate-400">Fleet Average MPG</div>
-                <div className="text-2xl font-bold font-mono tabular-nums text-white mt-1">
+              <div className="surface-ceramic rounded-2xl p-4 sm:p-5">
+                <div className="text-xs font-medium text-slate-300">Fleet Average MPG</div>
+                <div className="text-xl sm:text-2xl font-display font-bold tabular-nums text-white mt-2">
                   {iftaReport.fleetMpg.toFixed(2)} MPG
                 </div>
               </div>
-              <div className="glass-panel rounded-lg p-4 border border-bro-gold/35">
-                <div className="font-mono text-[10px] uppercase text-slate-400">Net IFTA Tax Due / (Credit)</div>
+              <div className="surface-ceramic rounded-2xl p-4 sm:p-5 border border-bro-gold/35">
+                <div className="text-xs font-medium text-slate-300">Net IFTA Tax Due / (Credit)</div>
                 <div
-                  className={`text-2xl font-bold font-mono tabular-nums mt-1 ${
-                    iftaReport.totalNetTaxDueCents > 0 ? 'text-bro-crimson' : 'text-emerald-300'
+                  className={`text-xl sm:text-2xl font-display font-bold tabular-nums mt-2 ${
+                    iftaReport.totalNetTaxDueCents > 0 ? 'text-rose-200' : 'text-emerald-200'
                   }`}
                 >
                   {formatCents(iftaReport.totalNetTaxDueCents, 'USD')}
@@ -846,22 +1080,26 @@ export default function BillingAccountingDesk() {
 
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
             {/* Add Mileage / Fuel Log Form */}
-            <section aria-label="Record IFTA Mileage and Fuel Log" className="xl:col-span-4 glass-panel rounded-lg border border-white/10 p-5 space-y-4">
+            <section aria-label="Record IFTA Mileage and Fuel Log" className="xl:col-span-4 surface-ceramic rounded-2xl p-5 sm:p-6 space-y-4">
               <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-                <Plus className="w-4 h-4 text-bro-cyan" />
-                <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+                <Plus className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
+                <h2 className="font-display text-base font-bold text-white">
                   Add Jurisdiction Log ({quarter})
                 </h2>
               </div>
 
-              <form onSubmit={handleAddIftaLog} className="space-y-3">
+              <form onSubmit={handleAddIftaLog} className="space-y-3.5">
                 <div>
-                  <label className="block font-mono text-[10px] uppercase text-slate-400 mb-1">Tractor Unit</label>
+                  <label htmlFor="ifta-tractor" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Tractor Unit
+                  </label>
                   {tractors.length > 0 ? (
                     <select
+                      id="ifta-tractor"
+                      required
                       value={iftaForm.tractorId}
                       onChange={(e) => setIftaForm({ ...iftaForm, tractorId: e.target.value })}
-                      className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white outline-none"
                     >
                       {tractors.map((t) => (
                         <option key={t.id} value={t.id}>
@@ -871,21 +1109,26 @@ export default function BillingAccountingDesk() {
                     </select>
                   ) : (
                     <input
+                      id="ifta-tractor"
                       type="text"
                       required
+                      placeholder="e.g. eq_trc_101"
                       value={iftaForm.tractorId}
                       onChange={(e) => setIftaForm({ ...iftaForm, tractorId: e.target.value })}
-                      className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white placeholder:text-slate-400 outline-none"
                     />
                   )}
                 </div>
 
                 <div>
-                  <label className="block font-mono text-[10px] uppercase text-slate-400 mb-1">Jurisdiction (State / Prov)</label>
+                  <label htmlFor="ifta-jurisdiction" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Jurisdiction (State / Province)
+                  </label>
                   <select
+                    id="ifta-jurisdiction"
                     value={iftaForm.jurisdictionCode}
                     onChange={(e) => setIftaForm({ ...iftaForm, jurisdictionCode: e.target.value })}
-                    className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white"
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white outline-none"
                   >
                     {IFTA_JURISDICTIONS.map((jur) => (
                       <option key={jur} value={jur}>
@@ -895,48 +1138,57 @@ export default function BillingAccountingDesk() {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-mono text-[10px] uppercase text-slate-400 mb-1">Distance (km)</label>
+                    <label htmlFor="ifta-distance" className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Distance (km)
+                    </label>
                     <input
+                      id="ifta-distance"
                       type="number"
                       min="0"
                       step="0.1"
                       required
                       value={iftaForm.distanceKm}
                       onChange={(e) => setIftaForm({ ...iftaForm, distanceKm: e.target.value })}
-                      className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white tabular-nums"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white tabular-nums outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block font-mono text-[10px] uppercase text-slate-400 mb-1">Fuel (Liters)</label>
+                    <label htmlFor="ifta-fuel-liters" className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Fuel (Liters)
+                    </label>
                     <input
+                      id="ifta-fuel-liters"
                       type="number"
                       min="0"
                       step="0.1"
                       value={iftaForm.fuelLiters}
                       onChange={(e) => setIftaForm({ ...iftaForm, fuelLiters: e.target.value })}
-                      className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white tabular-nums"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white tabular-nums outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-mono text-[10px] uppercase text-slate-400 mb-1">Receipt Fuel Cost ($)</label>
+                  <label htmlFor="ifta-fuel-cost" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Receipt Fuel Cost ($)
+                  </label>
                   <input
+                    id="ifta-fuel-cost"
                     type="number"
                     min="0"
                     step="0.01"
                     value={iftaForm.fuelCostDollars}
                     onChange={(e) => setIftaForm({ ...iftaForm, fuelCostDollars: e.target.value })}
-                    className="w-full rounded bg-bro-obsidian border border-white/15 px-3 py-2 font-mono text-xs text-white tabular-nums"
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white tabular-nums outline-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={iftaBusy}
-                  className="w-full px-4 py-2.5 rounded bg-bro-cyan text-bro-obsidian font-mono text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 cursor-pointer disabled:opacity-50"
+                  disabled={iftaBusy || !iftaForm.tractorId.trim()}
+                  className="w-full px-4 py-2.5 min-h-[44px] rounded-xl bg-bro-cyan text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   {iftaBusy ? 'Logging Entry...' : 'Record IFTA Entry'}
                 </button>
@@ -944,9 +1196,9 @@ export default function BillingAccountingDesk() {
             </section>
 
             {/* Jurisdiction Breakdown Table */}
-            <section aria-label="IFTA Jurisdiction Breakdown" className="xl:col-span-8 glass-panel rounded-lg border border-white/10 overflow-hidden">
-              <div className="p-4 border-b border-white/10">
-                <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+            <section aria-label="IFTA Jurisdiction Breakdown" className="xl:col-span-8 surface-ceramic rounded-2xl overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-white/10">
+                <h2 className="font-display text-base font-bold text-white">
                   Jurisdiction Breakdown — {quarter}
                 </h2>
               </div>
@@ -954,37 +1206,37 @@ export default function BillingAccountingDesk() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                      <th className="px-4 py-2.5">Jurisdiction</th>
-                      <th className="px-4 py-2.5 text-right">Miles</th>
-                      <th className="px-4 py-2.5 text-right">Taxable Gal</th>
-                      <th className="px-4 py-2.5 text-right">Tax-Paid Gal</th>
-                      <th className="px-4 py-2.5 text-right">Net Gal</th>
-                      <th className="px-4 py-2.5 text-right">Rate ($/gal)</th>
-                      <th className="px-4 py-2.5 text-right">Net Tax Due</th>
+                    <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                      <th className="px-4 py-3">Jurisdiction</th>
+                      <th className="px-4 py-3 text-right">Miles</th>
+                      <th className="px-4 py-3 text-right">Taxable Gal</th>
+                      <th className="px-4 py-3 text-right">Tax-Paid Gal</th>
+                      <th className="px-4 py-3 text-right">Net Gal</th>
+                      <th className="px-4 py-3 text-right">Rate ($/gal)</th>
+                      <th className="px-4 py-3 text-right">Net Tax Due</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-xs font-mono tabular-nums">
+                  <tbody className="divide-y divide-white/[0.06] text-xs font-mono tabular-nums">
                     {!iftaReport || iftaReport.jurisdictions.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={7} className="px-4 py-10 text-center font-sans text-slate-300">
                           No IFTA jurisdiction logs recorded for {quarter}.
                         </td>
                       </tr>
                     ) : (
                       iftaReport.jurisdictions.map((j) => (
-                        <tr key={j.jurisdictionCode} className="hover:bg-white/5">
-                          <td className="px-4 py-3 font-bold text-white">{j.jurisdictionCode}</td>
-                          <td className="px-4 py-3 text-right text-slate-200">{j.miles.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-right text-slate-300">{j.taxableGallons.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-right text-bro-cyan">{j.taxPaidGallons.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-right text-slate-200">{j.netTaxableGallons.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-right text-slate-400">
+                        <tr key={j.jurisdictionCode} className="hover:bg-white/[0.03]">
+                          <td className="px-4 py-3.5 font-bold text-white">{j.jurisdictionCode}</td>
+                          <td className="px-4 py-3.5 text-right text-slate-200">{j.miles.toFixed(2)}</td>
+                          <td className="px-4 py-3.5 text-right text-slate-300">{j.taxableGallons.toFixed(2)}</td>
+                          <td className="px-4 py-3.5 text-right text-bro-cyan">{j.taxPaidGallons.toFixed(2)}</td>
+                          <td className="px-4 py-3.5 text-right text-slate-200">{j.netTaxableGallons.toFixed(2)}</td>
+                          <td className="px-4 py-3.5 text-right text-slate-300">
                             ${(j.taxRateCentsPerGal / 100).toFixed(2)}
                           </td>
                           <td
-                            className={`px-4 py-3 text-right font-bold ${
-                              j.netTaxDueCents > 0 ? 'text-bro-crimson' : 'text-emerald-300'
+                            className={`px-4 py-3.5 text-right font-bold ${
+                              j.netTaxDueCents > 0 ? 'text-rose-200' : 'text-emerald-200'
                             }`}
                           >
                             {formatCents(j.netTaxDueCents, 'USD')}
@@ -1002,37 +1254,42 @@ export default function BillingAccountingDesk() {
 
       {/* TAB D: LOAD P&L MARGIN */}
       {activeTab === 'pnl' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="glass-panel rounded-lg p-4 border border-bro-cyan/30">
-              <div className="font-mono text-[10px] uppercase text-slate-400">Gross Customer Revenue</div>
-              <div className="text-2xl font-bold font-mono tabular-nums text-white mt-1">
+        <div
+          role="tabpanel"
+          id="billing-panel-pnl"
+          aria-labelledby="billing-tab-pnl"
+          className="space-y-6"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="surface-ceramic rounded-2xl p-4 sm:p-5 border border-bro-cyan/30">
+              <div className="text-xs font-medium text-slate-300">Gross Customer Revenue</div>
+              <div className="text-xl sm:text-2xl font-display font-bold tabular-nums text-white mt-2">
                 {formatCentsShort(pnlTotals.revCents)}
               </div>
             </div>
-            <div className="glass-panel rounded-lg p-4 border border-white/10">
-              <div className="font-mono text-[10px] uppercase text-slate-400">Carrier / Driver Cost</div>
-              <div className="text-2xl font-bold font-mono tabular-nums text-slate-200 mt-1">
+            <div className="surface-ceramic rounded-2xl p-4 sm:p-5">
+              <div className="text-xs font-medium text-slate-300">Carrier / Driver Cost</div>
+              <div className="text-xl sm:text-2xl font-display font-bold tabular-nums text-slate-200 mt-2">
                 {formatCentsShort(pnlTotals.costCents)}
               </div>
             </div>
-            <div className="glass-panel rounded-lg p-4 border border-emerald-500/35">
-              <div className="font-mono text-[10px] uppercase text-slate-400">Net Gross Profit</div>
-              <div className="text-2xl font-bold font-mono tabular-nums text-emerald-300 mt-1">
+            <div className="surface-ceramic rounded-2xl p-4 sm:p-5 border border-emerald-400/35">
+              <div className="text-xs font-medium text-slate-300">Net Gross Profit</div>
+              <div className="text-xl sm:text-2xl font-display font-bold tabular-nums text-emerald-200 mt-2">
                 {formatCentsShort(totalProfitCents)}
               </div>
             </div>
-            <div className="glass-panel rounded-lg p-4 border border-bro-gold/35">
-              <div className="font-mono text-[10px] uppercase text-slate-400">Blended Net Margin</div>
-              <div className="text-2xl font-bold font-mono tabular-nums text-bro-gold mt-1">
+            <div className="surface-ceramic rounded-2xl p-4 sm:p-5 border border-bro-gold/35">
+              <div className="text-xs font-medium text-slate-300">Blended Net Margin</div>
+              <div className="text-xl sm:text-2xl font-display font-bold tabular-nums text-bro-gold mt-2">
                 {blendedMarginPct}%
               </div>
             </div>
           </div>
 
-          <section aria-label="Per-Load Profit and Loss Table" className="glass-panel rounded-lg border border-white/10 overflow-hidden">
-            <div className="p-4 border-b border-white/10">
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+          <section aria-label="Per-Load Profit and Loss Table" className="surface-ceramic rounded-2xl overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-white/10">
+              <h2 className="font-display text-base font-bold text-white">
                 Per-Load Revenue vs. Carrier/Driver Cost &amp; Net Margin ({loads.length} loads)
               </h2>
             </div>
@@ -1040,20 +1297,20 @@ export default function BillingAccountingDesk() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/10 bg-bro-obsidian/50 font-mono text-[10px] uppercase text-slate-400">
-                    <th className="px-4 py-2.5">Load # / Division</th>
-                    <th className="px-4 py-2.5">Shipper</th>
-                    <th className="px-4 py-2.5 text-right">Loaded Miles</th>
-                    <th className="px-4 py-2.5 text-right">Customer Rev</th>
-                    <th className="px-4 py-2.5 text-right">Carrier Cost</th>
-                    <th className="px-4 py-2.5 text-right">Net Profit</th>
-                    <th className="px-4 py-2.5 text-right">Margin %</th>
+                  <tr className="border-b border-white/10 bg-[#0b1120] text-xs font-medium text-slate-300">
+                    <th className="px-4 py-3">Load # / Division</th>
+                    <th className="px-4 py-3">Shipper</th>
+                    <th className="px-4 py-3 text-right">Loaded Miles</th>
+                    <th className="px-4 py-3 text-right">Customer Rev</th>
+                    <th className="px-4 py-3 text-right">Carrier Cost</th>
+                    <th className="px-4 py-3 text-right">Net Profit</th>
+                    <th className="px-4 py-3 text-right">Margin %</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-xs font-mono tabular-nums">
+                <tbody className="divide-y divide-white/[0.06] text-xs font-mono tabular-nums">
                   {loads.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                      <td colSpan={7} className="px-4 py-10 text-center font-sans text-slate-300">
                         No loads available for P&amp;L analysis.
                       </td>
                     </tr>
@@ -1068,32 +1325,32 @@ export default function BillingAccountingDesk() {
                           ? 'bg-bro-cyan/15 text-bro-cyan border-bro-cyan/40'
                           : marginPct >= 15
                             ? 'bg-bro-gold/15 text-bro-gold border-bro-gold/40'
-                            : 'bg-bro-crimson/15 text-bro-crimson border-bro-crimson/40';
+                            : 'bg-rose-950/70 text-rose-200 border-rose-400/50';
                       return (
-                        <tr key={l.id} className="hover:bg-white/5">
-                          <td className="px-4 py-3">
+                        <tr key={l.id} className="hover:bg-white/[0.03]">
+                          <td className="px-4 py-3.5">
                             <div className="font-bold text-white">{l.loadNumber}</div>
-                            <div className="text-[10px] text-slate-400 uppercase">
+                            <div className="text-xs text-slate-400 uppercase mt-0.5">
                               {l.equipmentType.replace(/_/g, ' ')} · {l.status}
                             </div>
                           </td>
-                          <td className="px-4 py-3 font-sans text-slate-200">{org?.name || l.shipperOrgId}</td>
-                          <td className="px-4 py-3 text-right text-slate-300">{l.loadedMiles.toLocaleString()} mi</td>
-                          <td className="px-4 py-3 text-right text-white">
+                          <td className="px-4 py-3.5 font-sans text-sm text-slate-100">{org?.name || l.shipperOrgId}</td>
+                          <td className="px-4 py-3.5 text-right text-slate-300">{l.loadedMiles.toLocaleString()} mi</td>
+                          <td className="px-4 py-3.5 text-right text-white">
                             {formatCents(l.rateCustomerCents, l.currency)}
                           </td>
-                          <td className="px-4 py-3 text-right text-slate-300">
+                          <td className="px-4 py-3.5 text-right text-slate-300">
                             {formatCents(l.rateCarrierCents, l.currency)}
                           </td>
                           <td
-                            className={`px-4 py-3 text-right font-bold ${
-                              profitCents >= 0 ? 'text-emerald-300' : 'text-bro-crimson'
+                            className={`px-4 py-3.5 text-right font-bold ${
+                              profitCents >= 0 ? 'text-emerald-200' : 'text-rose-200'
                             }`}
                           >
                             {formatCents(profitCents, l.currency)}
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${marginBadge}`}>
+                          <td className="px-4 py-3.5 text-right">
+                            <span className={`px-2.5 py-1 rounded-full border text-xs font-bold ${marginBadge}`}>
                               {marginPct.toFixed(1)}%
                             </span>
                           </td>
@@ -1108,38 +1365,268 @@ export default function BillingAccountingDesk() {
         </div>
       )}
 
-      {/* Accessible Mark Paid Modal (replaces browser prompt) */}
-      {payModalInv && (
+      {/* Accessible Create Commercial Invoice Modal */}
+      {createInvModal.mounted && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-invoice-title"
+        >
+          <div
+            className="bro-modal-backdrop fixed inset-0 bg-black/75 backdrop-blur-sm"
+            data-visible={createInvModal.visible ? 'true' : 'false'}
+            onClick={closeCreateInvModal}
+          />
+          <div
+            ref={createInvModal.containerRef}
+            data-visible={createInvModal.visible ? 'true' : 'false'}
+            className="bro-modal-panel relative z-10 w-full max-w-xl surface-ceramic rounded-2xl border border-bro-cyan/40 shadow-2xl overflow-hidden my-auto"
+          >
+            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Receipt className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
+                <h3 id="create-invoice-title" className="font-display text-base font-bold text-white">
+                  Create Commercial Invoice
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeCreateInvModal}
+                aria-label="Close create invoice modal"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateInvoiceSubmit} className="p-5 space-y-4">
+              {createInvError && (
+                <div role="alert" className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-400/50 text-xs text-rose-200">
+                  {createInvError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label htmlFor="inv-load-id" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Billable Load
+                  </label>
+                  <select
+                    id="inv-load-id"
+                    ref={createInvLoadRef}
+                    required
+                    value={createInvForm.loadId}
+                    onChange={(e) => handleCreateInvoiceLoadChange(e.target.value)}
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] text-xs text-white outline-none"
+                  >
+                    <option value="">-- Select Load --</option>
+                    {loads.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.loadNumber} — {l.commodity}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="inv-shipper-org" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Shipper Account
+                  </label>
+                  <select
+                    id="inv-shipper-org"
+                    required
+                    value={createInvForm.shipperOrgId}
+                    onChange={(e) => setCreateInvForm({ ...createInvForm, shipperOrgId: e.target.value })}
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] text-xs text-white outline-none"
+                  >
+                    <option value="">-- Select Shipper --</option>
+                    {orgs.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name} ({o.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="inv-direction" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Tax Jurisdiction / Corridor
+                  </label>
+                  <select
+                    id="inv-direction"
+                    value={createInvForm.direction}
+                    onChange={(e) => setCreateInvForm({ ...createInvForm, direction: e.target.value as LoadDirection })}
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] text-xs text-white outline-none"
+                  >
+                    <option value="ca_to_us">CA → US (Zero-Rated 0%)</option>
+                    <option value="us_to_ca">US → CA (Zero-Rated 0%)</option>
+                    <option value="domestic_ca">Domestic Canada (HST/GST)</option>
+                    <option value="domestic_us">Domestic US (Exempt 0%)</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label htmlFor="inv-currency" className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Currency
+                    </label>
+                    <select
+                      id="inv-currency"
+                      value={createInvForm.currency}
+                      onChange={(e) => setCreateInvForm({ ...createInvForm, currency: e.target.value as 'CAD' | 'USD' })}
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white outline-none"
+                    >
+                      <option value="CAD">CAD</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="inv-due-days" className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Net Terms (Days)
+                    </label>
+                    <input
+                      id="inv-due-days"
+                      type="number"
+                      min="0"
+                      max="90"
+                      required
+                      value={createInvForm.dueDays}
+                      onChange={(e) => setCreateInvForm({ ...createInvForm, dueDays: e.target.value })}
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white tabular-nums outline-none"
+                    />
+                  </div>
+                </div>
+
+                {createInvForm.direction === 'domestic_ca' && (
+                  <div>
+                    <label htmlFor="inv-dest-province" className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Destination Province (HST/GST)
+                    </label>
+                    <input
+                      id="inv-dest-province"
+                      type="text"
+                      maxLength={2}
+                      placeholder="PE"
+                      value={createInvForm.destinationProvince}
+                      onChange={(e) =>
+                        setCreateInvForm({ ...createInvForm, destinationProvince: e.target.value.toUpperCase() })
+                      }
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white uppercase outline-none"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="inv-item-code" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Line Code
+                  </label>
+                  <input
+                    id="inv-item-code"
+                    type="text"
+                    required
+                    minLength={2}
+                    value={createInvForm.itemCode}
+                    onChange={(e) => setCreateInvForm({ ...createInvForm, itemCode: e.target.value.toUpperCase() })}
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white uppercase outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="inv-item-amount" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Linehaul Amount ($)
+                  </label>
+                  <input
+                    id="inv-item-amount"
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    required
+                    placeholder="3850.00"
+                    value={createInvForm.amountDollars}
+                    onChange={(e) => setCreateInvForm({ ...createInvForm, amountDollars: e.target.value })}
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] font-mono text-xs text-white tabular-nums placeholder:text-slate-400 outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label htmlFor="inv-item-desc" className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Line Item Description
+                  </label>
+                  <input
+                    id="inv-item-desc"
+                    type="text"
+                    required
+                    minLength={2}
+                    placeholder="Commercial Freight Linehaul"
+                    value={createInvForm.itemDescription}
+                    onChange={(e) => setCreateInvForm({ ...createInvForm, itemDescription: e.target.value })}
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2.5 min-h-[44px] text-xs text-white placeholder:text-slate-400 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2.5 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={closeCreateInvModal}
+                  className="px-4 py-2 min-h-[44px] rounded-xl border border-white/15 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/[0.05] cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createInvBusy}
+                  className="px-5 py-2 min-h-[44px] rounded-xl bg-bro-cyan text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 cursor-pointer disabled:opacity-50 transition-colors"
+                >
+                  {createInvBusy ? 'Creating Invoice...' : 'Create Invoice'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Accessible Mark Paid Modal */}
+      {payModal.mounted && renderedPayInv && (
+        <div
+          className="fixed inset-0 z-50 flex justify-center p-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="mark-paid-title"
         >
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setPayModalInv(null)} />
-          <div className="relative z-10 w-full max-w-md rounded-lg bg-bro-obsidian border border-emerald-500/40 shadow-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-              <h3 id="mark-paid-title" className="font-mono text-sm font-bold text-white uppercase">
-                Record Settlement Payment — {payModalInv.invoiceNumber}
+          <div
+            className="bro-modal-backdrop fixed inset-0 bg-black/75 backdrop-blur-sm"
+            data-visible={payModal.visible ? 'true' : 'false'}
+            onClick={closePayModal}
+          />
+          <div
+            ref={payModal.containerRef}
+            data-visible={payModal.visible ? 'true' : 'false'}
+            className="bro-modal-panel relative z-10 w-full max-w-md surface-ceramic rounded-2xl border border-emerald-400/40 shadow-2xl overflow-hidden my-auto"
+          >
+            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3">
+              <h3 id="mark-paid-title" className="font-display text-base font-bold text-white">
+                Record Settlement Payment — {renderedPayInv.invoiceNumber}
               </h3>
               <button
                 type="button"
-                onClick={() => setPayModalInv(null)}
+                onClick={closePayModal}
                 aria-label="Close payment modal"
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <form onSubmit={handleMarkPaidSubmit} className="p-5 space-y-4">
-              <div className="p-3 rounded bg-bro-steel/70 border border-white/10 font-mono text-xs flex justify-between">
-                <span className="text-slate-400">Amount Settled:</span>
-                <span className="font-bold text-emerald-300 tabular-nums">
-                  {formatCents(payModalInv.totalCents, payModalInv.currency)}
+              <div className="p-3.5 rounded-xl bg-[#0b1120] border border-white/10 text-xs flex justify-between items-center">
+                <span className="text-slate-300">Amount Settled:</span>
+                <span className="font-mono font-bold text-emerald-200 tabular-nums text-sm">
+                  {formatCents(renderedPayInv.totalCents, renderedPayInv.currency)}
                 </span>
               </div>
               <div>
-                <label htmlFor="payment-ref-input" className="block font-mono text-[10px] uppercase text-slate-400 mb-1">
+                <label htmlFor="payment-ref-input" className="block text-xs font-medium text-slate-300 mb-1.5">
                   EFT / ACH / Factoring Wire Reference
                 </label>
                 <input
@@ -1149,21 +1636,21 @@ export default function BillingAccountingDesk() {
                   required
                   value={paymentRef}
                   onChange={(e) => setPaymentRef(e.target.value)}
-                  className="w-full rounded bg-bro-steel border border-white/15 focus:border-emerald-400 px-3 py-2 font-mono text-xs text-white outline-none"
+                  className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-emerald-400 px-3 py-2.5 min-h-[44px] font-mono text-xs text-white outline-none"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+              <div className="flex flex-wrap justify-end gap-2.5 pt-3 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={() => setPayModalInv(null)}
-                  className="px-4 py-2 rounded border border-white/15 font-mono text-xs text-slate-300 hover:text-white cursor-pointer"
+                  onClick={closePayModal}
+                  className="px-4 py-2 min-h-[44px] rounded-xl border border-white/15 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/[0.05] cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={busyInvoiceId === payModalInv.id}
-                  className="px-4 py-2 rounded bg-emerald-500 text-bro-obsidian font-mono text-xs font-bold uppercase hover:bg-emerald-400 cursor-pointer disabled:opacity-50"
+                  disabled={busyInvoiceId === renderedPayInv.id}
+                  className="px-5 py-2 min-h-[44px] rounded-xl bg-emerald-400 text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-emerald-300 cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   Confirm Payment Received
                 </button>

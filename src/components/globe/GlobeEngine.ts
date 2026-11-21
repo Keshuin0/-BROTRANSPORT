@@ -30,6 +30,7 @@ export interface GlobeEngineOptions {
   onSelectNode?: (node: GlobeNode | null) => void;
   onHoverNode?: (node: GlobeNode | null) => void;
   onContextLost?: (lost: boolean) => void;
+  onUserInteract?: () => void;
 }
 
 interface FreightPulseState {
@@ -48,10 +49,18 @@ interface HubPulseState {
 }
 
 interface FlyToState {
+  startDir: THREE.Vector3;
   targetDir: THREE.Vector3;
+  startDistance: number;
   targetDistance: number;
+  elapsedSec: number;
+  durationSec: number;
+  arcLift: number;
+  slerpAxis: THREE.Vector3;
+  slerpAngle: number;
 }
 
+const UNIT_X = new THREE.Vector3(1, 0, 0);
 const UNIT_Y = new THREE.Vector3(0, 1, 0);
 const UNIT_Z = new THREE.Vector3(0, 0, 1);
 const RAYCAST_THROTTLE_MS = 60;
@@ -61,6 +70,8 @@ const IDLE_SPIN_RAD_PER_SEC = 0.032;
 const SUN_UPDATE_INTERVAL_MS = 60_000;
 const MIN_CAMERA_DISTANCE = 62;
 const MAX_CAMERA_DISTANCE = 210;
+const FLY_DURATION_SEC = 1.15;
+const MAX_SCROLL_TILT_DEG = 6;
 const GOLDEN_RATIO_CONJUGATE = 0.6180339887498949;
 
 export class GlobeEngine {
@@ -68,6 +79,7 @@ export class GlobeEngine {
   private readonly onSelectNode?: (node: GlobeNode | null) => void;
   private readonly onHoverNode?: (node: GlobeNode | null) => void;
   private readonly onContextLost?: (lost: boolean) => void;
+  private readonly onUserInteract?: () => void;
 
   private readonly scene: THREE.Scene;
   private readonly camera: THREE.PerspectiveCamera;
@@ -97,13 +109,15 @@ export class GlobeEngine {
   private readonly pointerNdc = new THREE.Vector2();
   private readonly tempMatrix = new THREE.Matrix4();
   private readonly tempPos = new THREE.Vector3();
-  private readonly tempQuat = new THREE.Quaternion();
   private readonly tempScale = new THREE.Vector3();
   private readonly tempColor = new THREE.Color();
   private readonly tempDir = new THREE.Vector3();
   private readonly tempStepQuat = new THREE.Quaternion();
   private readonly tempIdentityQuat = new THREE.Quaternion();
   private readonly tempProjected = new THREE.Vector3();
+  private readonly tempReticlePos = new THREE.Vector3();
+  private readonly tempReticleNormal = new THREE.Vector3();
+  private readonly tempSpherical = new THREE.Spherical();
 
   private animationFrameId: number | null = null;
   private resumeSpinTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -117,13 +131,23 @@ export class GlobeEngine {
   private reducedMotion = false;
   private shouldSpin = true;
   private disposed = false;
+  private touchOrbitEnabled = false;
+  private isUserInteracting = false;
+  private hasDispatchedDragInteract = false;
+  private ringsPrimed = false;
+
+  private targetScrollTiltRad = 0;
+  private appliedScrollTiltRad = 0;
+  private lastViewportWidth = 0;
+  private lastViewportHeight = 0;
+  private lastPixelRatio = 0;
 
   private lastFrameMs = 0;
   private lastRaycastMs = 0;
   private lastSunUpdateMs = 0;
   private lastMarkerScale = -1;
 
-  private pointerDownPos: { x: number; y: number } | null = null;
+  private pointerDownPos: { x: number; y: number; pointerType: string } | null = null;
   private hoveredNodeId: string | null = null;
   private selectedNodeId: string | null = null;
   private flyState: FlyToState | null = null;
@@ -133,12 +157,18 @@ export class GlobeEngine {
     this.onSelectNode = options.onSelectNode;
     this.onHoverNode = options.onHoverNode;
     this.onContextLost = options.onContextLost;
+    this.onUserInteract = options.onUserInteract;
 
     // Clone border port entries so live wait-time telemetry mutates instance state only
     this.borderPorts = BORDER_PORTS.map((port) => ({ ...port }));
 
     const width = Math.max(1, this.container.clientWidth);
     const height = Math.max(1, this.container.clientHeight);
+    const isMobile = this.isCoarseOrCompactViewport(width);
+    const targetDpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+    this.lastViewportWidth = width;
+    this.lastViewportHeight = height;
+    this.lastPixelRatio = targetDpr;
 
     // 1. Scene & Camera (framed on North America by default)
     this.scene = new THREE.Scene();
@@ -147,21 +177,20 @@ export class GlobeEngine {
     const initialPos = latLonToVector3(initialPreset.lat, initialPreset.lon, initialPreset.distance);
     this.camera.position.copy(initialPos);
 
-    // 2. Renderer (alpha, antialias, high-performance, clamped DPR <= 2)
+    // 2. Renderer (alpha, antialias, high-performance, clamped DPR before setSize)
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.setPixelRatio(targetDpr);
     this.renderer.setSize(width, height, false);
     this.renderer.domElement.style.width = '100%';
     this.renderer.domElement.style.height = '100%';
     this.renderer.domElement.style.display = 'block';
-    this.renderer.domElement.style.touchAction = 'none';
     this.container.appendChild(this.renderer.domElement);
 
-    // 3. OrbitControls
+    // 3. OrbitControls (touch policy applied AFTER OrbitControls constructor)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.06;
@@ -172,6 +201,7 @@ export class GlobeEngine {
     this.controls.zoomSpeed = 0.85;
     this.controls.target.set(0, 0, 0);
     this.controls.update();
+    this.applyTouchPolicy(width);
 
     // 4. Real-Time Solar Terminator Earth Core (Draw Call 1)
     const sunDir = getSubsolarDirection(new Date());
@@ -366,15 +396,75 @@ export class GlobeEngine {
     this.bindEvents();
     this.initObservers();
 
-    // Prime initial transforms so frame 1 is immediately populated
+    this.isDocumentHidden = typeof document !== 'undefined' ? document.hidden : false;
+    this.isVisible = this.checkInitiallyVisible();
+
+    // Prime initial transforms so frame 1 is immediately populated when visible
     this.updateMarkerMatrices(true);
     this.updateFreightPulses(0);
     this.updateArrivalRings(0);
-    this.renderer.render(this.scene, this.camera);
+    if (this.isVisible) {
+      this.renderer.render(this.scene, this.camera);
+    }
 
     // Start frame loop (respecting visibility & reduced motion)
     this.lastFrameMs = performance.now();
     this.startLoop();
+  }
+
+  private isCoarseOrCompactViewport(width = this.container.clientWidth): boolean {
+    const isCoarse =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches;
+    return isCoarse || width < 1024;
+  }
+
+  private applyTouchPolicy(width = this.container.clientWidth): void {
+    const dom = this.renderer.domElement;
+    if (!this.isCoarseOrCompactViewport(width) || this.touchOrbitEnabled) {
+      dom.style.touchAction = 'none';
+      this.controls.touches.ONE = THREE.TOUCH.ROTATE;
+      this.controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+    } else {
+      dom.style.touchAction = 'pan-y';
+      this.controls.touches.ONE = null;
+      this.controls.touches.TWO = null;
+    }
+  }
+
+  private checkInitiallyVisible(): boolean {
+    if (typeof window === 'undefined') return true;
+    const rect = this.container.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return false;
+    const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+    const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+    if (vw <= 0 || vh <= 0) return false;
+    return rect.bottom > 0 && rect.top < vh && rect.right > 0 && rect.left < vw;
+  }
+
+  /**
+   * Enables or disables touch-based 3D globe rotation on coarse/compact viewports,
+   * restoring native `touch-action: pan-y` vertical page scrolling when disabled.
+   */
+  public setTouchOrbitEnabled(enabled: boolean): void {
+    if (this.disposed) return;
+    this.touchOrbitEnabled = enabled;
+    this.applyTouchPolicy(this.container.clientWidth);
+  }
+
+  /**
+   * Applies a subtle scroll-linked polar latitude offset (+/- 6°) when not
+   * dragging, flying, or under reduced-motion preference.
+   */
+  public setScrollProgress(progress: number): void {
+    if (this.disposed) return;
+    if (this.reducedMotion || !Number.isFinite(progress)) {
+      this.targetScrollTiltRad = 0;
+      return;
+    }
+    const clamped = THREE.MathUtils.clamp(progress, -1, 1);
+    this.targetScrollTiltRad = THREE.MathUtils.degToRad(clamped * MAX_SCROLL_TILT_DEG);
   }
 
   private buildCorridorsAndPulses(): {
@@ -458,6 +548,7 @@ export class GlobeEngine {
     this.reducedMotion = this.reducedMotionQuery.matches;
     if (this.reducedMotion) {
       this.shouldSpin = false;
+      this.targetScrollTiltRad = 0;
     }
     this.reducedMotionQuery.addEventListener('change', this.handleReducedMotionChange);
   }
@@ -468,25 +559,33 @@ export class GlobeEngine {
         (entries) => {
           const entry = entries[0];
           if (!entry) return;
-          const visible = entry.isIntersecting;
+          const visible = entry.isIntersecting && entry.intersectionRatio >= 0.15;
           if (visible !== this.isVisible) {
             this.isVisible = visible;
             if (visible) {
-              this.lastFrameMs = performance.now();
-              this.startLoop();
+              if (this.reducedMotion) {
+                this.renderSingleFrame();
+              } else {
+                this.lastFrameMs = performance.now();
+                this.startLoop();
+              }
             } else {
               this.stopLoop();
             }
           }
         },
-        { threshold: 0.05 },
+        { threshold: 0.15 },
       );
       this.intersectionObserver.observe(this.container);
     }
 
     if (typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => {
-        this.handleResize();
+      this.resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        const width = Math.max(1, Math.round(entry.contentRect.width));
+        const height = Math.max(1, Math.round(entry.contentRect.height));
+        this.applyResize(width, height);
       });
       this.resizeObserver.observe(this.container);
     }
@@ -497,15 +596,17 @@ export class GlobeEngine {
     dom.addEventListener('pointermove', this.handlePointerMove, { passive: true });
     dom.addEventListener('pointerdown', this.handlePointerDown, { passive: true });
     dom.addEventListener('pointerup', this.handlePointerUp, { passive: true });
+    dom.addEventListener('pointercancel', this.handlePointerCancel, { passive: true });
     dom.addEventListener('pointerenter', this.handlePointerEnter, { passive: true });
     dom.addEventListener('pointerleave', this.handlePointerLeave, { passive: true });
+    dom.addEventListener('wheel', this.handleWheel, { passive: true });
     dom.addEventListener('webglcontextlost', this.handleContextLost, false);
     dom.addEventListener('webglcontextrestored', this.handleContextRestored, false);
 
     this.controls.addEventListener('start', this.handleControlsStart);
+    this.controls.addEventListener('end', this.handleControlsEnd);
     this.controls.addEventListener('change', this.handleControlsChange);
 
-    window.addEventListener('resize', this.handleResize, { passive: true });
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
@@ -514,6 +615,8 @@ export class GlobeEngine {
     if (this.reducedMotion) {
       this.shouldSpin = false;
       this.flyState = null;
+      this.targetScrollTiltRad = 0;
+      this.appliedScrollTiltRad = 0;
       this.stopLoop();
       this.renderSingleFrame();
     } else {
@@ -524,19 +627,30 @@ export class GlobeEngine {
   };
 
   private readonly handleControlsStart = (): void => {
+    this.isUserInteracting = true;
     this.flyState = null;
+    this.appliedScrollTiltRad = this.targetScrollTiltRad;
     this.pauseSpin();
   };
 
+  private readonly handleControlsEnd = (): void => {
+    this.isUserInteracting = false;
+    this.hasDispatchedDragInteract = false;
+    this.scheduleSpinResume();
+  };
+
   private readonly handleControlsChange = (): void => {
-    if (this.reducedMotion && !this.disposed && !this.isContextLost) {
+    if (this.reducedMotion && !this.disposed && !this.isContextLost && this.isVisible) {
       this.updateMarkerMatrices(false);
       this.updateFocusReticle();
       this.renderer.render(this.scene, this.camera);
     }
   };
 
-  private readonly handlePointerEnter = (): void => {
+  private readonly handlePointerEnter = (event: PointerEvent): void => {
+    if (event.pointerType === 'touch' && this.isCoarseOrCompactViewport() && !this.touchOrbitEnabled) {
+      return;
+    }
     this.pauseSpin();
   };
 
@@ -552,11 +666,53 @@ export class GlobeEngine {
   };
 
   private readonly handlePointerDown = (event: PointerEvent): void => {
-    this.pointerDownPos = { x: event.clientX, y: event.clientY };
+    this.pointerDownPos = {
+      x: event.clientX,
+      y: event.clientY,
+      pointerType: event.pointerType,
+    };
+    this.hasDispatchedDragInteract = false;
+    if (event.pointerType === 'touch' && this.isCoarseOrCompactViewport() && !this.touchOrbitEnabled) {
+      return;
+    }
     this.pauseSpin();
   };
 
+  private readonly handlePointerCancel = (): void => {
+    this.pointerDownPos = null;
+    this.isUserInteracting = false;
+    this.hasDispatchedDragInteract = false;
+    this.scheduleSpinResume();
+  };
+
+  private readonly handleWheel = (): void => {
+    this.flyState = null;
+    this.appliedScrollTiltRad = this.targetScrollTiltRad;
+    this.pauseSpin();
+    this.scheduleSpinResume();
+    this.onUserInteract?.();
+  };
+
   private readonly handlePointerMove = (event: PointerEvent): void => {
+    if (this.pointerDownPos && !this.hasDispatchedDragInteract) {
+      const canOrbitWithPointer =
+        this.pointerDownPos.pointerType !== 'touch' ||
+        !this.isCoarseOrCompactViewport() ||
+        this.touchOrbitEnabled;
+      if (canOrbitWithPointer) {
+        const moved = Math.hypot(
+          event.clientX - this.pointerDownPos.x,
+          event.clientY - this.pointerDownPos.y,
+        );
+        if (moved > CLICK_DRAG_THRESHOLD_PX) {
+          this.hasDispatchedDragInteract = true;
+          this.onUserInteract?.();
+        }
+      }
+    }
+
+    if (event.pointerType === 'touch') return;
+
     const now = performance.now();
     if (now - this.lastRaycastMs < RAYCAST_THROTTLE_MS) return;
     this.lastRaycastMs = now;
@@ -603,6 +759,11 @@ export class GlobeEngine {
   private readonly handleContextLost = (event: Event): void => {
     event.preventDefault();
     this.isContextLost = true;
+    this.flyState = null;
+    if (this.resumeSpinTimeout) {
+      clearTimeout(this.resumeSpinTimeout);
+      this.resumeSpinTimeout = null;
+    }
     this.stopLoop();
     this.onContextLost?.(true);
   };
@@ -625,18 +786,35 @@ export class GlobeEngine {
     }
   };
 
-  private readonly handleResize = (): void => {
+  private applyResize(width: number, height: number): void {
     if (this.disposed) return;
-    const width = Math.max(1, this.container.clientWidth);
-    const height = Math.max(1, this.container.clientHeight);
-    this.camera.aspect = width / height;
+    const clampedW = Math.max(1, width);
+    const clampedH = Math.max(1, height);
+    const isMobile = this.isCoarseOrCompactViewport(clampedW);
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    const targetDpr = Math.min(dpr, isMobile ? 1.5 : 2);
+
+    if (
+      clampedW === this.lastViewportWidth &&
+      clampedH === this.lastViewportHeight &&
+      targetDpr === this.lastPixelRatio
+    ) {
+      return;
+    }
+
+    this.lastViewportWidth = clampedW;
+    this.lastViewportHeight = clampedH;
+    this.lastPixelRatio = targetDpr;
+
+    this.camera.aspect = clampedW / clampedH;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height, false);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    if (this.reducedMotion) {
+    this.renderer.setPixelRatio(targetDpr);
+    this.renderer.setSize(clampedW, clampedH, false);
+    this.applyTouchPolicy(clampedW);
+    if (this.reducedMotion && this.isVisible) {
       this.renderSingleFrame();
     }
-  };
+  }
 
   private pauseSpin(): void {
     this.shouldSpin = false;
@@ -721,7 +899,7 @@ export class GlobeEngine {
 
   /**
    * Smoothly flies the orbital camera to a geographic lat/lon and orbital distance
-   * along a spherical great-circle path (never clipping through Earth).
+   * along a spherical great-circle path using a deterministic quintic ease-in-out curve.
    */
   public flyTo(lat: number, lon: number, distance = 96): void {
     if (this.disposed) return;
@@ -730,6 +908,13 @@ export class GlobeEngine {
       MIN_CAMERA_DISTANCE,
       MAX_CAMERA_DISTANCE,
     );
+
+    // Zero residual OrbitControls damping deltas before sampling start orientation
+    this.controls.enableDamping = false;
+    this.controls.update();
+    this.controls.enableDamping = true;
+    this.appliedScrollTiltRad = this.targetScrollTiltRad;
+
     const targetDir = latLonToVector3(lat, lon, 1).normalize();
     this.pauseSpin();
 
@@ -741,7 +926,42 @@ export class GlobeEngine {
       return;
     }
 
-    this.flyState = { targetDir, targetDistance: clampedDistance };
+    const startDistance = THREE.MathUtils.clamp(
+      this.camera.position.length(),
+      MIN_CAMERA_DISTANCE,
+      MAX_CAMERA_DISTANCE,
+    );
+    const startDir = this.camera.position.clone().normalize();
+    const dot = THREE.MathUtils.clamp(startDir.dot(targetDir), -1, 1);
+    const slerpAngle = Math.acos(dot);
+
+    const slerpAxis = new THREE.Vector3().crossVectors(startDir, targetDir);
+    if (slerpAxis.lengthSq() < 1e-8) {
+      if (dot < 0) {
+        const ref = Math.abs(startDir.y) < 0.9 ? UNIT_Y : UNIT_X;
+        slerpAxis.crossVectors(startDir, ref).normalize();
+      } else {
+        slerpAxis.copy(UNIT_Y);
+      }
+    } else {
+      slerpAxis.normalize();
+    }
+
+    const distSpan = Math.abs(clampedDistance - startDistance);
+    const arcLift = slerpAngle > 0.25 || distSpan > 24 ? Math.min(22, slerpAngle * 11.5) : 0;
+
+    this.flyState = {
+      startDir,
+      targetDir,
+      startDistance,
+      targetDistance: clampedDistance,
+      elapsedSec: 0,
+      durationSec: FLY_DURATION_SEC,
+      arcLift,
+      slerpAxis,
+      slerpAngle,
+    };
+
     if (this.animationFrameId === null && this.isVisible && !this.isDocumentHidden) {
       this.lastFrameMs = performance.now();
       this.startLoop();
@@ -889,10 +1109,10 @@ export class GlobeEngine {
     }
 
     const markerScale = this.computeMarkerScale();
-    const pos = latLonToVector3(node.lat, node.lon, GLOBE_RADIUS + 0.24);
-    const normal = pos.clone().normalize();
-    this.focusReticleMesh.position.copy(pos);
-    this.focusReticleMesh.quaternion.setFromUnitVectors(UNIT_Z, normal);
+    latLonToVector3(node.lat, node.lon, GLOBE_RADIUS + 0.24, this.tempReticlePos);
+    this.tempReticleNormal.copy(this.tempReticlePos).normalize();
+    this.focusReticleMesh.position.copy(this.tempReticlePos);
+    this.focusReticleMesh.quaternion.setFromUnitVectors(UNIT_Z, this.tempReticleNormal);
     this.focusReticleMesh.scale.setScalar(markerScale * 1.25);
 
     if (node.kind === 'border_port') {
@@ -934,10 +1154,13 @@ export class GlobeEngine {
     const markerScale = this.computeMarkerScale();
     const alphaArray = this.ringAlphaAttr.array as Float32Array;
     const waveSpeedPerSec = 0.85;
+    let needsGpuSync = !this.ringsPrimed;
 
     for (let i = 0; i < this.hubPulseStates.length; i++) {
       const hubState = this.hubPulseStates[i];
-      if (hubState.progress >= 0 && dt > 0) {
+      const wasActive = hubState.progress >= 0;
+
+      if (wasActive && dt > 0) {
         hubState.progress += waveSpeedPerSec * dt;
         if (hubState.progress >= 1.0) {
           hubState.progress = -1.0;
@@ -961,49 +1184,51 @@ export class GlobeEngine {
         this.tempMatrix.compose(hubState.position, hubState.quaternion, this.tempScale);
         this.arrivalRingsMesh.setMatrixAt(outerIdx, this.tempMatrix);
         alphaArray[outerIdx] = 0.45 * (1 - p) * (1 - p);
-      } else {
+        needsGpuSync = true;
+      } else if (wasActive || !this.ringsPrimed) {
         this.tempScale.setScalar(0);
         this.tempMatrix.compose(hubState.position, hubState.quaternion, this.tempScale);
         this.arrivalRingsMesh.setMatrixAt(innerIdx, this.tempMatrix);
         this.arrivalRingsMesh.setMatrixAt(outerIdx, this.tempMatrix);
         alphaArray[innerIdx] = 0;
         alphaArray[outerIdx] = 0;
+        needsGpuSync = true;
       }
     }
 
-    this.arrivalRingsMesh.instanceMatrix.needsUpdate = true;
-    this.ringAlphaAttr.needsUpdate = true;
+    this.ringsPrimed = true;
+    if (needsGpuSync) {
+      this.arrivalRingsMesh.instanceMatrix.needsUpdate = true;
+      this.ringAlphaAttr.needsUpdate = true;
+    }
   }
 
   private updateFlyTo(dt: number): void {
-    if (!this.flyState) return;
+    const fly = this.flyState;
+    if (!fly) return;
 
-    const currentDist = this.camera.position.length();
-    const currentDir = this.tempDir.copy(this.camera.position).normalize();
-    const dot = THREE.MathUtils.clamp(currentDir.dot(this.flyState.targetDir), -1, 1);
-    const angle = Math.acos(dot);
+    fly.elapsedSec += dt;
+    const t = Math.min(1, fly.elapsedSec / fly.durationSec);
+    // Quintic ease-in-out curve
+    const eased = t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
 
-    const damping = 1 - Math.exp(-5.4 * dt);
-
-    if (angle < 0.002 && Math.abs(currentDist - this.flyState.targetDistance) < 0.12) {
-      this.camera.position
-        .copy(this.flyState.targetDir)
-        .multiplyScalar(this.flyState.targetDistance);
-      this.flyState = null;
-      return;
-    }
-
-    if (dot < -0.999) {
-      // Exact antipode guard: rotate cleanly around world Y axis
-      this.tempStepQuat.setFromAxisAngle(UNIT_Y, Math.PI * damping);
+    if (fly.slerpAngle > 1e-5) {
+      this.tempStepQuat.setFromAxisAngle(fly.slerpAxis, fly.slerpAngle * eased);
+      this.tempDir.copy(fly.startDir).applyQuaternion(this.tempStepQuat).normalize();
     } else {
-      this.tempQuat.setFromUnitVectors(currentDir, this.flyState.targetDir);
-      this.tempStepQuat.copy(this.tempIdentityQuat).slerp(this.tempQuat, damping);
+      this.tempDir.copy(fly.targetDir);
     }
 
-    currentDir.applyQuaternion(this.tempStepQuat).normalize();
-    const nextDist = THREE.MathUtils.lerp(currentDist, this.flyState.targetDistance, damping);
-    this.camera.position.copy(currentDir).multiplyScalar(nextDist);
+    const baseDist = THREE.MathUtils.lerp(fly.startDistance, fly.targetDistance, eased);
+    const radialLift = fly.arcLift * Math.sin(eased * Math.PI);
+    const nextDist = Math.min(MAX_CAMERA_DISTANCE, baseDist + radialLift);
+
+    this.camera.position.copy(this.tempDir).multiplyScalar(nextDist);
+
+    if (t >= 1) {
+      this.camera.position.copy(fly.targetDir).multiplyScalar(fly.targetDistance);
+      this.flyState = null;
+    }
   }
 
   private refreshSunDirectionIfDue(): void {
@@ -1060,9 +1285,31 @@ export class GlobeEngine {
 
     if (this.flyState) {
       this.updateFlyTo(dt);
-    } else if (this.shouldSpin) {
-      // Gentle deltaTime-normalized azimuthal orbital drift
-      this.camera.position.applyAxisAngle(UNIT_Y, IDLE_SPIN_RAD_PER_SEC * dt);
+    } else {
+      if (this.shouldSpin) {
+        // Gentle deltaTime-normalized azimuthal orbital drift
+        this.camera.position.applyAxisAngle(UNIT_Y, IDLE_SPIN_RAD_PER_SEC * dt);
+      }
+      if (!this.reducedMotion && !this.isUserInteracting) {
+        const tiltLerp = 1 - Math.exp(-8 * dt);
+        const nextTilt = THREE.MathUtils.lerp(
+          this.appliedScrollTiltRad,
+          this.targetScrollTiltRad,
+          tiltLerp,
+        );
+        const deltaTilt = nextTilt - this.appliedScrollTiltRad;
+        if (Math.abs(deltaTilt) > 1e-6) {
+          this.tempSpherical.setFromVector3(this.camera.position);
+          const clampedPhi = THREE.MathUtils.clamp(
+            this.tempSpherical.phi + deltaTilt,
+            0.18,
+            Math.PI - 0.18,
+          );
+          this.appliedScrollTiltRad += clampedPhi - this.tempSpherical.phi;
+          this.tempSpherical.phi = clampedPhi;
+          this.camera.position.setFromSpherical(this.tempSpherical);
+        }
+      }
     }
 
     this.controls.update();
@@ -1101,15 +1348,17 @@ export class GlobeEngine {
     dom.removeEventListener('pointermove', this.handlePointerMove);
     dom.removeEventListener('pointerdown', this.handlePointerDown);
     dom.removeEventListener('pointerup', this.handlePointerUp);
+    dom.removeEventListener('pointercancel', this.handlePointerCancel);
     dom.removeEventListener('pointerenter', this.handlePointerEnter);
     dom.removeEventListener('pointerleave', this.handlePointerLeave);
+    dom.removeEventListener('wheel', this.handleWheel);
     dom.removeEventListener('webglcontextlost', this.handleContextLost);
     dom.removeEventListener('webglcontextrestored', this.handleContextRestored);
 
     this.controls.removeEventListener('start', this.handleControlsStart);
+    this.controls.removeEventListener('end', this.handleControlsEnd);
     this.controls.removeEventListener('change', this.handleControlsChange);
 
-    window.removeEventListener('resize', this.handleResize);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
 
     this.controls.dispose();

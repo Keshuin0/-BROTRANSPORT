@@ -402,16 +402,16 @@ export default function MobileDocScanner({
   return (
     <form
       onSubmit={handleUpload}
-      className="rounded-lg bg-bro-steel/60 border border-white/10 p-5 sm:p-6 space-y-5"
+      className="rounded-2xl surface-ceramic p-5 sm:p-6 space-y-5"
     >
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
-        <div className="flex items-center gap-2">
-          <Camera className="w-4 h-4 text-bro-cyan" />
-          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
-            Mobile Document Capture & OCR Vault
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+        <div className="flex items-center gap-2.5">
+          <Camera className="w-5 h-5 text-bro-cyan shrink-0" aria-hidden="true" />
+          <h3 className="font-display text-base font-bold text-white tracking-tight">
+            Mobile Document Capture &amp; OCR Vault
           </h3>
         </div>
-        <span className="font-mono text-[10px] text-slate-400">
+        <span className="px-2.5 py-1 rounded-full bg-[#060912] border border-white/10 text-xs text-slate-300">
           Max 1800px WebP · PDF Preserved
         </span>
       </div>
@@ -419,14 +419,14 @@ export default function MobileDocScanner({
       {/* Document Type & Linked Load */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label htmlFor="scanner-doc-type" className="block font-mono text-[11px] uppercase text-slate-300">
+          <label htmlFor="scanner-doc-type" className="block text-xs font-medium text-slate-300">
             Document Classification (14 Types)
           </label>
           <select
             id="scanner-doc-type"
             value={docType}
             onChange={(e) => setDocType(e.target.value as DocumentType)}
-            className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-3 text-sm text-white outline-none focus:border-bro-cyan"
+            className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-cyan"
           >
             {DocumentTypeSchema.options.map((opt) => (
               <option key={opt} value={opt}>
@@ -437,14 +437,14 @@ export default function MobileDocScanner({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="scanner-load-id" className="block font-mono text-[11px] uppercase text-slate-300">
+          <label htmlFor="scanner-load-id" className="block text-xs font-medium text-slate-300">
             Linked Load (Optional for Driver Credentials)
           </label>
           <select
             id="scanner-load-id"
             value={selectedLoadId}
             onChange={(e) => setSelectedLoadId(e.target.value)}
-            className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-3 text-sm text-white outline-none focus:border-bro-cyan"
+            className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-cyan"
           >
             <option value="">— Driver / Fleet General Document —</option>
             {loads.map((load) => (
@@ -461,16 +461,16 @@ export default function MobileDocScanner({
       <div className="space-y-3">
         <label
           htmlFor="scanner-file-input"
-          className="flex flex-col items-center justify-center gap-2 min-h-[132px] p-5 rounded-lg border-2 border-dashed border-bro-cyan/40 hover:border-bro-cyan bg-bro-obsidian/70 text-center cursor-pointer transition-colors"
+          className="flex flex-col items-center justify-center gap-2.5 min-h-[144px] p-6 rounded-2xl border-2 border-dashed border-bro-cyan/40 hover:border-bro-cyan focus-within:ring-2 focus-within:ring-bro-cyan focus-within:border-bro-cyan bg-[#060912] text-center cursor-pointer transition-colors"
         >
           <div className="p-3 rounded-full bg-bro-cyan/10 border border-bro-cyan/30 text-bro-cyan">
-            <Camera className="w-6 h-6" />
+            <Camera className="w-6 h-6" aria-hidden="true" />
           </div>
-          <div className="font-mono text-xs font-bold uppercase text-white">
+          <div className="font-display text-sm font-semibold text-white">
             Tap to Scan with Camera or Choose PDF
           </div>
-          <p className="text-[11px] text-slate-400 max-w-sm">
-            Images over 1.2 MB are automatically resized (1800px max) & WebP-compressed on-device before upload.
+          <p className="text-xs text-slate-300 max-w-sm leading-relaxed">
+            Images over 1.2 MB are automatically resized (1800px max) &amp; WebP-compressed on-device before upload.
           </p>
           <input
             ref={inputRef}
@@ -484,29 +484,29 @@ export default function MobileDocScanner({
         </label>
 
         {selectedFile && (
-          <div className="flex items-center justify-between gap-3 p-3.5 rounded-lg bg-bro-obsidian/80 border border-white/15">
+          <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#060912] border border-white/15">
             <div className="flex items-center gap-3 min-w-0">
               {previewUrl ? (
                 <img
                   src={previewUrl}
                   alt="Captured document preview"
-                  className="w-14 h-14 rounded object-cover border border-white/15 shrink-0"
+                  className="w-14 h-14 rounded-xl object-cover border border-white/15 shrink-0"
                 />
               ) : (
-                <div className="w-14 h-14 rounded bg-bro-steel border border-white/10 flex items-center justify-center shrink-0">
+                <div className="w-14 h-14 rounded-xl bg-[#0b1120] border border-white/10 flex items-center justify-center shrink-0">
                   {selectedFile.type === 'application/pdf' ? (
-                    <FileText className="w-6 h-6 text-bro-gold" />
+                    <FileText className="w-6 h-6 text-bro-gold" aria-hidden="true" />
                   ) : (
-                    <ImageIcon className="w-6 h-6 text-bro-cyan" />
+                    <ImageIcon className="w-6 h-6 text-bro-cyan" aria-hidden="true" />
                   )}
                 </div>
               )}
-              <div className="min-w-0">
-                <div className="font-mono text-xs font-bold text-white truncate">{selectedFile.name}</div>
-                <div className="font-mono text-[11px] text-slate-400 tabular-nums">
+              <div className="min-w-0 space-y-0.5">
+                <div className="font-mono text-xs font-semibold text-white truncate">{selectedFile.name}</div>
+                <div className="text-xs text-slate-300 tabular-nums">
                   {formatFileSize(selectedFile.size)} · {selectedFile.type || 'document'}
                   {selectedFile.type.startsWith('image/') && selectedFile.size > COMPRESS_THRESHOLD_BYTES && (
-                    <span className="ml-2 text-bro-cyan">Will optimize to WebP</span>
+                    <span className="ml-2 text-bro-cyan font-medium">Will optimize to WebP</span>
                   )}
                 </div>
               </div>
@@ -515,16 +515,16 @@ export default function MobileDocScanner({
               type="button"
               onClick={clearSelection}
               aria-label="Remove selected file"
-              className="p-2 rounded border border-white/10 text-slate-400 hover:text-rose-300 cursor-pointer shrink-0"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full border border-white/15 bg-[#0b1120] text-slate-300 hover:text-rose-200 hover:border-rose-400/60 focus-visible:ring-2 focus-visible:ring-bro-cyan cursor-pointer shrink-0 transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
       </div>
 
       {compressionNote && (
-        <div className="p-2.5 rounded bg-cyan-950/50 border border-bro-cyan/30 text-bro-cyan font-mono text-[11px] tabular-nums">
+        <div className="p-3 rounded-xl bg-cyan-950/50 border border-bro-cyan/30 text-bro-cyan text-xs font-medium tabular-nums">
           {compressionNote}
         </div>
       )}
@@ -532,9 +532,9 @@ export default function MobileDocScanner({
       {errorMsg && (
         <div
           role="alert"
-          className="flex items-start gap-2 p-3.5 rounded bg-rose-950/70 border border-rose-500/50 text-rose-200 font-mono text-xs"
+          className="flex items-start gap-2 p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-medium"
         >
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -543,17 +543,17 @@ export default function MobileDocScanner({
         <div
           role="status"
           aria-live="polite"
-          className="p-3.5 rounded bg-emerald-950/60 border border-emerald-500/40 text-emerald-100 font-mono text-xs space-y-1"
+          className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-100 text-xs space-y-1.5"
         >
-          <div className="flex items-center gap-2 font-bold text-emerald-300 uppercase">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Uploaded to R2 Vault & Queued for AI OCR</span>
+          <div className="flex items-center gap-2 font-semibold text-emerald-300">
+            <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Uploaded to R2 Vault &amp; Queued for AI OCR</span>
           </div>
-          <div className="text-[11px] text-emerald-200/90">
+          <div className="font-mono text-xs text-emerald-100">
             {uploadSuccess.docType} · {uploadSuccess.fileName} · ID: {uploadSuccess.documentId}
           </div>
           {uploadSuccess.sha256Hex && (
-            <div className="text-[10px] text-slate-300 break-all">
+            <div className="font-mono text-xs text-slate-300 break-all">
               SHA-256: {uploadSuccess.sha256Hex.slice(0, 32)}…
             </div>
           )}
@@ -564,13 +564,13 @@ export default function MobileDocScanner({
         <div
           role="status"
           aria-live="polite"
-          className="p-3.5 rounded bg-amber-950/60 border border-bro-gold text-amber-100 font-mono text-xs space-y-1"
+          className="p-4 rounded-2xl bg-amber-950/60 border border-bro-gold text-amber-100 text-xs space-y-1.5"
         >
-          <div className="flex items-center gap-2 font-bold text-bro-gold uppercase">
-            <WifiOff className="w-4 h-4" />
+          <div className="flex items-center gap-2 font-semibold text-bro-gold">
+            <WifiOff className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>Saved to Offline Border Dead-Zone Vault</span>
           </div>
-          <p className="text-[11px] text-amber-100/90">
+          <p className="text-xs text-amber-100/90 leading-relaxed">
             {offlineQueued.docType} ({offlineQueued.fileName}, {formatFileSize(offlineQueued.sizeBytes)}) is safely
             stored in IndexedDB and will upload automatically when cell service returns.
           </p>
@@ -580,16 +580,16 @@ export default function MobileDocScanner({
       <button
         type="submit"
         disabled={uploading || !selectedFile}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded bg-bro-cyan hover:bg-cyan-300 text-black font-mono text-xs font-bold uppercase tracking-wider disabled:opacity-40 transition-colors cursor-pointer"
+        className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-bro-cyan hover:bg-cyan-300 text-black text-sm font-semibold disabled:opacity-40 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-bro-cyan"
       >
         {uploading ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Processing & Uploading...</span>
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
+            <span>Processing &amp; Uploading...</span>
           </>
         ) : (
           <>
-            <Upload className="w-4 h-4" />
+            <Upload className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>Upload Document Scan</span>
           </>
         )}

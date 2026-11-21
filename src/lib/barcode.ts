@@ -233,7 +233,7 @@ export function renderCode128Svg(text: string, options: Code128SvgOptions = {}):
     : '';
 
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${totalHeight}" width="${totalWidth}" height="${totalHeight}" role="img" aria-label="Code-128B barcode for ${safeLabel}" shape-rendering="crispEdges">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${totalHeight}" width="${totalWidth}" height="${totalHeight}" preserveAspectRatio="xMidYMid meet" class="w-full max-w-full h-auto" role="img" aria-label="Code-128B barcode for ${safeLabel}" shape-rendering="crispEdges">`,
     `<rect x="0" y="0" width="${totalWidth}" height="${totalHeight}" fill="#ffffff"/>`,
     ...rects,
     textNode,

@@ -31,6 +31,7 @@ import {
 } from '@bro/contracts';
 import { BroWsClient, type WsEventMessage } from '../../lib/wsClient';
 import { sha256Hex } from '../../lib/ebolCrypto';
+import { useModalFocusTrap } from '../../lib/useModalFocusTrap';
 
 type ShipperTab = 'shipments' | 'quotes' | 'vault' | 'billing';
 
@@ -204,7 +205,7 @@ function invoiceBadgeStyle(status: InvoiceStatus): string {
       return 'bg-rose-500/20 border-bro-crimson text-rose-200';
     case 'draft':
     default:
-      return 'bg-slate-800 border-white/15 text-slate-300';
+      return 'bg-[#060912] border-white/15 text-slate-300';
   }
 }
 
@@ -220,7 +221,7 @@ function ocrBadgeStyle(status: OcrStatus): string {
       return 'bg-rose-500/20 border-bro-crimson text-rose-200';
     case 'pending':
     default:
-      return 'bg-slate-800 border-white/15 text-slate-300';
+      return 'bg-[#060912] border-white/15 text-slate-300';
   }
 }
 
@@ -259,6 +260,16 @@ export default function ShipperPortalApp() {
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditData, setAuditData] = useState<TelemetryAuditPayload | null>(null);
   const closeAuditBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  const {
+    mounted: auditMounted,
+    visible: auditVisible,
+    containerRef: auditContainerRef,
+  } = useModalFocusTrap<HTMLDivElement, HTMLButtonElement>({
+    open: auditModalOpen,
+    onClose: () => setAuditModalOpen(false),
+    initialFocusRef: closeAuditBtnRef,
+  });
 
   // Quote Booking state
   const [bookingRef, setBookingRef] = useState<string | null>(null);
@@ -323,21 +334,6 @@ export default function ShipperPortalApp() {
       client.disconnect();
     };
   }, [orgId, fetchDashboard]);
-
-  // Accessibility: Escape key closes FSMA Temp Audit modal & manages focus
-  useEffect(() => {
-    if (!auditModalOpen) return;
-    closeAuditBtnRef.current?.focus();
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setAuditModalOpen(false);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [auditModalOpen]);
 
   const handleOpenFsmaAudit = async (loadId: string) => {
     setAuditModalOpen(true);
@@ -490,26 +486,15 @@ export default function ShipperPortalApp() {
 
     setUploadingDoc(true);
     try {
-      const makeFormData = () => {
-        const fd = new FormData();
-        fd.append('file', uploadFile, uploadFile.name);
-        fd.append('docType', uploadDocType);
-        if (uploadLoadId) fd.append('loadId', uploadLoadId);
-        return fd;
-      };
+      const fd = new FormData();
+      fd.append('file', uploadFile, uploadFile.name);
+      fd.append('docType', uploadDocType);
+      if (uploadLoadId) fd.append('loadId', uploadLoadId);
 
-      let res = await fetch('/api/shipper/documents/upload', {
+      const res = await fetch('/api/shipper/documents/upload', {
         method: 'POST',
-        body: makeFormData(),
+        body: fd,
       });
-
-      // Fallback to unified vault upload endpoint when shipper upload route is not mounted separately
-      if (res.status === 404) {
-        res = await fetch('/api/driver/documents/upload', {
-          method: 'POST',
-          body: makeFormData(),
-        });
-      }
 
       const data = (await res.json().catch(() => ({}))) as {
         success?: boolean;
@@ -520,9 +505,7 @@ export default function ShipperPortalApp() {
       if (!res.ok) {
         setUploadStatus({
           type: 'error',
-          message:
-            data.error ||
-            `Document upload unavailable (HTTP ${res.status}). Email customs documents to customs@brotransport.com or contact dispatch.`,
+          message: data.error || `Document upload failed (HTTP ${res.status}).`,
         });
         return;
       }
@@ -535,10 +518,10 @@ export default function ShipperPortalApp() {
       setUploadDigest(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       await fetchDashboard(true);
-    } catch {
+    } catch (err) {
       setUploadStatus({
         type: 'error',
-        message: 'Network error while uploading commercial invoice.',
+        message: err instanceof Error ? err.message : 'Network error while uploading commercial invoice.',
       });
     } finally {
       setUploadingDoc(false);
@@ -590,52 +573,75 @@ export default function ShipperPortalApp() {
     { id: 'billing', label: 'Billing & Invoices', icon: Receipt, count: invoices.length },
   ];
 
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, currentId: ShipperTab) => {
+    const idx = tabs.findIndex((t) => t.id === currentId);
+    if (idx === -1) return;
+
+    let nextIdx: number | null = null;
+    if (e.key === 'ArrowRight') nextIdx = (idx + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') nextIdx = 0;
+    else if (e.key === 'End') nextIdx = tabs.length - 1;
+
+    if (nextIdx !== null) {
+      e.preventDefault();
+      const targetTab = tabs[nextIdx];
+      setActiveTab(targetTab.id);
+      document.getElementById(`shipper-tab-${targetTab.id}`)?.focus();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Shipper Command Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-lg bg-bro-steel/70 border border-bro-cyan/30 backdrop-blur-xl">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-bro-cyan">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Shipper Command Portal</span>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl surface-ceramic border-bro-cyan/25">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-bro-cyan/15 border border-bro-cyan/40 text-bro-cyan font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <span>Enterprise Shipper Workspace</span>
+            </span>
             {orgId && (
-              <span className="px-2 py-0.5 rounded bg-bro-obsidian/80 border border-white/10 text-slate-300">
+              <span className="px-3 py-1 rounded-full bg-[#060912] border border-white/15 font-mono text-slate-200">
                 ORG: {orgId}
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400">
-            Real-time cross-border freight tracking, FSMA cold-chain audits, instant booking & zero-rated AR billing.
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
+            Shipper Command Portal
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300">
+            Real-time cross-border freight tracking, FSMA cold-chain audits, instant booking &amp; zero-rated AR billing.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-center">
+        <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-center shrink-0">
           <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-mono text-[11px] uppercase ${
+            className={`min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-semibold ${
               wsStatus === 'connected'
                 ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
                 : wsStatus === 'connecting'
                   ? 'bg-cyan-950/70 border-bro-cyan/50 text-bro-cyan'
-                  : 'bg-slate-900/80 border-white/15 text-slate-400'
+                  : 'bg-[#060912] border-white/15 text-slate-300'
             }`}
           >
-            <Radio className="w-3.5 h-3.5" />
+            <Radio className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>WS: {wsStatus}</span>
           </span>
           <button
             type="button"
             disabled={refreshing}
             onClick={() => void fetchDashboard(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/15 bg-bro-obsidian/70 hover:border-bro-cyan text-slate-200 font-mono text-[11px] uppercase cursor-pointer disabled:opacity-50"
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-[#060912] hover:border-bro-cyan text-slate-200 text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 shrink-0 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
             <span>Sync</span>
           </button>
           <a
             href="/quote"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-bro-cyan hover:bg-cyan-300 text-black font-mono text-[11px] font-bold uppercase transition-colors"
+            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bro-cyan hover:bg-cyan-300 text-black text-xs font-semibold transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>New Quote</span>
           </a>
         </div>
@@ -645,16 +651,16 @@ export default function ShipperPortalApp() {
         <div
           role="status"
           aria-live="polite"
-          className="flex items-center justify-between gap-2 px-4 py-2.5 rounded bg-cyan-950/60 border border-bro-cyan/40 text-bro-cyan font-mono text-xs"
+          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-cyan-950/60 border border-bro-cyan/40 text-bro-cyan text-xs font-medium"
         >
           <span>{liveNotice}</span>
           <button
             type="button"
             onClick={() => setLiveNotice(null)}
             aria-label="Dismiss live notification"
-            className="p-1 text-slate-300 hover:text-white cursor-pointer"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-slate-200 hover:text-white hover:bg-white/10 cursor-pointer transition-colors shrink-0"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -662,18 +668,18 @@ export default function ShipperPortalApp() {
       {errorMsg && (
         <div
           role="alert"
-          className="flex items-start gap-2.5 p-4 rounded-lg bg-rose-950/70 border border-rose-500/50 text-rose-200 font-mono text-xs"
+          className="flex items-start gap-2.5 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-medium"
         >
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" aria-hidden="true" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* 4 Portal Tabs */}
+      {/* 4 Wrapping Portal Tabs */}
       <div
         role="tablist"
         aria-label="Shipper Portal Sections"
-        className="flex overflow-x-auto gap-1.5 p-1.5 rounded-lg bg-bro-steel/70 border border-white/10"
+        className="flex flex-wrap sm:inline-flex items-center gap-1.5 p-1.5 rounded-2xl sm:rounded-full surface-ceramic w-full sm:w-auto"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -681,21 +687,25 @@ export default function ShipperPortalApp() {
           return (
             <button
               key={tab.id}
+              id={`shipper-tab-${tab.id}`}
               type="button"
               role="tab"
               aria-selected={selected}
+              aria-controls={`shipper-panel-${tab.id}`}
+              tabIndex={selected ? 0 : -1}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-[150px] flex items-center justify-center gap-2 px-3 py-3 rounded font-mono text-xs font-bold uppercase tracking-wide transition-colors cursor-pointer whitespace-nowrap ${
+              onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
+              className={`flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                 selected
-                  ? 'bg-bro-cyan text-black'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  ? 'bg-bro-cyan text-black shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>{tab.label}</span>
               <span
-                className={`px-1.5 py-0.5 rounded text-[10px] tabular-nums ${
-                  selected ? 'bg-black/20 text-black' : 'bg-white/10 text-slate-200'
+                className={`px-2 py-0.5 rounded-full text-xs tabular-nums ${
+                  selected ? 'bg-black/15 text-black' : 'bg-white/10 text-slate-200'
                 }`}
               >
                 {tab.count}
@@ -706,28 +716,34 @@ export default function ShipperPortalApp() {
       </div>
 
       {loading ? (
-        <div className="p-12 rounded-lg bg-bro-steel/50 border border-white/10 flex flex-col items-center justify-center gap-3 font-mono text-xs text-slate-400">
-          <Loader2 className="w-6 h-6 text-bro-cyan animate-spin" />
+        <div className="p-12 rounded-2xl surface-ceramic flex flex-col items-center justify-center gap-3 text-xs text-slate-300">
+          <Loader2 className="w-6 h-6 text-bro-cyan animate-spin" aria-hidden="true" />
           <span>Loading Organization Freight Ledger...</span>
         </div>
       ) : (
         <>
           {/* TAB 1: ACTIVE SHIPMENTS */}
           {activeTab === 'shipments' && (
-            <div className="space-y-4">
+            <div
+              role="tabpanel"
+              id="shipper-panel-shipments"
+              aria-labelledby="shipper-tab-shipments"
+              tabIndex={0}
+              className="space-y-4 outline-none"
+            >
               {loads.length === 0 ? (
-                <div className="p-8 rounded-lg bg-bro-steel/50 border border-white/10 text-center space-y-3">
-                  <Package className="w-8 h-8 text-slate-500 mx-auto" />
-                  <div className="font-mono text-xs uppercase text-slate-300">No Active Shipments Found</div>
-                  <p className="text-xs text-slate-400">
+                <div className="p-8 rounded-2xl surface-ceramic text-center space-y-3">
+                  <Package className="w-8 h-8 text-slate-400 mx-auto" aria-hidden="true" />
+                  <div className="font-display text-base font-semibold text-white">No Active Shipments Found</div>
+                  <p className="text-xs sm:text-sm text-slate-300">
                     Book one of your saved quotes or request a live cross-border freight quote.
                   </p>
                   <a
                     href="/quote"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded bg-bro-cyan text-black font-mono text-xs font-bold uppercase"
+                    className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-bro-cyan hover:bg-cyan-300 text-black text-xs font-semibold transition-colors"
                   >
                     <span>Get Instant Quote</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" />
                   </a>
                 </div>
               ) : (
@@ -737,72 +753,74 @@ export default function ShipperPortalApp() {
                   return (
                     <article
                       key={load.id}
-                      className="rounded-lg bg-bro-steel/60 border border-white/10 p-5 space-y-4"
+                      className="rounded-2xl surface-ceramic p-5 sm:p-6 space-y-4"
                     >
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-base font-bold text-white">{load.loadNumber}</span>
-                            <span className="px-2 py-0.5 rounded bg-bro-cyan/15 border border-bro-cyan/40 font-mono text-[10px] font-bold uppercase text-bro-cyan">
+                            <span className="px-2.5 py-0.5 rounded-full bg-bro-cyan/15 border border-bro-cyan/40 text-xs font-semibold uppercase text-bro-cyan">
                               {load.status.replace(/_/g, ' ')}
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 font-mono text-[10px] text-slate-300">
+                            <span className="px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/15 text-xs text-slate-200">
                               {DIRECTION_LABELS[load.direction]}
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-bro-gold/10 border border-bro-gold/30 font-mono text-[10px] text-bro-gold">
+                            <span className="px-2.5 py-0.5 rounded-full bg-bro-gold/15 border border-bro-gold/35 text-xs font-medium text-bro-gold">
                               {EQUIPMENT_LABELS[load.equipmentType]}
                             </span>
                             {load.isFoodFda && (
-                              <span className="px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/40 font-mono text-[10px] text-emerald-300">
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-xs font-medium text-emerald-300">
                                 FSMA / FDA
                               </span>
                             )}
                           </div>
-                          <div className="text-sm text-slate-200 font-medium">{load.commodity}</div>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-slate-400 tabular-nums">
+                          <div className="text-sm sm:text-base text-white font-medium">{load.commodity}</div>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-slate-300 tabular-nums">
                             <span>{load.weightLbs.toLocaleString()} lbs</span>
                             <span>{load.loadedMiles} mi</span>
                             {load.tempSetpointC !== null && (
                               <span className="text-bro-cyan">Target: {load.tempSetpointC.toFixed(1)}°C</span>
                             )}
-                            <span className={load.detentionMinutes > 0 ? 'text-bro-gold font-bold' : ''}>
+                            <span className={load.detentionMinutes > 0 ? 'text-bro-gold font-semibold' : ''}>
                               Detention: {load.detentionMinutes} min
                             </span>
                           </div>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2.5">
-                          <div className="px-3 py-2 rounded bg-bro-obsidian/80 border border-white/10 font-mono text-xs text-white font-bold tabular-nums">
+                          <div className="min-h-[44px] inline-flex items-center px-4 py-2 rounded-xl bg-[#060912] border border-white/15 font-mono text-xs text-white font-bold tabular-nums">
                             {formatMoneyCents(load.rateCustomerCents, load.currency)}
                           </div>
                           <button
                             type="button"
                             onClick={() => void handleOpenFsmaAudit(load.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-cyan-950/80 border border-bro-cyan/50 hover:bg-bro-cyan hover:text-black text-bro-cyan font-mono text-xs font-bold uppercase transition-colors cursor-pointer"
+                            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-950/80 border border-bro-cyan/50 hover:bg-bro-cyan hover:text-black text-bro-cyan text-xs font-semibold transition-colors cursor-pointer"
                           >
-                            <Thermometer className="w-3.5 h-3.5" />
+                            <Thermometer className="w-4 h-4 shrink-0" aria-hidden="true" />
                             <span>FSMA Temp Audit</span>
                           </button>
                           <a
                             href={`/verify/${encodeURIComponent(load.id)}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-white/15 bg-bro-obsidian/70 hover:border-bro-gold text-slate-200 hover:text-bro-gold font-mono text-xs font-bold uppercase transition-colors"
+                            className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-[#060912] hover:border-bro-gold text-slate-200 hover:text-bro-gold text-xs font-semibold transition-colors"
                           >
                             <span>eBOL Verify</span>
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                           </a>
                         </div>
                       </div>
 
                       {/* 11-Stage Lifecycle Progress Bar */}
-                      <div className="space-y-2 pt-2 border-t border-white/10">
-                        <div className="flex items-center justify-between font-mono text-[10px] uppercase text-slate-400 tabular-nums">
-                          <span>
-                            Stage {stageIdx + 1} / {LIFECYCLE_STAGES.length} ({load.status.replace(/_/g, ' ')})
+                      <div className="space-y-3 pt-3 border-t border-white/10">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs tabular-nums">
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bro-cyan/15 border border-bro-cyan/40 font-semibold text-bro-cyan">
+                            Stage {stageIdx + 1}/{LIFECYCLE_STAGES.length} · {load.status.replace(/_/g, ' ')}
                           </span>
-                          <span>{progressPct}% Complete</span>
+                          <span className="font-mono text-xs font-medium text-slate-300">
+                            {progressPct}% Complete
+                          </span>
                         </div>
                         <div
-                          className="h-2 w-full rounded-full bg-bro-obsidian overflow-hidden border border-white/10"
+                          className="h-2.5 w-full rounded-full bg-[#060912] overflow-hidden border border-white/10"
                           role="progressbar"
                           aria-valuenow={progressPct}
                           aria-valuemin={0}
@@ -810,23 +828,23 @@ export default function ShipperPortalApp() {
                           aria-label={`Shipment ${load.loadNumber} progress`}
                         >
                           <div
-                            className="h-full bg-gradient-to-r from-bro-cyan to-emerald-400 transition-all"
+                            className="h-full rounded-full bg-gradient-to-r from-bro-cyan to-emerald-400 transition-[width] duration-300"
                             style={{ width: `${progressPct}%` }}
                           />
                         </div>
-                        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-11 gap-1 pt-1">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-2 pt-1">
                           {LIFECYCLE_STAGES.map((stage, idx) => {
                             const done = idx < stageIdx;
                             const current = idx === stageIdx;
                             return (
                               <div
                                 key={stage}
-                                className={`text-center px-1 py-1 rounded font-mono text-[9px] uppercase truncate ${
+                                className={`min-h-[36px] text-center px-2 py-1.5 rounded-full flex items-center justify-center text-xs font-medium leading-tight border ${
                                   current
-                                    ? 'bg-bro-cyan text-black font-bold'
+                                    ? 'bg-bro-cyan text-black border-bro-cyan font-semibold'
                                     : done
-                                      ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-                                      : 'bg-bro-obsidian/50 text-slate-500'
+                                      ? 'bg-emerald-950/60 text-emerald-200 border-emerald-500/40'
+                                      : 'bg-[#060912] text-slate-400 border-white/10'
                                 }`}
                               >
                                 {stage.replace(/_/g, ' ')}
@@ -844,19 +862,25 @@ export default function ShipperPortalApp() {
 
           {/* TAB 2: QUOTES & BOOK */}
           {activeTab === 'quotes' && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg bg-bro-steel/60 border border-white/10">
-                <div>
-                  <h3 className="font-mono text-xs font-bold uppercase text-white">Saved Commercial Rate Quotes</h3>
-                  <p className="text-xs text-slate-400">
+            <div
+              role="tabpanel"
+              id="shipper-panel-quotes"
+              aria-labelledby="shipper-tab-quotes"
+              tabIndex={0}
+              className="space-y-4 outline-none"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 p-5 rounded-2xl surface-ceramic">
+                <div className="space-y-1">
+                  <h2 className="font-display text-base font-bold text-white">Saved Commercial Rate Quotes</h2>
+                  <p className="text-xs sm:text-sm text-slate-300">
                     Convert any active spot or corridor quote directly into a dispatched #BRO Transport load in 1 click.
                   </p>
                 </div>
                 <a
                   href="/quote"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded bg-bro-gold hover:bg-amber-400 text-black font-mono text-xs font-bold uppercase transition-colors"
+                  className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-bro-gold hover:bg-amber-300 text-black text-xs font-semibold transition-colors"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>Calculate New Quote</span>
                 </a>
               </div>
@@ -865,7 +889,7 @@ export default function ShipperPortalApp() {
                 <div
                   role={bookingFeedback.type === 'error' ? 'alert' : 'status'}
                   aria-live="polite"
-                  className={`flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border font-mono text-xs ${
+                  className={`flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl border text-xs ${
                     bookingFeedback.type === 'success'
                       ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-100'
                       : 'bg-rose-950/70 border-rose-500/50 text-rose-200'
@@ -873,9 +897,9 @@ export default function ShipperPortalApp() {
                 >
                   <div className="flex items-center gap-2">
                     {bookingFeedback.type === 'success' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
                     ) : (
-                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" aria-hidden="true" />
                     )}
                     <span>{bookingFeedback.message}</span>
                   </div>
@@ -883,7 +907,7 @@ export default function ShipperPortalApp() {
                     <button
                       type="button"
                       onClick={() => setActiveTab('shipments')}
-                      className="px-3 py-1 rounded bg-emerald-400 text-black font-bold uppercase text-[11px] cursor-pointer"
+                      className="min-h-[44px] px-4 py-2 rounded-full bg-emerald-400 hover:bg-emerald-300 text-black font-semibold text-xs cursor-pointer transition-colors"
                     >
                       View Active Shipments
                     </button>
@@ -892,18 +916,18 @@ export default function ShipperPortalApp() {
               )}
 
               {quotes.length === 0 ? (
-                <div className="p-8 rounded-lg bg-bro-steel/50 border border-white/10 text-center space-y-3">
-                  <FileSpreadsheet className="w-8 h-8 text-slate-500 mx-auto" />
-                  <div className="font-mono text-xs uppercase text-slate-300">No Saved Quotes Yet</div>
-                  <p className="text-xs text-slate-400">
+                <div className="p-8 rounded-2xl surface-ceramic text-center space-y-3">
+                  <FileSpreadsheet className="w-8 h-8 text-slate-400 mx-auto" aria-hidden="true" />
+                  <div className="font-display text-base font-semibold text-white">No Saved Quotes Yet</div>
+                  <p className="text-xs sm:text-sm text-slate-300">
                     Use our deterministic highway freight estimator to generate Dry Van, Reefer, or Flatbed quotes.
                   </p>
                   <a
                     href="/quote"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded bg-bro-cyan text-black font-mono text-xs font-bold uppercase"
+                    className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-bro-cyan hover:bg-cyan-300 text-black text-xs font-semibold transition-colors"
                   >
                     <span>Open Quote Engine</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" />
                   </a>
                 </div>
               ) : (
@@ -914,36 +938,37 @@ export default function ShipperPortalApp() {
                     return (
                       <div
                         key={q.id}
-                        className="p-5 rounded-lg bg-bro-steel/60 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                        className="p-5 sm:p-6 rounded-2xl surface-ceramic flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                       >
                         <div className="space-y-1.5">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-sm font-bold text-white">{q.quoteRef}</span>
+                            <span className="font-mono text-base font-bold text-white">{q.quoteRef}</span>
                             <span
-                              className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase border ${
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase border ${
                                 q.status === 'booked'
                                   ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300'
                                   : isExpired
-                                    ? 'bg-slate-800 border-white/15 text-slate-400'
+                                    ? 'bg-[#060912] border-white/15 text-slate-300'
                                     : 'bg-cyan-500/20 border-bro-cyan/50 text-bro-cyan'
                               }`}
                             >
                               {isExpired && q.status === 'open' ? 'expired' : q.status}
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-bro-gold/10 border border-bro-gold/30 font-mono text-[10px] text-bro-gold">
+                            <span className="px-2.5 py-0.5 rounded-full bg-bro-gold/15 border border-bro-gold/35 text-xs font-medium text-bro-gold">
                               {EQUIPMENT_LABELS[q.equipmentType]}
                             </span>
                           </div>
-                          <div className="text-sm font-semibold text-white">
+                          <div className="text-sm sm:text-base font-semibold text-white">
                             {q.originLabel} <span className="text-bro-cyan">→</span> {q.destLabel}
                           </div>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-slate-400 tabular-nums">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300 tabular-nums">
                             <span>{q.commodity}</span>
                             <span>{q.distanceKm.toLocaleString()} km</span>
                             <span>{q.weightLbs.toLocaleString()} lbs</span>
                             <span>{q.co2Kg} kg CO₂e</span>
-                            <span className="inline-flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> Valid until {formatDate(q.expiresAt)}
+                            <span className="inline-flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                              <span>Valid until {formatDate(q.expiresAt)}</span>
                             </span>
                           </div>
                         </div>
@@ -953,7 +978,7 @@ export default function ShipperPortalApp() {
                             <div className="text-base font-bold text-white">
                               {formatMoneyCents(q.totalCents, q.currency)}
                             </div>
-                            <div className="text-[10px] text-slate-400">
+                            <div className="text-xs text-slate-300">
                               LH {formatMoneyCents(q.linehaulCents, q.currency)} · FSC{' '}
                               {formatMoneyCents(q.fscCents, q.currency)}
                             </div>
@@ -964,17 +989,17 @@ export default function ShipperPortalApp() {
                               type="button"
                               disabled={isBooking}
                               onClick={() => void handleBookQuote(q.quoteRef)}
-                              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-bro-cyan hover:bg-cyan-300 text-black font-mono text-xs font-bold uppercase disabled:opacity-50 transition-colors cursor-pointer"
+                              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-bro-cyan hover:bg-cyan-300 text-black text-xs font-semibold disabled:opacity-50 transition-colors cursor-pointer"
                             >
                               {isBooking ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
                               ) : (
-                                <CheckCircle2 className="w-4 h-4" />
+                                <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
                               )}
                               <span>{isBooking ? 'Booking...' : 'Book Load Now'}</span>
                             </button>
                           ) : (
-                            <span className="px-3 py-2 rounded bg-bro-obsidian/80 border border-white/10 font-mono text-[11px] uppercase text-slate-400">
+                            <span className="min-h-[44px] inline-flex items-center px-4 py-2 rounded-full bg-[#060912] border border-white/15 text-xs font-medium uppercase text-slate-300">
                               {q.status === 'booked' ? 'Booked ✓' : 'Expired'}
                             </span>
                           )}
@@ -989,15 +1014,23 @@ export default function ShipperPortalApp() {
 
           {/* TAB 3: DOCUMENT VAULT */}
           {activeTab === 'vault' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div
+              role="tabpanel"
+              id="shipper-panel-vault"
+              aria-labelledby="shipper-tab-vault"
+              tabIndex={0}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6 outline-none"
+            >
               {/* Verified BOL / POD / Commercial Invoices List */}
-              <div className="lg:col-span-7 rounded-lg bg-bro-steel/60 border border-white/10 p-5 space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase text-white">
-                    <FileText className="w-4 h-4 text-bro-cyan" />
-                    <span>Organization Document Vault ({filteredDocs.length})</span>
+              <div className="lg:col-span-7 rounded-2xl surface-ceramic p-5 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <FileText className="w-5 h-5 text-bro-cyan shrink-0" aria-hidden="true" />
+                    <h2 className="font-display text-base font-bold text-white">
+                      Organization Document Vault ({filteredDocs.length})
+                    </h2>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 font-mono text-[10px]">
+                  <div className="flex flex-wrap gap-1.5 text-xs">
                     {(
                       [
                         { id: 'all', label: 'All' },
@@ -1009,11 +1042,12 @@ export default function ShipperPortalApp() {
                       <button
                         key={chip.id}
                         type="button"
+                        aria-pressed={vaultFilter === chip.id}
                         onClick={() => setVaultFilter(chip.id)}
-                        className={`px-2.5 py-1 rounded border uppercase cursor-pointer ${
+                        className={`min-h-[44px] px-3.5 py-2 rounded-full border text-xs font-semibold cursor-pointer transition-colors ${
                           vaultFilter === chip.id
-                            ? 'bg-bro-cyan text-black border-bro-cyan font-bold'
-                            : 'bg-bro-obsidian/70 text-slate-300 border-white/10 hover:border-white/25'
+                            ? 'bg-bro-cyan text-black border-bro-cyan'
+                            : 'bg-[#060912] text-slate-300 border-white/15 hover:border-white/30 hover:text-white'
                         }`}
                       >
                         {chip.label}
@@ -1023,19 +1057,19 @@ export default function ShipperPortalApp() {
                 </div>
 
                 {filteredDocs.length === 0 ? (
-                  <div className="p-8 rounded bg-bro-obsidian/60 border border-white/10 text-center font-mono text-xs text-slate-400">
+                  <div className="p-8 rounded-2xl bg-[#060912] border border-white/10 text-center text-xs sm:text-sm text-slate-300 leading-relaxed">
                     No matching documents archived yet. Verified BOLs, signed PODs, and Commercial Invoices appear here.
                   </div>
                 ) : (
-                  <div className="space-y-2.5 max-h-[540px] overflow-y-auto pr-1">
+                  <div className="space-y-3 max-h-[540px] overflow-y-auto pr-1">
                     {filteredDocs.map((doc) => (
                       <div
                         key={doc.id}
-                        className="p-3.5 rounded-lg bg-bro-obsidian/80 border border-white/10 space-y-1.5"
+                        className="p-4 rounded-2xl bg-[#060912] border border-white/10 space-y-2"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-[10px] font-bold uppercase text-white shrink-0">
+                            <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-semibold uppercase text-white shrink-0">
                               {doc.docType}
                             </span>
                             <span className="font-mono text-xs text-slate-100 truncate">
@@ -1043,13 +1077,13 @@ export default function ShipperPortalApp() {
                             </span>
                           </div>
                           <span
-                            className={`px-2 py-0.5 rounded border font-mono text-[10px] font-bold uppercase shrink-0 ${ocrBadgeStyle(doc.ocrStatus)}`}
+                            className={`px-2.5 py-0.5 rounded-full border text-xs font-semibold uppercase shrink-0 ${ocrBadgeStyle(doc.ocrStatus)}`}
                           >
                             {doc.ocrStatus.replace(/_/g, ' ')}
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] text-slate-400 tabular-nums">
+                        <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-slate-300 tabular-nums">
                           <span>
                             {(doc.sizeBytes / 1024).toFixed(1)} KB · SHA-256: {doc.sha256Hex.slice(0, 16)}…
                           </span>
@@ -1067,28 +1101,28 @@ export default function ShipperPortalApp() {
               {/* Shipper Commercial Invoice Upload Form */}
               <form
                 onSubmit={handleUploadCommercialInvoice}
-                className="lg:col-span-5 rounded-lg bg-bro-steel/60 border border-bro-gold/30 p-5 space-y-4 self-start"
+                className="lg:col-span-5 rounded-2xl surface-ceramic border-bro-gold/25 p-5 sm:p-6 space-y-4 self-start"
               >
-                <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-                  <Upload className="w-4 h-4 text-bro-gold" />
-                  <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+                <div className="flex items-center gap-2.5 border-b border-white/10 pb-3.5">
+                  <Upload className="w-5 h-5 text-bro-gold shrink-0" aria-hidden="true" />
+                  <h2 className="font-display text-base font-bold text-white">
                     Upload Shipper Customs Document
-                  </h3>
+                  </h2>
                 </div>
 
-                <p className="text-xs text-slate-400">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                   Attach your Commercial Invoice, Packing List, or Shipper BOL for CBSA / CBP pre-arrival filing.
                 </p>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="shipper-doc-load" className="block font-mono text-[11px] uppercase text-slate-300">
+                  <label htmlFor="shipper-doc-load" className="block text-xs font-medium text-slate-300">
                     Associated Shipment
                   </label>
                   <select
                     id="shipper-doc-load"
                     value={uploadLoadId}
                     onChange={(e) => setUploadLoadId(e.target.value)}
-                    className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+                    className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
                   >
                     <option value="">— Organization General Document —</option>
                     {loads.map((l) => (
@@ -1100,7 +1134,7 @@ export default function ShipperPortalApp() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="shipper-doc-type" className="block font-mono text-[11px] uppercase text-slate-300">
+                  <label htmlFor="shipper-doc-type" className="block text-xs font-medium text-slate-300">
                     Document Type
                   </label>
                   <select
@@ -1109,7 +1143,7 @@ export default function ShipperPortalApp() {
                     onChange={(e) =>
                       setUploadDocType(e.target.value as 'COMMERCIAL_INVOICE' | 'PACKING_LIST' | 'BOL')
                     }
-                    className="w-full bg-bro-obsidian/90 border border-white/15 rounded px-3 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
+                    className="w-full min-h-[44px] bg-[#060912] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:border-bro-gold"
                   >
                     <option value="COMMERCIAL_INVOICE">COMMERCIAL_INVOICE — Customs Commercial Invoice</option>
                     <option value="PACKING_LIST">PACKING_LIST — Cargo Packing List</option>
@@ -1118,7 +1152,7 @@ export default function ShipperPortalApp() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="shipper-doc-file" className="block font-mono text-[11px] uppercase text-slate-300">
+                  <label htmlFor="shipper-doc-file" className="block text-xs font-medium text-slate-300">
                     PDF or Scan (Max 15 MB) *
                   </label>
                   <input
@@ -1127,10 +1161,10 @@ export default function ShipperPortalApp() {
                     type="file"
                     accept="application/pdf,image/jpeg,image/png,image/webp"
                     onChange={(e) => void handleSelectShipperFile(e)}
-                    className="w-full text-xs font-mono text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded file:border-0 file:bg-bro-gold file:text-black file:font-bold file:uppercase file:cursor-pointer bg-bro-obsidian/80 border border-white/15 rounded p-2"
+                    className="w-full min-h-[44px] text-xs font-mono text-slate-200 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-bro-gold file:text-black file:font-semibold file:cursor-pointer bg-[#060912] border border-white/15 rounded-xl p-2"
                   />
                   {uploadDigest && (
-                    <div className="font-mono text-[10px] text-bro-cyan break-all">
+                    <div className="font-mono text-xs text-bro-cyan break-all">
                       Client SHA-256: {uploadDigest.slice(0, 32)}…
                     </div>
                   )}
@@ -1140,7 +1174,7 @@ export default function ShipperPortalApp() {
                   <div
                     role={uploadStatus.type === 'error' ? 'alert' : 'status'}
                     aria-live="polite"
-                    className={`p-3 rounded border font-mono text-xs ${
+                    className={`p-3.5 rounded-xl border text-xs font-medium ${
                       uploadStatus.type === 'success'
                         ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200'
                         : 'bg-rose-950/70 border-rose-500/50 text-rose-200'
@@ -1153,16 +1187,16 @@ export default function ShipperPortalApp() {
                 <button
                   type="submit"
                   disabled={uploadingDoc || !uploadFile}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded bg-bro-gold hover:bg-amber-400 text-black font-mono text-xs font-bold uppercase disabled:opacity-40 transition-colors cursor-pointer"
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-bro-gold hover:bg-amber-300 text-black text-sm font-semibold disabled:opacity-40 transition-colors cursor-pointer"
                 >
                   {uploadingDoc ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
                       <span>Uploading to Vault...</span>
                     </>
                   ) : (
                     <>
-                      <Upload className="w-4 h-4" />
+                      <Upload className="w-4 h-4 shrink-0" aria-hidden="true" />
                       <span>Upload Commercial Invoice</span>
                     </>
                   )}
@@ -1173,11 +1207,17 @@ export default function ShipperPortalApp() {
 
           {/* TAB 4: BILLING & INVOICES */}
           {activeTab === 'billing' && (
-            <div className="space-y-5">
+            <div
+              role="tabpanel"
+              id="shipper-panel-billing"
+              aria-labelledby="shipper-tab-billing"
+              tabIndex={0}
+              className="space-y-5 outline-none"
+            >
               {/* Billing KPI Strip */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-bro-steel/60 border border-white/10 space-y-1">
-                  <div className="font-mono text-[10px] uppercase text-slate-400">Open Balance</div>
+                <div className="p-5 rounded-2xl surface-ceramic space-y-1.5">
+                  <div className="text-xs font-medium text-slate-300">Open Balance</div>
                   <div className="font-mono text-lg font-bold text-bro-gold tabular-nums">
                     {Object.keys(openTotalsByCurrency).length === 0
                       ? '$0.00'
@@ -1186,9 +1226,9 @@ export default function ShipperPortalApp() {
                           .join(' · ')}
                   </div>
                 </div>
-                <div className="p-4 rounded-lg bg-bro-steel/60 border border-white/10 space-y-1">
-                  <div className="font-mono text-[10px] uppercase text-slate-400">Settled / Paid</div>
-                  <div className="font-mono text-lg font-bold text-emerald-400 tabular-nums">
+                <div className="p-5 rounded-2xl surface-ceramic space-y-1.5">
+                  <div className="text-xs font-medium text-slate-300">Settled / Paid</div>
+                  <div className="font-mono text-lg font-bold text-emerald-300 tabular-nums">
                     {Object.keys(paidTotalsByCurrency).length === 0
                       ? '$0.00'
                       : Object.entries(paidTotalsByCurrency)
@@ -1196,28 +1236,30 @@ export default function ShipperPortalApp() {
                           .join(' · ')}
                   </div>
                 </div>
-                <div className="p-4 rounded-lg bg-bro-steel/60 border border-bro-cyan/30 space-y-1">
-                  <div className="font-mono text-[10px] uppercase text-bro-cyan">Cross-Border Tax Treatment</div>
-                  <div className="text-xs text-slate-200 font-medium">
+                <div className="p-5 rounded-2xl surface-ceramic border-bro-cyan/30 space-y-1.5">
+                  <div className="text-xs font-semibold text-bro-cyan">Cross-Border Tax Treatment</div>
+                  <div className="text-sm text-white font-medium">
                     0% Zero-Rated International Freight
                   </div>
-                  <div className="font-mono text-[10px] text-slate-400">
+                  <div className="text-xs text-slate-300">
                     Canada ETA Sch. VI, Part VII, s. 7 / 49 U.S.C. § 14505
                   </div>
                 </div>
               </div>
 
               {/* Invoice List */}
-              <div className="rounded-lg bg-bro-steel/60 border border-white/10 overflow-hidden">
-                <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase text-white">
-                    <Receipt className="w-4 h-4 text-bro-cyan" />
-                    <span>Accounts Receivable Invoices ({invoices.length})</span>
+              <div className="rounded-2xl surface-ceramic overflow-hidden">
+                <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Receipt className="w-5 h-5 text-bro-cyan shrink-0" aria-hidden="true" />
+                    <h2 className="font-display text-base font-bold text-white">
+                      Accounts Receivable Invoices ({invoices.length})
+                    </h2>
                   </div>
                 </div>
 
                 {invoices.length === 0 ? (
-                  <div className="p-8 text-center font-mono text-xs text-slate-400">
+                  <div className="p-8 text-center text-xs sm:text-sm text-slate-300">
                     No invoices generated for your organization yet.
                   </div>
                 ) : (
@@ -1228,25 +1270,25 @@ export default function ShipperPortalApp() {
                       return (
                         <div key={inv.id} className="p-5 space-y-3 hover:bg-white/[0.02]">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-mono text-sm font-bold text-white">{inv.invoiceNumber}</span>
+                                <span className="font-mono text-base font-bold text-white">{inv.invoiceNumber}</span>
                                 <span
-                                  className={`px-2 py-0.5 rounded border font-mono text-[10px] font-bold uppercase ${invoiceBadgeStyle(inv.status)}`}
+                                  className={`px-2.5 py-0.5 rounded-full border text-xs font-semibold uppercase ${invoiceBadgeStyle(inv.status)}`}
                                 >
                                   {inv.status.replace(/_/g, ' ')}
                                 </span>
                                 <span
-                                  className={`px-2 py-0.5 rounded font-mono text-[10px] border ${
+                                  className={`px-2.5 py-0.5 rounded-full text-xs border ${
                                     isZeroRated
                                       ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
-                                      : 'bg-white/5 border-white/10 text-slate-300'
+                                      : 'bg-white/5 border-white/15 text-slate-200'
                                   }`}
                                 >
                                   {inv.taxLabel}
                                 </span>
                               </div>
-                              <div className="font-mono text-[11px] text-slate-400">
+                              <div className="text-xs text-slate-300">
                                 Load Ref: {inv.loadId} · Issued {formatDate(inv.createdAt)} · Due{' '}
                                 {formatDate(inv.dueDate)}
                                 {inv.paidAt ? ` · Paid ${formatDate(inv.paidAt)}` : ''}
@@ -1255,7 +1297,7 @@ export default function ShipperPortalApp() {
 
                             <div className="flex flex-wrap items-center gap-4">
                               <div className="text-left md:text-right font-mono tabular-nums">
-                                <div className="text-[10px] text-slate-400 uppercase">
+                                <div className="text-xs text-slate-300">
                                   Sub {formatMoneyCents(inv.subtotalCents, inv.currency)} + Tax{' '}
                                   {formatMoneyCents(inv.taxCents, inv.currency)}
                                 </div>
@@ -1268,26 +1310,28 @@ export default function ShipperPortalApp() {
                                 href={`/api/billing/invoices/${encodeURIComponent(inv.id)}/pdf`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-cyan/10 border border-bro-cyan/50 hover:bg-bro-cyan hover:text-black text-bro-cyan font-mono text-xs font-bold uppercase transition-colors"
+                                className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bro-cyan/10 border border-bro-cyan/50 hover:bg-bro-cyan hover:text-black text-bro-cyan text-xs font-semibold transition-colors"
                               >
-                                <Download className="w-3.5 h-3.5" />
+                                <Download className="w-4 h-4 shrink-0" aria-hidden="true" />
                                 <span>Download Invoice PDF</span>
                               </a>
                             </div>
                           </div>
 
                           {items.length > 0 && (
-                            <div className="rounded bg-bro-obsidian/70 border border-white/10 p-3 space-y-1 font-mono text-[11px] tabular-nums">
+                            <div className="rounded-xl bg-[#060912] border border-white/10 p-3.5 space-y-1.5 font-mono text-xs tabular-nums">
                               {items.map((li, idx) => (
                                 <div
                                   key={`${inv.id}-li-${idx}`}
-                                  className="flex items-center justify-between gap-2 text-slate-300"
+                                  className="flex items-center justify-between gap-2 text-slate-200"
                                 >
                                   <span>
-                                    <span className="text-slate-500 mr-2">[{li.code}]</span>
+                                    <span className="text-slate-400 mr-2">[{li.code}]</span>
                                     {li.description}
                                   </span>
-                                  <span className="text-white">{formatMoneyCents(li.amountCents, inv.currency)}</span>
+                                  <span className="text-white font-semibold">
+                                    {formatMoneyCents(li.amountCents, inv.currency)}
+                                  </span>
                                 </div>
                               ))}
                             </div>
@@ -1304,7 +1348,7 @@ export default function ShipperPortalApp() {
       )}
 
       {/* FSMA Cold-Chain Temperature Audit Modal */}
-      {auditModalOpen && (
+      {auditMounted && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
@@ -1312,19 +1356,24 @@ export default function ShipperPortalApp() {
           aria-labelledby="fsma-audit-title"
         >
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            className="bro-modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm"
+            data-visible={auditVisible ? 'true' : 'false'}
             onClick={() => setAuditModalOpen(false)}
           />
-          <div className="relative z-10 w-full max-w-3xl max-h-[88vh] flex flex-col rounded-lg bg-bro-obsidian border border-bro-cyan/40 shadow-2xl overflow-hidden">
-            <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between gap-3 bg-bro-steel/70">
-              <div className="flex items-center gap-2">
-                <Thermometer className="w-5 h-5 text-bro-cyan" />
+          <div
+            ref={auditContainerRef}
+            data-visible={auditVisible ? 'true' : 'false'}
+            className="bro-modal-panel relative z-10 w-full max-w-3xl max-h-[88vh] flex flex-col rounded-2xl surface-ceramic border-bro-cyan/40 shadow-2xl overflow-hidden"
+          >
+            <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between gap-3 bg-[#060912]">
+              <div className="flex items-center gap-2.5">
+                <Thermometer className="w-5 h-5 text-bro-cyan shrink-0" aria-hidden="true" />
                 <div>
-                  <h2 id="fsma-audit-title" className="font-mono text-xs sm:text-sm font-bold uppercase text-white">
+                  <h2 id="fsma-audit-title" className="font-display text-sm sm:text-base font-bold text-white">
                     FSMA 21 CFR §1.908 Cold-Chain Temperature Audit
                   </h2>
                   {auditData && (
-                    <p className="font-mono text-[11px] text-slate-400">
+                    <p className="text-xs text-slate-300">
                       {auditData.load.loadNumber} · {auditData.load.commodity}
                     </p>
                   )}
@@ -1335,56 +1384,56 @@ export default function ShipperPortalApp() {
                 type="button"
                 onClick={() => setAuditModalOpen(false)}
                 aria-label="Close FSMA temperature audit modal"
-                className="p-1.5 rounded border border-white/15 text-slate-300 hover:text-white cursor-pointer"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full border border-white/15 bg-[#0b1120] text-slate-300 hover:text-white hover:border-white/30 cursor-pointer transition-colors shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             <div className="p-5 overflow-y-auto space-y-4">
               {auditLoading ? (
-                <div className="py-10 flex items-center justify-center gap-2 font-mono text-xs text-slate-400">
-                  <Loader2 className="w-5 h-5 text-bro-cyan animate-spin" />
+                <div className="py-10 flex items-center justify-center gap-2 text-xs text-slate-300">
+                  <Loader2 className="w-5 h-5 text-bro-cyan animate-spin" aria-hidden="true" />
                   <span>Loading reefer sensor telemetry...</span>
                 </div>
               ) : auditError ? (
                 <div
                   role="alert"
-                  className="p-4 rounded bg-rose-950/70 border border-rose-500/50 text-rose-200 font-mono text-xs"
+                  className="p-4 rounded-xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs font-medium"
                 >
                   {auditError}
                 </div>
               ) : auditData ? (
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono tabular-nums">
-                    <div className="p-3 rounded bg-bro-steel/70 border border-white/10">
-                      <div className="text-[10px] uppercase text-slate-400">Target Setpoint</div>
+                    <div className="p-3.5 rounded-xl bg-[#060912] border border-white/10">
+                      <div className="text-xs text-slate-400">Target Setpoint</div>
                       <div className="text-sm font-bold text-bro-cyan mt-0.5">
                         {auditData.load.tempSetpointC !== null
                           ? `${auditData.load.tempSetpointC.toFixed(1)}°C`
                           : 'Ambient / Dry'}
                       </div>
                     </div>
-                    <div className="p-3 rounded bg-bro-steel/70 border border-white/10">
-                      <div className="text-[10px] uppercase text-slate-400">Min / Max Recorded</div>
+                    <div className="p-3.5 rounded-xl bg-[#060912] border border-white/10">
+                      <div className="text-xs text-slate-400">Min / Max Recorded</div>
                       <div className="text-sm font-bold text-white mt-0.5">
                         {minTemp !== null && maxTemp !== null
                           ? `${minTemp.toFixed(1)}°C / ${maxTemp.toFixed(1)}°C`
                           : 'No sensor pts'}
                       </div>
                     </div>
-                    <div className="p-3 rounded bg-bro-steel/70 border border-white/10">
-                      <div className="text-[10px] uppercase text-slate-400">Temp Excursions</div>
+                    <div className="p-3.5 rounded-xl bg-[#060912] border border-white/10">
+                      <div className="text-xs text-slate-400">Temp Excursions</div>
                       <div
                         className={`text-sm font-bold mt-0.5 ${
-                          excursionCount > 0 ? 'text-rose-400' : 'text-emerald-400'
+                          excursionCount > 0 ? 'text-rose-300' : 'text-emerald-300'
                         }`}
                       >
                         {excursionCount} ({doorOpenCount} door open)
                       </div>
                     </div>
-                    <div className="p-3 rounded bg-bro-steel/70 border border-white/10">
-                      <div className="text-[10px] uppercase text-slate-400">eBOL Custody Blocks</div>
+                    <div className="p-3.5 rounded-xl bg-[#060912] border border-white/10">
+                      <div className="text-xs text-slate-400">eBOL Custody Blocks</div>
                       <div className="text-sm font-bold text-white mt-0.5">
                         {auditData.ebolBlocksCount} Signed
                       </div>
@@ -1392,20 +1441,20 @@ export default function ShipperPortalApp() {
                   </div>
 
                   {auditData.telemetry.length === 0 ? (
-                    <div className="p-6 rounded bg-bro-steel/50 border border-white/10 text-center font-mono text-xs text-slate-400">
+                    <div className="p-6 rounded-2xl bg-[#060912] border border-white/10 text-center text-xs text-slate-300">
                       No telematics sensor events logged for this load yet.
                     </div>
                   ) : (
-                    <div className="overflow-x-auto rounded border border-white/10">
+                    <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#060912]">
                       <table className="w-full text-left font-mono text-xs tabular-nums">
-                        <thead className="bg-bro-steel/80 text-[10px] uppercase text-slate-400 border-b border-white/10">
+                        <thead className="bg-[#0b1120] text-xs text-slate-300 border-b border-white/10">
                           <tr>
-                            <th className="px-3 py-2.5">Timestamp</th>
-                            <th className="px-3 py-2.5">Temp (°C)</th>
-                            <th className="px-3 py-2.5">Setpoint</th>
-                            <th className="px-3 py-2.5">Door</th>
-                            <th className="px-3 py-2.5">GPS Coords</th>
-                            <th className="px-3 py-2.5">TPMS / RUL</th>
+                            <th className="px-3.5 py-2.5 font-semibold">Timestamp</th>
+                            <th className="px-3.5 py-2.5 font-semibold">Temp (°C)</th>
+                            <th className="px-3.5 py-2.5 font-semibold">Setpoint</th>
+                            <th className="px-3.5 py-2.5 font-semibold">Door</th>
+                            <th className="px-3.5 py-2.5 font-semibold">GPS Coords</th>
+                            <th className="px-3.5 py-2.5 font-semibold">TPMS / RUL</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/10">
@@ -1415,32 +1464,32 @@ export default function ShipperPortalApp() {
                               t.reeferTempC !== null && sp !== null && Math.abs(t.reeferTempC - sp) > 2.0;
                             return (
                               <tr key={t.id} className="hover:bg-white/[0.02]">
-                                <td className="px-3 py-2 text-slate-300 whitespace-nowrap">
+                                <td className="px-3.5 py-2.5 text-slate-200 whitespace-nowrap">
                                   {formatTimestamp(t.recordedAt)}
                                 </td>
                                 <td
-                                  className={`px-3 py-2 font-bold ${
-                                    isExcursion ? 'text-rose-400' : 'text-emerald-300'
+                                  className={`px-3.5 py-2.5 font-bold ${
+                                    isExcursion ? 'text-rose-300' : 'text-emerald-300'
                                   }`}
                                 >
                                   {t.reeferTempC !== null ? `${t.reeferTempC.toFixed(1)}°C` : '—'}
                                 </td>
-                                <td className="px-3 py-2 text-slate-400">
+                                <td className="px-3.5 py-2.5 text-slate-300">
                                   {sp !== null ? `${sp.toFixed(1)}°C` : '—'}
                                 </td>
-                                <td className="px-3 py-2">
+                                <td className="px-3.5 py-2.5">
                                   {t.doorClosed === null ? (
                                     '—'
                                   ) : t.doorClosed ? (
-                                    <span className="text-emerald-400">SEALED</span>
+                                    <span className="text-emerald-300">SEALED</span>
                                   ) : (
                                     <span className="text-bro-gold font-bold">OPEN</span>
                                   )}
                                 </td>
-                                <td className="px-3 py-2 text-slate-400">
+                                <td className="px-3.5 py-2.5 text-slate-300">
                                   {t.lat.toFixed(3)}, {t.lon.toFixed(3)}
                                 </td>
-                                <td className="px-3 py-2 text-slate-400">
+                                <td className="px-3.5 py-2.5 text-slate-300">
                                   {t.tpmsPsi ? `${t.tpmsPsi} psi` : '—'}
                                   {t.rulHours ? ` · ${t.rulHours}h` : ''}
                                 </td>
@@ -1455,33 +1504,33 @@ export default function ShipperPortalApp() {
               ) : null}
             </div>
 
-            <div className="p-4 border-t border-white/10 bg-bro-steel/70 flex flex-wrap items-center justify-between gap-3">
+            <div className="p-4 sm:p-5 border-t border-white/10 bg-[#060912] flex flex-wrap items-center justify-between gap-3">
               {auditData ? (
                 <a
                   href={`/verify/${encodeURIComponent(auditData.load.id)}`}
-                  className="inline-flex items-center gap-1.5 font-mono text-xs text-bro-cyan hover:underline"
+                  className="min-h-[44px] inline-flex items-center gap-1.5 text-xs font-medium text-bro-cyan hover:underline"
                 >
                   <span>Verify eBOL Cryptographic Chain</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 </a>
               ) : (
                 <span />
               )}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2.5">
                 {auditData && (
                   <button
                     type="button"
                     onClick={handleDownloadFsmaCsv}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-bro-cyan hover:bg-cyan-300 text-black font-mono text-xs font-bold uppercase cursor-pointer"
+                    className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bro-cyan hover:bg-cyan-300 text-black text-xs font-semibold cursor-pointer transition-colors"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="w-4 h-4 shrink-0" aria-hidden="true" />
                     <span>Download FSMA CSV</span>
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => setAuditModalOpen(false)}
-                  className="px-3.5 py-2 rounded border border-white/15 text-slate-300 hover:text-white font-mono text-xs uppercase cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 rounded-full border border-white/15 bg-[#0b1120] text-slate-200 hover:text-white hover:border-white/30 text-xs font-semibold cursor-pointer transition-colors"
                 >
                   Close
                 </button>

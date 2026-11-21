@@ -1,0 +1,211 @@
+/* ==========================================================================
+ * #BRO Transport Corp. — Motion, View Transitions & Composited UI Primitives
+ * Strictly GPU-composited (opacity, transform, grid-template-rows) + HIG safe
+ * ========================================================================== */
+
+:root {
+  --bro-hero-scroll: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * 1. Astro ClientRouter View Transitions (220ms crisp cross-fade / micro-scale)
+ * -------------------------------------------------------------------------- */
+@keyframes bro-vt-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.992);
+  }
+}
+
+@keyframes bro-vt-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(1.006);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+::view-transition-old(root) {
+  animation: 220ms cubic-bezier(0.22, 1, 0.36, 1) both bro-vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 220ms cubic-bezier(0.22, 1, 0.36, 1) both bro-vt-fade-in;
+}
+
+/* --------------------------------------------------------------------------
+ * 2. Lenis Smooth-Scroll Integration & Global Modal Scroll Lock
+ * -------------------------------------------------------------------------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+html.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch],
+.lenis [data-lenis-prevent-vertical],
+.lenis [data-lenis-prevent-horizontal] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped,
+html.bro-scroll-locked,
+html.bro-scroll-locked body {
+  overflow: clip;
+  overscroll-behavior: none;
+}
+
+/* --------------------------------------------------------------------------
+ * 3. Progressive-Enhancement Safety for Reveal Targets
+ * Elements MUST stay opacity: 1 by default when JS is off or uninitialized.
+ * -------------------------------------------------------------------------- */
+[data-reveal],
+[data-reveal-group] > * {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+ * 4. GPU-Composited Accordion Reveal (0fr -> 1fr grid track)
+ * Place padding on the inner child element so 0fr collapses to exact 0px.
+ * -------------------------------------------------------------------------- */
+.bro-accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    visibility 0s linear 280ms;
+}
+
+.bro-accordion-content > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.bro-accordion-content[data-open='true'],
+.bro-accordion-content[data-state='open'],
+.bro-accordion-content.is-open,
+.bro-accordion-content[aria-expanded='true'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    visibility 0s linear 0s;
+}
+
+/* --------------------------------------------------------------------------
+ * 5. Smooth Backdrop & Panel Transitions (opacity + transform only)
+ * Paired with useModalFocusTrap ({ mounted, visible, containerRef }).
+ * -------------------------------------------------------------------------- */
+.bro-modal-backdrop {
+  opacity: 0;
+  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+}
+
+.bro-modal-backdrop[data-visible='true'],
+.bro-modal-backdrop[data-state='open'],
+.bro-modal-backdrop.is-visible,
+.bro-modal-backdrop.is-open {
+  opacity: 1;
+}
+
+.bro-modal-panel {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0) scale(0.975);
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.bro-modal-panel[data-visible='true'],
+.bro-modal-panel[data-state='open'],
+.bro-modal-panel.is-visible,
+.bro-modal-panel.is-open {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.bro-drawer-panel {
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.bro-drawer-panel[data-side='left'] {
+  transform: translate3d(-100%, 0, 0);
+}
+
+.bro-drawer-panel[data-side='bottom'] {
+  transform: translate3d(0, 100%, 0);
+}
+
+.bro-drawer-panel[data-visible='true'],
+.bro-drawer-panel[data-state='open'],
+.bro-drawer-panel.is-visible,
+.bro-drawer-panel.is-open {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* --------------------------------------------------------------------------
+ * 6. Accessibility: Reduced Motion Compliance
+ * -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*) {
+    animation: none !important;
+  }
+
+  [data-reveal],
+  [data-reveal-group] > *,
+  [data-reveal-item] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .bro-accordion-content,
+  .bro-modal-backdrop,
+  .bro-modal-panel,
+  .bro-drawer-panel {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .bro-modal-panel[data-visible='true'],
+  .bro-modal-panel[data-state='open'],
+  .bro-modal-panel.is-visible,
+  .bro-modal-panel.is-open,
+  .bro-drawer-panel[data-visible='true'],
+  .bro-drawer-panel[data-state='open'],
+  .bro-drawer-panel.is-visible,
+  .bro-drawer-panel.is-open {
+    transform: none !important;
+  }
+}

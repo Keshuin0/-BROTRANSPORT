@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ShieldCheck, ShieldAlert, ScanLine } from 'lucide-react';
 import type { CustomsValidationReport } from '@bro/contracts';
 import { renderCode128Svg } from '../lib/barcode';
@@ -164,10 +164,11 @@ export default function TransborderPipeline() {
             key={key}
             type="button"
             onClick={() => selectPreset(key)}
-            className={`px-3 py-1.5 rounded border font-mono text-[11px] transition-colors cursor-pointer ${
+            aria-pressed={presetKey === key}
+            className={`min-h-[44px] px-4 py-2 rounded-full border text-xs font-medium transition-colors cursor-pointer ${
               presetKey === key
-                ? 'border-bro-cyan bg-bro-cyan/15 text-bro-cyan font-bold'
-                : 'border-white/10 bg-bro-steel/50 text-slate-300 hover:text-white'
+                ? 'border-white bg-white text-black font-semibold'
+                : 'border-white/15 bg-[#060912] text-slate-200 hover:text-white hover:border-white/30'
             }`}
           >
             {item.label}
@@ -176,8 +177,8 @@ export default function TransborderPipeline() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-7 rounded-lg border border-white/10 bg-bro-obsidian/90 p-5 flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2 font-mono text-xs">
+        <div className="lg:col-span-7 rounded-3xl surface-ceramic p-5 sm:p-6 flex flex-col justify-between space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-3 font-mono text-xs">
             <span className="text-white font-bold">ACE_PAPS / ACI_PARS JSON MANIFEST</span>
             <span className="text-bro-cyan">ISO 3779 · CARM R2 · FDA</span>
           </div>
@@ -187,54 +188,54 @@ export default function TransborderPipeline() {
             value={manifestStr}
             onChange={(e) => setManifestStr(e.target.value)}
             spellCheck={false}
-            className="w-full min-h-[340px] bg-black/70 text-cyan-300 border border-white/10 rounded p-3 font-mono text-[11px] outline-none focus:border-bro-cyan resize-y"
+            className="w-full min-h-[340px] bg-[#060912] text-cyan-200 border border-white/15 rounded-2xl p-4 font-mono text-xs outline-none focus:border-bro-cyan resize-y"
           />
 
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-mono text-[10px] text-slate-400">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="font-mono text-[11px] text-slate-300">
               Deterministic validation against real CBP/CBSA compliance rules.
             </span>
             <button
               type="button"
               onClick={runValidation}
               disabled={scanning}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-bro-cyan hover:bg-bro-cyan/90 text-black font-mono text-xs font-bold uppercase cursor-pointer disabled:opacity-50"
+              className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-bro-cyan text-black text-xs font-semibold tracking-tight transition-colors cursor-pointer disabled:opacity-50"
             >
-              <ScanLine className="w-4 h-4" />
-              <span>{scanning ? 'Validating...' : 'Run Pre-Flight Check'}</span>
+              <ScanLine className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{scanning ? 'Validating…' : 'Run Pre-Flight Check'}</span>
             </button>
           </div>
         </div>
 
-        <div className="lg:col-span-5 rounded-lg border border-white/10 bg-bro-steel/50 p-5 flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2 font-mono text-xs">
+        <div className="lg:col-span-5 rounded-3xl surface-ceramic p-5 sm:p-6 flex flex-col justify-between space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-3 font-mono text-xs">
             <span className="text-white font-bold">PRE-FLIGHT AUDIT TERMINAL</span>
             {report ? (
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[10px] ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
                   report.compliant
                     ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
                     : 'bg-rose-950 text-rose-200 border border-rose-500/50'
                 }`}
               >
-                {report.compliant ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                {report.compliant ? <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> : <ShieldAlert className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />}
                 {report.compliant ? 'BORDER COMPLIANT' : 'REJECTED — HOLD DISPATCH'}
               </span>
             ) : (
-              <span className="text-[10px] text-slate-400">AWAITING SCAN</span>
+              <span className="text-[11px] text-slate-300">AWAITING SCAN</span>
             )}
           </div>
 
-          <div className="flex-1 space-y-2.5 font-mono text-[11px] overflow-y-auto max-h-[340px]">
+          <div className="flex-1 space-y-2.5 font-mono text-xs overflow-y-auto max-h-[340px]">
             {parseError && (
-              <div className="p-3 rounded bg-rose-950/50 border border-rose-500/40 text-rose-200">
+              <div role="alert" className="p-3.5 rounded-2xl bg-rose-950/50 border border-rose-500/40 text-rose-200">
                 [SCHEMA ERROR] {parseError}
               </div>
             )}
 
             {report && (
               <>
-                <div className="p-2.5 rounded bg-bro-obsidian/80 border border-white/10 text-slate-300 space-y-1">
+                <div className="p-3.5 rounded-2xl bg-[#060912] border border-white/[0.08] text-slate-200 space-y-1">
                   <div>Manifest ID: <strong className="text-white">{report.manifestId}</strong></div>
                   <div>Port: <strong className="text-bro-cyan">{report.portName}</strong></div>
                   <div>Lead Time: <strong className="tabular-nums">{report.leadTimeMinutes}m</strong> (min {report.requiredLeadTimeMinutes}m)</div>
@@ -243,7 +244,7 @@ export default function TransborderPipeline() {
                 {report.checks.map((chk) => (
                   <div
                     key={chk.code}
-                    className={`p-2 rounded border-l-2 bg-bro-obsidian/70 ${
+                    className={`p-3 rounded-xl border-l-2 bg-[#060912] ${
                       chk.status === 'pass'
                         ? 'border-emerald-400 text-slate-200'
                         : chk.status === 'warn'
@@ -251,16 +252,16 @@ export default function TransborderPipeline() {
                           : 'border-rose-500 text-rose-200'
                     }`}
                   >
-                    <div className="flex justify-between font-bold">
+                    <div className="flex justify-between gap-2 font-bold">
                       <span>{chk.label}</span>
-                      <span className="uppercase text-[10px]">{chk.status}</span>
+                      <span className="uppercase text-[11px] shrink-0">{chk.status}</span>
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{chk.detail}</div>
+                    <div className="text-[11px] text-slate-300 mt-0.5">{chk.detail}</div>
                   </div>
                 ))}
 
                 {report.warnings.map((w, i) => (
-                  <div key={i} className="p-2 rounded bg-amber-950/30 border border-bro-gold/40 text-amber-200 text-[10px]">
+                  <div key={i} className="p-3 rounded-xl bg-amber-950/30 border border-bro-gold/40 text-amber-200 text-[11px]">
                     [WARNING] {w}
                   </div>
                 ))}
@@ -268,18 +269,18 @@ export default function TransborderPipeline() {
             )}
 
             {!report && !parseError && (
-              <div className="py-10 text-center text-slate-500">
+              <div className="py-10 text-center text-slate-300">
                 Select a preset or edit the JSON manifest, then click Run Pre-Flight Check.
               </div>
             )}
           </div>
 
           {barcodeSvg && (
-            <div className="p-3 rounded bg-white text-black space-y-1">
-              <div className="font-mono text-[9px] font-bold uppercase text-slate-700 text-center">
+            <div className="p-3.5 rounded-2xl bg-white text-black space-y-1.5 overflow-hidden">
+              <div className="font-mono text-[10px] font-bold uppercase text-slate-800 text-center">
                 Scannable ISO/IEC 15417 Code-128B PAPS/PARS Barcode
               </div>
-              <div className="flex justify-center" dangerouslySetInnerHTML={{ __html: barcodeSvg }} />
+              <div className="w-full flex justify-center" dangerouslySetInnerHTML={{ __html: barcodeSvg }} />
             </div>
           )}
         </div>

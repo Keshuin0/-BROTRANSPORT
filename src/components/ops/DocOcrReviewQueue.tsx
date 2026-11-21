@@ -60,7 +60,7 @@ function confidenceBadgeStyle(score: number | null | undefined): {
   if (score === null || score === undefined || !Number.isFinite(score)) {
     return {
       label: 'N/A',
-      classes: 'bg-slate-800 text-slate-400 border-slate-700',
+      classes: 'bg-slate-800 text-slate-300 border-slate-600',
     };
   }
   const pct = Math.round(score * 100);
@@ -78,7 +78,7 @@ function confidenceBadgeStyle(score: number | null | undefined): {
   }
   return {
     label: `${pct}%`,
-    classes: 'bg-bro-crimson/15 text-bro-crimson border-bro-crimson/45',
+    classes: 'bg-rose-950/70 text-rose-200 border-rose-400/50',
   };
 }
 
@@ -203,38 +203,49 @@ export default function DocOcrReviewQueue() {
     setPreviewError(null);
   }, [selectedDoc?.id, selectedDoc?.updatedAt]);
 
-  // Fetch PDF as local Blob URL so X-Frame-Options never blocks same-origin iframe rendering
+  // Fetch PDF as local Blob URL with strict abort + cancellation guard to prevent blob URL leaks
   useEffect(() => {
-    let active = true;
+    let cancelled = false;
     let objectUrl: string | null = null;
+    const controller = new AbortController();
     setPdfBlobUrl(null);
 
     if (!selectedDoc || selectedDoc.mimeType !== 'application/pdf') {
-      return;
+      return () => {
+        cancelled = true;
+        controller.abort();
+      };
     }
 
     const loadPdf = async () => {
       try {
-        const res = await fetch(`/api/ops/documents/${encodeURIComponent(selectedDoc.id)}/file`);
+        const res = await fetch(`/api/ops/documents/${encodeURIComponent(selectedDoc.id)}/file`, {
+          signal: controller.signal,
+        });
+        if (cancelled) return;
         if (!res.ok) {
-          if (active) setPreviewError(`R2 PDF binary unavailable (HTTP ${res.status}).`);
+          setPreviewError(`R2 PDF binary unavailable (HTTP ${res.status}).`);
           return;
         }
         const blob = await res.blob();
+        if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
-        if (active) {
-          setPdfBlobUrl(objectUrl);
-          setPreviewError(null);
-        }
-      } catch {
-        if (active) setPreviewError('Unable to stream PDF binary from R2 vault.');
+        setPdfBlobUrl(objectUrl);
+        setPreviewError(null);
+      } catch (err) {
+        if (cancelled || (err instanceof DOMException && err.name === 'AbortError')) return;
+        setPreviewError('Unable to stream PDF binary from R2 vault.');
       }
     };
 
     void loadPdf();
     return () => {
-      active = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      cancelled = true;
+      controller.abort();
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
     };
   }, [selectedDoc?.id, selectedDoc?.mimeType]);
 
@@ -305,7 +316,7 @@ export default function DocOcrReviewQueue() {
     if (score === undefined) return null;
     const badge = confidenceBadgeStyle(score);
     return (
-      <span className={`px-1.5 py-0.5 rounded border font-mono text-[9px] tabular-nums ${badge.classes}`}>
+      <span className={`px-2 py-0.5 rounded-full border font-mono text-xs tabular-nums ${badge.classes}`}>
         {badge.label}
       </span>
     );
@@ -314,35 +325,43 @@ export default function DocOcrReviewQueue() {
   const fileUrl = selectedDoc ? `/api/ops/documents/${encodeURIComponent(selectedDoc.id)}/file` : '';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-widest text-bro-cyan">
-            MODULE 02 // CLOUDFLARE WORKFLOW HITL DOCUMENT VERIFICATION
+          <p className="text-xs font-medium uppercase tracking-wider text-bro-cyan">
+            Workflow Verification · Workers AI Vision OCR
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight mt-1">
             AI Document OCR Review Queue
           </h1>
         </div>
-        <div className="flex items-center gap-2.5">
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border font-mono text-[10px] uppercase ${
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            role="status"
+            aria-label={`OCR live stream status: ${wsStatus}`}
+            className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-full border text-xs font-semibold ${
               wsStatus === 'connected'
-                ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300'
-                : 'bg-slate-900 border-slate-700 text-slate-400'
+                ? 'bg-emerald-950/60 border-emerald-400/40 text-emerald-200'
+                : wsStatus === 'connecting'
+                  ? 'bg-bro-gold/15 border-bro-gold/40 text-bro-gold'
+                  : 'bg-[#0b1120] border-white/15 text-slate-300'
             }`}
           >
-            {wsStatus === 'connected' ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-            DOC_OCR_READY: {wsStatus}
-          </span>
+            {wsStatus === 'connected' ? (
+              <Wifi className="w-4 h-4 text-emerald-300 shrink-0" aria-hidden="true" />
+            ) : (
+              <WifiOff className="w-4 h-4 shrink-0" aria-hidden="true" />
+            )}
+            <span>{wsStatus === 'connected' ? 'OCR Stream Live' : wsStatus === 'connecting' ? 'Connecting Stream' : 'Polling Sync'}</span>
+          </div>
           <button
             type="button"
             onClick={() => void fetchDocuments()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-bro-steel border border-white/15 hover:border-bro-cyan/50 font-mono text-xs text-white cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-[#0b1120] border border-white/15 hover:border-bro-cyan/50 text-xs font-semibold text-white cursor-pointer transition-colors"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Refresh
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -351,16 +370,21 @@ export default function DocOcrReviewQueue() {
       {banner && (
         <div
           role={banner.kind === 'error' ? 'alert' : 'status'}
-          className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg border font-mono text-xs ${
+          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-xs font-medium ${
             banner.kind === 'error'
-              ? 'bg-rose-950/50 border-bro-crimson/40 text-rose-200'
+              ? 'bg-rose-950/60 border-rose-400/50 text-rose-200'
               : banner.kind === 'info'
                 ? 'bg-bro-cyan/10 border-bro-cyan/40 text-bro-cyan'
-                : 'bg-emerald-950/50 border-emerald-500/40 text-emerald-200'
+                : 'bg-emerald-950/60 border-emerald-400/40 text-emerald-200'
           }`}
         >
           <span>{banner.text}</span>
-          <button type="button" onClick={() => setBanner(null)} aria-label="Dismiss" className="cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setBanner(null)}
+            aria-label="Dismiss message"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -369,13 +393,13 @@ export default function DocOcrReviewQueue() {
       {/* 3-Pane OCR Workspace */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         {/* LEFT PANE: Filterable Queue */}
-        <aside className="xl:col-span-3 glass-panel rounded-lg border border-white/10 overflow-hidden flex flex-col max-h-[760px]">
-          <div className="p-3 border-b border-white/10 space-y-2.5 bg-bro-obsidian/60">
-            <div className="flex items-center justify-between font-mono text-[11px] font-bold uppercase text-white">
+        <aside className="xl:col-span-3 surface-ceramic rounded-2xl overflow-hidden flex flex-col max-h-[760px]">
+          <div className="p-4 border-b border-white/10 space-y-3 bg-[#0b1120]">
+            <div className="flex items-center justify-between text-xs font-semibold text-white">
               <span>Document Queue</span>
-              <span className="text-slate-400 tabular-nums">{filteredDocs.length} shown</span>
+              <span className="text-slate-300 tabular-nums">{filteredDocs.length} shown</span>
             </div>
-            <div className="grid grid-cols-2 gap-1">
+            <div className="grid grid-cols-2 gap-1.5">
               {(
                 [
                   ['awaiting_review', 'Review'],
@@ -388,10 +412,10 @@ export default function DocOcrReviewQueue() {
                   key={key}
                   type="button"
                   onClick={() => setFilter(key)}
-                  className={`px-2 py-1.5 rounded font-mono text-[10px] uppercase border transition-colors cursor-pointer flex items-center justify-between ${
+                  className={`px-3 py-2 min-h-[40px] rounded-xl text-xs font-medium border transition-colors cursor-pointer flex items-center justify-between ${
                     filter === key
-                      ? 'bg-bro-cyan/15 border-bro-cyan/45 text-bro-cyan font-bold'
-                      : 'bg-bro-obsidian/70 border-white/10 text-slate-400 hover:text-white'
+                      ? 'bg-white text-black border-white font-semibold shadow-sm'
+                      : 'bg-[#070b16] border-white/10 text-slate-300 hover:text-white'
                   }`}
                 >
                   <span>{label}</span>
@@ -401,14 +425,14 @@ export default function DocOcrReviewQueue() {
             </div>
           </div>
 
-          <div className="divide-y divide-white/5 overflow-y-auto flex-1">
+          <div className="divide-y divide-white/[0.06] overflow-y-auto flex-1">
             {loading ? (
-              <div className="p-6 text-center font-mono text-xs text-slate-500">Loading OCR queue...</div>
+              <div className="p-6 text-center text-xs text-slate-300">Loading OCR queue...</div>
             ) : filteredDocs.length === 0 ? (
-              <div className="p-8 text-center font-mono text-xs text-slate-500 space-y-2">
-                <FileSearch className="w-6 h-6 mx-auto text-slate-600" />
-                <p>No documents in &ldquo;{filter}&rdquo;.</p>
-                <p className="text-[10px] text-slate-600">
+              <div className="p-8 text-center text-xs text-slate-300 space-y-2">
+                <FileSearch className="w-6 h-6 mx-auto text-slate-400" aria-hidden="true" />
+                <p>No documents in &ldquo;{filter.replace(/_/g, ' ')}&rdquo;.</p>
+                <p className="text-xs text-slate-400">
                   Driver &amp; shipper uploads trigger Vision OCR automatically and stream here.
                 </p>
               </div>
@@ -421,22 +445,22 @@ export default function DocOcrReviewQueue() {
                     key={doc.id}
                     type="button"
                     onClick={() => setSelectedId(doc.id)}
-                    className={`w-full text-left p-3 transition-colors cursor-pointer space-y-1.5 ${
-                      isSelected ? 'bg-bro-cyan/10 border-l-2 border-l-bro-cyan' : 'hover:bg-white/5'
+                    className={`w-full text-left p-3.5 transition-colors cursor-pointer space-y-2 ${
+                      isSelected ? 'bg-bro-cyan/10 border-l-2 border-l-bro-cyan' : 'hover:bg-white/[0.04]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="px-1.5 py-0.5 rounded bg-bro-steel border border-white/10 font-mono text-[10px] font-bold text-white">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#0b1120] border border-white/10 font-mono text-xs font-bold text-white">
                         {doc.docType}
                       </span>
-                      <span className={`px-1.5 py-0.5 rounded border font-mono text-[10px] font-bold tabular-nums ${badge.classes}`}>
+                      <span className={`px-2.5 py-0.5 rounded-full border font-mono text-xs font-bold tabular-nums ${badge.classes}`}>
                         {badge.label}
                       </span>
                     </div>
                     <div className="text-xs font-medium text-slate-100 truncate">{doc.originalFilename}</div>
-                    <div className="flex items-center justify-between font-mono text-[10px] text-slate-400">
-                      <span>{doc.loadId || 'Unlinked'}</span>
-                      <span className="uppercase">{doc.ocrStatus.replace(/_/g, ' ')}</span>
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span className="font-mono truncate">{doc.loadId || 'Unlinked'}</span>
+                      <span className="capitalize shrink-0">{doc.ocrStatus.replace(/_/g, ' ')}</span>
                     </div>
                   </button>
                 );
@@ -448,14 +472,14 @@ export default function DocOcrReviewQueue() {
         {/* CENTER PANE: High-Res R2 Document Viewer */}
         <section
           aria-label="R2 Document Viewer"
-          className="xl:col-span-5 glass-panel rounded-lg border border-white/10 overflow-hidden flex flex-col min-h-[620px] max-h-[760px]"
+          className="xl:col-span-5 surface-ceramic rounded-2xl overflow-hidden flex flex-col min-h-[320px] lg:min-h-[600px] max-h-[760px]"
         >
-          <div className="px-4 py-3 border-b border-white/10 bg-bro-obsidian/70 flex flex-wrap items-center justify-between gap-2">
+          <div className="px-4 py-3 border-b border-white/10 bg-[#0b1120] flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               {selectedDoc?.mimeType === 'application/pdf' ? (
-                <FileText className="w-4 h-4 text-bro-gold shrink-0" />
+                <FileText className="w-4 h-4 text-bro-gold shrink-0" aria-hidden="true" />
               ) : (
-                <FileImage className="w-4 h-4 text-bro-cyan shrink-0" />
+                <FileImage className="w-4 h-4 text-bro-cyan shrink-0" aria-hidden="true" />
               )}
               <span className="font-mono text-xs font-bold text-white truncate">
                 {selectedDoc ? selectedDoc.originalFilename : 'No document selected'}
@@ -463,65 +487,67 @@ export default function DocOcrReviewQueue() {
             </div>
 
             {selectedDoc && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setZoomPct((z) => Math.max(50, z - 25))}
                   aria-label="Zoom out"
-                  className="p-1.5 rounded bg-bro-steel border border-white/10 hover:border-bro-cyan/40 text-slate-300 hover:text-white cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-[#070b16] border border-white/15 hover:border-bro-cyan/40 text-slate-200 hover:text-white cursor-pointer transition-colors"
                 >
-                  <ZoomOut className="w-3.5 h-3.5" />
+                  <ZoomOut className="w-4 h-4" />
                 </button>
-                <span className="font-mono text-[10px] tabular-nums text-slate-300 w-10 text-center">
+                <span className="font-mono text-xs tabular-nums text-slate-200 min-w-[44px] text-center">
                   {zoomPct}%
                 </span>
                 <button
                   type="button"
                   onClick={() => setZoomPct((z) => Math.min(250, z + 25))}
                   aria-label="Zoom in"
-                  className="p-1.5 rounded bg-bro-steel border border-white/10 hover:border-bro-cyan/40 text-slate-300 hover:text-white cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-[#070b16] border border-white/15 hover:border-bro-cyan/40 text-slate-200 hover:text-white cursor-pointer transition-colors"
                 >
-                  <ZoomIn className="w-3.5 h-3.5" />
+                  <ZoomIn className="w-4 h-4" />
                 </button>
                 {selectedDoc.mimeType.startsWith('image/') && (
                   <button
                     type="button"
                     onClick={() => setRotationDeg((r) => (r + 90) % 360)}
                     aria-label="Rotate document 90 degrees"
-                    className="p-1.5 rounded bg-bro-steel border border-white/10 hover:border-bro-cyan/40 text-slate-300 hover:text-white cursor-pointer"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-[#070b16] border border-white/15 hover:border-bro-cyan/40 text-slate-200 hover:text-white cursor-pointer transition-colors"
                   >
-                    <RotateCw className="w-3.5 h-3.5" />
+                    <RotateCw className="w-4 h-4" />
                   </button>
                 )}
                 <a
                   href={fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded bg-bro-steel border border-white/10 hover:border-bro-cyan/40 font-mono text-[10px] text-bro-cyan"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 min-h-[44px] rounded-xl bg-[#070b16] border border-white/15 hover:border-bro-cyan/40 text-xs font-semibold text-bro-cyan transition-colors"
                 >
-                  Open <ExternalLink className="w-3 h-3" />
+                  <span>Open</span>
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                 </a>
               </div>
             )}
           </div>
 
-          <div className="flex-1 bg-black/70 overflow-auto flex items-center justify-center p-4 relative">
+          <div className="flex-1 bg-[#050811] overflow-auto flex items-start justify-start p-4 relative">
             {!selectedDoc ? (
-              <div className="text-center font-mono text-xs text-slate-500">
+              <div className="m-auto text-center text-xs text-slate-300">
                 Select a document from the left queue to inspect its R2 vault scan.
               </div>
             ) : previewError ? (
-              <div className="max-w-sm text-center space-y-3 p-6 rounded-lg bg-bro-steel/70 border border-white/10 font-mono text-xs">
-                <AlertTriangle className="w-6 h-6 text-bro-gold mx-auto" />
-                <div className="text-slate-200">{previewError}</div>
-                <div className="text-[10px] text-slate-400 break-all">R2 Key: {selectedDoc.r2Key}</div>
+              <div className="m-auto max-w-sm text-center space-y-3 p-6 rounded-2xl bg-[#0b1120] border border-white/10 text-xs">
+                <AlertTriangle className="w-6 h-6 text-bro-gold mx-auto" aria-hidden="true" />
+                <div className="text-slate-100">{previewError}</div>
+                <div className="font-mono text-xs text-slate-400 break-all">R2 Key: {selectedDoc.r2Key}</div>
                 <a
                   href={fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-bro-cyan/15 border border-bro-cyan/40 text-bro-cyan text-[11px]"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl bg-bro-cyan/15 border border-bro-cyan/40 text-bro-cyan text-xs font-semibold hover:bg-bro-cyan/25 transition-colors"
                 >
-                  Direct R2 Stream <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Direct R2 Stream</span>
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                 </a>
               </div>
             ) : selectedDoc.mimeType === 'application/pdf' ? (
@@ -529,20 +555,26 @@ export default function DocOcrReviewQueue() {
                 <iframe
                   title={`PDF preview for ${selectedDoc.originalFilename}`}
                   src={pdfBlobUrl}
-                  className="w-full h-[640px] rounded border border-white/10 bg-white"
-                  style={{ transform: `scale(${zoomPct / 100})`, transformOrigin: 'top center' }}
+                  className="block rounded-xl border border-white/10 bg-white shrink-0"
+                  style={{
+                    width: `${zoomPct}%`,
+                    maxWidth: 'none',
+                    height: `${Math.round(640 * (zoomPct / 100))}px`,
+                  }}
                 />
               ) : (
-                <div className="font-mono text-xs text-slate-400">Streaming PDF from R2 vault...</div>
+                <div className="m-auto text-xs text-slate-300">Streaming PDF from R2 vault...</div>
               )
             ) : (
               <img
                 src={fileUrl}
                 alt={`Scanned freight document ${selectedDoc.originalFilename}`}
                 onError={() => setPreviewError('Image binary not found in local R2 vault or access denied.')}
-                className="max-w-full rounded shadow-xl border border-white/10 transition-transform"
+                className="block rounded-xl shadow-xl border border-white/10 transition-[width] duration-150 shrink-0"
                 style={{
-                  transform: `scale(${zoomPct / 100}) rotate(${rotationDeg}deg)`,
+                  width: `${zoomPct}%`,
+                  maxWidth: 'none',
+                  transform: rotationDeg !== 0 ? `rotate(${rotationDeg}deg)` : undefined,
                   transformOrigin: 'center center',
                 }}
               />
@@ -550,10 +582,10 @@ export default function DocOcrReviewQueue() {
           </div>
 
           {selectedDoc && (
-            <div className="px-4 py-2 border-t border-white/10 bg-bro-obsidian/80 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] text-slate-400">
+            <div className="px-4 py-2.5 border-t border-white/10 bg-[#0b1120] flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-slate-300">
               <span>MIME: {selectedDoc.mimeType}</span>
               <span className="tabular-nums">{(selectedDoc.sizeBytes / 1024).toFixed(1)} KB</span>
-              <span className="truncate max-w-[200px]">SHA-256: {selectedDoc.sha256Hex.slice(0, 16)}…</span>
+              <span className="truncate max-w-[220px]">SHA-256: {selectedDoc.sha256Hex.slice(0, 16)}…</span>
             </div>
           )}
         </section>
@@ -561,43 +593,49 @@ export default function DocOcrReviewQueue() {
         {/* RIGHT PANE: Editable AI-Extracted JSON & HITL Decision */}
         <section
           aria-label="AI Extracted OCR Fields and HITL Decision"
-          className="xl:col-span-4 glass-panel rounded-lg border border-white/10 p-4 space-y-4 max-h-[760px] overflow-y-auto"
+          className="xl:col-span-4 surface-ceramic rounded-2xl p-4 sm:p-5 space-y-4 max-h-[760px] overflow-y-auto"
         >
           {!selectedDoc ? (
-            <div className="py-16 text-center font-mono text-xs text-slate-500">
+            <div className="py-16 text-center text-xs text-slate-300">
               No document selected for field verification.
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
                 <div>
-                  <div className="font-mono text-xs font-bold uppercase text-white">
+                  <h2 className="font-display text-sm font-bold text-white">
                     AI-Extracted Structured Fields
-                  </div>
-                  <div className="font-mono text-[10px] text-slate-400 mt-0.5">
-                    HITL Auto-Approve Gate: &gt;= 92% · Zero OS&amp;D
+                  </h2>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    Auto-Approve Gate: &gt;= 92% · Zero OS&amp;D
                   </div>
                 </div>
-                <span className={`px-2.5 py-1 rounded border font-mono text-xs font-bold tabular-nums ${overallBadge.classes}`}>
+                <span className={`px-3 py-1 rounded-full border font-mono text-xs font-bold tabular-nums ${overallBadge.classes}`}>
                   Conf: {overallBadge.label}
                 </span>
               </div>
 
               {/* Confidence Legend */}
-              <div className="flex items-center gap-2 font-mono text-[10px]">
-                <span className="px-1.5 py-0.5 rounded bg-bro-cyan/15 text-bro-cyan border border-bro-cyan/40">&gt;=92% High</span>
-                <span className="px-1.5 py-0.5 rounded bg-bro-gold/15 text-bro-gold border border-bro-gold/40">75–91% Review</span>
-                <span className="px-1.5 py-0.5 rounded bg-bro-crimson/15 text-bro-crimson border border-bro-crimson/40">&lt;75% Low</span>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="px-2.5 py-0.5 rounded-full bg-bro-cyan/15 text-bro-cyan border border-bro-cyan/40">
+                  &gt;=92% High
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-bro-gold/15 text-bro-gold border border-bro-gold/40">
+                  75–91% Review
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-rose-950/70 text-rose-200 border border-rose-400/50">
+                  &lt;75% Low
+                </span>
               </div>
 
               {/* HITL Review Reasons */}
               {reviewReasons.length > 0 && (
-                <div className="p-3 rounded-lg bg-rose-950/40 border border-bro-crimson/40 space-y-1.5">
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase text-bro-crimson">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    HITL Escalation Reasons ({reviewReasons.length})
+                <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-400/50 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-rose-200">
+                    <ShieldAlert className="w-4 h-4 text-rose-300 shrink-0" aria-hidden="true" />
+                    <span>HITL Escalation Reasons ({reviewReasons.length})</span>
                   </div>
-                  <ul className="list-disc pl-4 space-y-1 font-mono text-[11px] text-rose-100">
+                  <ul className="list-disc pl-4 space-y-1 text-xs text-rose-100">
                     {reviewReasons.map((reason, idx) => (
                       <li key={idx}>{reason}</li>
                     ))}
@@ -606,10 +644,10 @@ export default function DocOcrReviewQueue() {
               )}
 
               {/* Editable Extraction Inputs */}
-              <div className="space-y-3">
+              <div className="space-y-3.5">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="ocr-bol" className="font-mono text-[10px] uppercase text-slate-300">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="ocr-bol" className="text-xs font-medium text-slate-300">
                       BOL Number
                     </label>
                     {renderFieldConf('bolNumber')}
@@ -620,13 +658,13 @@ export default function DocOcrReviewQueue() {
                     value={fields.bolNumber}
                     onChange={(e) => setFields({ ...fields, bolNumber: e.target.value })}
                     placeholder="e.g. BOL-9948201"
-                    className="w-full rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-3 py-1.5 font-mono text-xs text-white outline-none"
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[40px] font-mono text-xs text-white placeholder:text-slate-400 outline-none"
                   />
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="ocr-paps" className="font-mono text-[10px] uppercase text-slate-300">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="ocr-paps" className="text-xs font-medium text-slate-300">
                       PAPS / PARS Control #
                     </label>
                     {renderFieldConf('papsOrParsNumber')}
@@ -637,14 +675,14 @@ export default function DocOcrReviewQueue() {
                     value={fields.papsOrParsNumber}
                     onChange={(e) => setFields({ ...fields, papsOrParsNumber: e.target.value })}
                     placeholder="e.g. BROP8843921"
-                    className="w-full rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-3 py-1.5 font-mono text-xs text-white outline-none"
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[40px] font-mono text-xs text-white placeholder:text-slate-400 outline-none"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label htmlFor="ocr-weight" className="font-mono text-[10px] uppercase text-slate-300">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="ocr-weight" className="text-xs font-medium text-slate-300">
                         Weight (lbs)
                       </label>
                       {renderFieldConf('weightLbs')}
@@ -654,13 +692,13 @@ export default function DocOcrReviewQueue() {
                       type="number"
                       value={fields.weightLbs}
                       onChange={(e) => setFields({ ...fields, weightLbs: e.target.value })}
-                      className="w-full rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-3 py-1.5 font-mono text-xs text-white tabular-nums outline-none"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[40px] font-mono text-xs text-white tabular-nums outline-none"
                     />
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label htmlFor="ocr-cents" className="font-mono text-[10px] uppercase text-slate-300">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="ocr-cents" className="text-xs font-medium text-slate-300">
                         Total (Integer Cents)
                       </label>
                       {renderFieldConf('totalAmountCents')}
@@ -672,26 +710,26 @@ export default function DocOcrReviewQueue() {
                       value={fields.totalAmountCents}
                       onChange={(e) => setFields({ ...fields, totalAmountCents: e.target.value })}
                       placeholder="e.g. 385000"
-                      className="w-full rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-3 py-1.5 font-mono text-xs text-white tabular-nums outline-none"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[40px] font-mono text-xs text-white placeholder:text-slate-400 tabular-nums outline-none"
                     />
                     {fields.totalAmountCents && (
-                      <div className="font-mono text-[10px] text-bro-cyan tabular-nums mt-0.5">
+                      <div className="font-mono text-xs text-bro-cyan tabular-nums mt-1">
                         = {formatCentsPreview(fields.totalAmountCents, fields.currency)}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label htmlFor="ocr-currency" className="block font-mono text-[10px] uppercase text-slate-300 mb-1">
+                    <label htmlFor="ocr-currency" className="block text-xs font-medium text-slate-300 mb-1.5">
                       Currency
                     </label>
                     <select
                       id="ocr-currency"
                       value={fields.currency}
                       onChange={(e) => setFields({ ...fields, currency: e.target.value as 'CAD' | 'USD' })}
-                      className="w-full rounded bg-bro-obsidian border border-white/15 px-2.5 py-1.5 font-mono text-xs text-white"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[40px] font-mono text-xs text-white outline-none"
                     >
                       <option value="CAD">CAD</option>
                       <option value="USD">USD</option>
@@ -699,8 +737,8 @@ export default function DocOcrReviewQueue() {
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label htmlFor="ocr-fuel" className="font-mono text-[10px] uppercase text-slate-300">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="ocr-fuel" className="text-xs font-medium text-slate-300">
                         Fuel (L)
                       </label>
                       {renderFieldConf('fuelLiters')}
@@ -711,13 +749,13 @@ export default function DocOcrReviewQueue() {
                       step="0.1"
                       value={fields.fuelLiters}
                       onChange={(e) => setFields({ ...fields, fuelLiters: e.target.value })}
-                      className="w-full rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-2.5 py-1.5 font-mono text-xs text-white tabular-nums outline-none"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[40px] font-mono text-xs text-white tabular-nums outline-none"
                     />
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label htmlFor="ocr-jur" className="font-mono text-[10px] uppercase text-slate-300">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="ocr-jur" className="text-xs font-medium text-slate-300">
                         IFTA Jur
                       </label>
                       {renderFieldConf('jurisdictionCode')}
@@ -729,38 +767,45 @@ export default function DocOcrReviewQueue() {
                       value={fields.jurisdictionCode}
                       onChange={(e) => setFields({ ...fields, jurisdictionCode: e.target.value.toUpperCase() })}
                       placeholder="NB"
-                      className="w-full rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-2.5 py-1.5 font-mono text-xs text-white uppercase outline-none"
+                      className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 min-h-[40px] font-mono text-xs text-white uppercase placeholder:text-slate-400 outline-none"
                     />
                   </div>
                 </div>
 
                 {/* OS&D Damage / Shortage Toggle */}
-                <div className="p-3 rounded bg-bro-obsidian/80 border border-white/10 space-y-2">
-                  <label className="flex items-center gap-2 font-mono text-xs text-slate-200 cursor-pointer">
+                <div className="p-3.5 rounded-xl bg-[#0b1120] border border-white/10 space-y-2.5">
+                  <label htmlFor="ocr-osd-flag" className="flex items-center gap-2.5 text-xs text-slate-200 cursor-pointer min-h-[32px]">
                     <input
+                      id="ocr-osd-flag"
                       type="checkbox"
                       checked={fields.hasOsdDamageOrShortage}
                       onChange={(e) => setFields({ ...fields, hasOsdDamageOrShortage: e.target.checked })}
-                      className="rounded border-white/20"
+                      className="w-4 h-4 rounded border-white/25 accent-rose-500 cursor-pointer"
                     />
-                    <span className={fields.hasOsdDamageOrShortage ? 'text-bro-crimson font-bold' : ''}>
+                    <span className={fields.hasOsdDamageOrShortage ? 'text-rose-200 font-bold' : 'font-medium'}>
                       OS&amp;D Damage / Shortage Flag
                     </span>
                   </label>
                   {fields.hasOsdDamageOrShortage && (
-                    <input
-                      type="text"
-                      value={fields.osdNotes}
-                      onChange={(e) => setFields({ ...fields, osdNotes: e.target.value })}
-                      placeholder="Detail OS&D damage or piece count shortage..."
-                      className="w-full rounded bg-bro-steel border border-bro-crimson/40 px-2.5 py-1.5 font-mono text-xs text-white outline-none"
-                    />
+                    <div>
+                      <label htmlFor="ocr-osd-notes" className="sr-only">
+                        OS&amp;D Damage or Shortage Notes
+                      </label>
+                      <input
+                        id="ocr-osd-notes"
+                        type="text"
+                        value={fields.osdNotes}
+                        onChange={(e) => setFields({ ...fields, osdNotes: e.target.value })}
+                        placeholder="Detail OS&D damage or piece count shortage..."
+                        className="w-full rounded-xl bg-[#070b16] border border-rose-400/50 focus:border-rose-300 focus:ring-2 focus:ring-rose-400/30 px-3 py-2 min-h-[40px] text-xs text-white placeholder:text-slate-400 outline-none"
+                      />
+                    </div>
                   )}
                 </div>
 
                 {/* Reviewer Notes */}
                 <div>
-                  <label htmlFor="ocr-reviewer-notes" className="block font-mono text-[10px] uppercase text-slate-300 mb-1">
+                  <label htmlFor="ocr-reviewer-notes" className="block text-xs font-medium text-slate-300 mb-1.5">
                     Reviewer Audit Notes (Max 500 chars)
                   </label>
                   <textarea
@@ -770,30 +815,30 @@ export default function DocOcrReviewQueue() {
                     value={reviewerNotes}
                     onChange={(e) => setReviewerNotes(e.target.value)}
                     placeholder="Record corrections, signature confirmation, or rescan reason..."
-                    className="w-full rounded bg-bro-obsidian border border-white/15 focus:border-bro-cyan px-3 py-2 font-mono text-xs text-white outline-none"
+                    className="w-full rounded-xl bg-[#0b1120] border border-white/15 focus:border-bro-cyan px-3 py-2 text-xs text-white placeholder:text-slate-400 outline-none"
                   />
                 </div>
               </div>
 
               {/* 1-Click HITL Workflow Decision Buttons */}
-              <div className="pt-3 border-t border-white/10 space-y-2">
+              <div className="pt-3 border-t border-white/10 space-y-2.5">
                 <button
                   type="button"
                   disabled={decisionBusy}
                   onClick={() => void handleDecision('approve')}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-bro-cyan text-bro-obsidian font-mono text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 cursor-pointer disabled:opacity-50"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-bro-cyan text-bro-obsidian text-xs font-bold uppercase tracking-wider hover:bg-cyan-300 cursor-pointer disabled:opacity-50 transition-colors"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  {decisionBusy ? 'Submitting Decision...' : 'Approve & Trigger Next Workflow'}
+                  <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                  <span>{decisionBusy ? 'Submitting Decision...' : 'Approve & Trigger Next Workflow'}</span>
                 </button>
                 <button
                   type="button"
                   disabled={decisionBusy}
                   onClick={() => void handleDecision('reject')}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-rose-950/70 hover:bg-rose-900/70 border border-bro-crimson/50 font-mono text-xs font-bold uppercase tracking-wider text-rose-200 cursor-pointer disabled:opacity-50"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-rose-700 hover:bg-rose-600 text-white text-xs font-bold uppercase tracking-wider cursor-pointer disabled:opacity-50 transition-colors"
                 >
-                  <XCircle className="w-4 h-4 text-bro-crimson" />
-                  Reject &amp; Request Rescan
+                  <XCircle className="w-4 h-4" aria-hidden="true" />
+                  <span>Reject &amp; Request Rescan</span>
                 </button>
               </div>
             </>

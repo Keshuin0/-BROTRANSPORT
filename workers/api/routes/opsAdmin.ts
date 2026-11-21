@@ -1,17 +1,34 @@
 import { Hono } from 'hono';
 import { desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { createDb, users, auditLogs, seedDatabase } from '@bro/db';
 import { UserRoleSchema, isOpsRole } from '@bro/contracts';
 import type { ApiEnv } from './authRoutes.js';
 
 export const opsAdminRoutes = new Hono<ApiEnv>();
 
+const CopilotCommandSchema = z.object({
+  command: z.string().trim().min(1, { error: 'Command string required.' }).max(500),
+});
+
+const AdminUpdateUserRoleSchema = z.object({
+  role: UserRoleSchema,
+  active: z.boolean().optional(),
+});
+
+const AgentActionSchema = z.object({
+  action: z.enum(['toggle', 'run']),
+  enabled: z.boolean().optional(),
+});
+
 opsAdminRoutes.post('/ops/copilot/command', async (c) => {
   const user = c.get('user');
   if (!user || !isOpsRole(user.role)) return c.json({ error: 'Ops RBAC required.' }, 403);
-  const body = (await c.req.json().catch(() => ({}))) as { command?: string };
-  const command = (body.command || '').trim();
-  if (!command) return c.json({ error: 'Command string required.' }, 400);
+  const parsed = CopilotCommandSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Command string required.' }, 400);
+  }
+  const command = parsed.data.command;
 
   if (c.env.DISPATCH_AGENT) {
     const id = c.env.DISPATCH_AGENT.idFromName('global-dispatch-copilot');
@@ -21,7 +38,8 @@ opsAdminRoutes.post('/ops/copilot/command', async (c) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command }),
     });
-    return c.json(await res.json());
+    const data = await res.json().catch(() => ({ error: 'Copilot agent returned invalid response.' }));
+    return c.json(data, res.ok ? 200 : 502);
   }
 
   return c.json({
@@ -61,17 +79,23 @@ opsAdminRoutes.get('/ops/admin/users', async (c) => {
 opsAdminRoutes.patch('/ops/admin/users/:id/role', async (c) => {
   const admin = c.get('user')!;
   const targetId = c.req.param('id');
-  const body = (await c.req.json().catch(() => ({}))) as { role?: string; active?: boolean };
-  const parsedRole = UserRoleSchema.safeParse(body.role);
-  if (!parsedRole.success) return c.json({ error: 'Invalid role value.' }, 400);
+  const parsed = AdminUpdateUserRoleSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Invalid role or active status.' }, 400);
+  }
 
   const db = createDb(c.env.DB);
+  const existing = await db.select({ id: users.id }).from(users).where(eq(users.id, targetId)).limit(1);
+  if (!existing[0]) {
+    return c.json({ error: 'Target user not found.' }, 404);
+  }
+
   const now = Date.now();
   await db
     .update(users)
     .set({
-      role: parsedRole.data,
-      ...(typeof body.active === 'boolean' ? { active: body.active } : {}),
+      role: parsed.data.role,
+      ...(typeof parsed.data.active === 'boolean' ? { active: parsed.data.active } : {}),
       updatedAt: now,
     })
     .where(eq(users.id, targetId));
@@ -83,11 +107,11 @@ opsAdminRoutes.patch('/ops/admin/users/:id/role', async (c) => {
     action: 'ADMIN_ROLE_UPDATED',
     entityType: 'user',
     entityId: targetId,
-    detailJson: JSON.stringify({ role: parsedRole.data, active: body.active }),
+    detailJson: JSON.stringify({ role: parsed.data.role, active: parsed.data.active }),
     createdAt: now,
   });
 
-  return c.json({ success: true, id: targetId, role: parsedRole.data });
+  return c.json({ success: true, id: targetId, role: parsed.data.role });
 });
 
 opsAdminRoutes.get('/ops/admin/audit-logs', async (c) => {
@@ -107,7 +131,8 @@ opsAdminRoutes.get('/ops/admin/agents/status', async (c) => {
     try {
       const stub = ns.get(ns.idFromName(name));
       const r = await stub.fetch('https://agent.internal/status');
-      results.push((await r.json()) as Record<string, unknown>);
+      const json = (await r.json().catch(() => ({ agent: label, enabled: false, error: 'Malformed status' }))) as Record<string, unknown>;
+      results.push(json);
     } catch {
       results.push({ agent: label, enabled: false, error: 'Unreachable' });
     }
@@ -130,7 +155,11 @@ opsAdminRoutes.get('/ops/admin/agents/status', async (c) => {
 opsAdminRoutes.post('/ops/admin/agents/:name/action', async (c) => {
   const admin = c.get('user')!;
   const name = c.req.param('name');
-  const body = (await c.req.json().catch(() => ({}))) as { action: 'toggle' | 'run'; enabled?: boolean };
+  const parsed = AgentActionSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Action must be "toggle" or "run".' }, 400);
+  }
+  const body = parsed.data;
 
   const map: Record<string, { ns?: DurableObjectNamespace; key: string }> = {
     CustomsPreFlightAgent: { ns: c.env.CUSTOMS_AGENT, key: 'global-customs-agent' },
@@ -148,7 +177,7 @@ opsAdminRoutes.post('/ops/admin/agents/:name/action', async (c) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ enabled: body.enabled }),
     });
-    payload = await res.json();
+    payload = await res.json().catch(() => ({ agent: name, action: body.action }));
   }
 
   const db = createDb(c.env.DB);
